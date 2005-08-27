@@ -1,13 +1,13 @@
 #include "ops-linux.h"
 
-gboolean ControlMessageRead(unsigned int command, int* data, int size, int timeout) {
+gboolean ControlMessageRead(unsigned int command, char *data, int size, int timeout) {
   int x = usb_control_msg(m_p_handle,
 			  USB_ENDPOINT_IN | USB_TYPE_VENDOR | USB_RECIP_INTERFACE,
 			  
 			  0x01,
 			  command,
 			  0x0000,
-			  (char *)data,
+			  data,
 			  size,
 			  timeout );
   if(x<size) {
@@ -17,13 +17,13 @@ gboolean ControlMessageRead(unsigned int command, int* data, int size, int timeo
   return TRUE;
 }
 
-gboolean ControlMessageWrite(unsigned int command, int *data, int size, int timeout) {
+gboolean ControlMessageWrite(unsigned int command, const char *const data, int size, int timeout) {
   int x=usb_control_msg(m_p_handle,
 			USB_ENDPOINT_OUT | USB_TYPE_VENDOR | USB_RECIP_DEVICE,
 			0x01,
 			command,
 			0x0101,
-			(char *)data,
+			data,
 			size,
 			timeout);
   if(x<size) {
@@ -32,12 +32,12 @@ gboolean ControlMessageWrite(unsigned int command, int *data, int size, int time
   return TRUE;
 }
 
-int Read(unsigned char *p_buffer, unsigned int length, int timeout)
+int Read(char *p_buffer, unsigned int length, int timeout)
 {
   int bytes_read = -1;
   
   if (m_p_handle) {
-    bytes_read = usb_bulk_read(m_p_handle,READ_ENDPOINT,(char*)p_buffer,length,timeout);
+    bytes_read = usb_bulk_read(m_p_handle,READ_ENDPOINT,p_buffer,length,timeout);
     //    fprintf(stderr,"bytes_read: %d\n", bytes_read);
   }
   
@@ -45,13 +45,13 @@ int Read(unsigned char *p_buffer, unsigned int length, int timeout)
 
 }
 
-int Write(unsigned char *p_buffer, unsigned int length, int timeout)
+int Write(const char *const p_buffer, unsigned int length, int timeout)
 {
 
   int bytes_written = -1;
 
   if (m_p_handle) {
-    bytes_written = usb_bulk_write(m_p_handle,WRITE_ENDPOINT,(char*)p_buffer,length,timeout);						
+    bytes_written = usb_bulk_write(m_p_handle,WRITE_ENDPOINT,p_buffer,length,timeout);						
     
   }
   

@@ -162,10 +162,10 @@ void EnableControls(gboolean value);
 /*  GUI-independent workhorse functions  */
 gboolean ChangePartition(unsigned int partition); 
 gboolean ChangeDirectory(const char* st);  
-gboolean ControlMessageWrite(unsigned int command, int *data, int size, int timeout);
-gboolean ControlMessageRead(unsigned int command, int* data, int size, int timeout);
-int Write(unsigned char *p_buffer, unsigned int length, int timeout);
-int Read(unsigned char *p_buffer, unsigned int length, int timeout);
+gboolean ControlMessageWrite(unsigned int command, const char *const data, int size, int timeout);
+gboolean ControlMessageRead(unsigned int command, char* data, int size, int timeout);
+int Write(const char *const p_buffer, unsigned int length, int timeout);
+int Read(char *p_buffer, unsigned int length, int timeout);
 
 gboolean CheckCameraOpen(void);
 gboolean Close(void);
