@@ -16,14 +16,23 @@ static gboolean WaitMediaStatus(void) {
 
 }
 
-
+typedef struct cvs_dir_entry {
+  unsigned char  unknown1[4];  //  0  if 1st byte 0x0f, no more files
+  char           filename[12]; //  4  MS-DOS style, but with explicit '.'
+  unsigned char  filetype;     // 16  0x00==regular, 0x77==directory
+  unsigned char  unknown2;     // 17
+  unsigned char  fileattr;     // 18  0x20==regular, 0x10==directory
+  unsigned char  unknown3;     // 19
+  unsigned       filesize;     // 20  little-endian
+  unsigned short modtime;      // 24  crazy DOS time
+  unsigned short moddate;      // 26  crazy DOS date
+                               // 28  (this is a 28-byte struct)
+} cvs_dir_entry;
 
 gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
-  
-  unsigned char data[29],tempname[29];
+  cvs_dir_entry data;
   int dummy,command,s,t;
-  memset(data,0,29);
-
+  memset(&data, 0, sizeof data);
 
   if(isfirstfile==TRUE)
     command=0xbc00; //first file
@@ -33,11 +42,11 @@ gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
   
   //sometimes the first-file read fails after a partition change
   for(t=0;t<2;t++) {
-    if(ControlMessageWrite(command,&dummy,0,TIMEOUT)==FALSE) {
+    if(ControlMessageWrite(command,(char*)&dummy,0,TIMEOUT)==FALSE) {
       Log("failed at 0xbc (requesting first file info).");
       return FALSE;
     }
-    if(((s=Read(data,28,TIMEOUT)))<28) {
+    if(((s=Read((char*)&data,28,TIMEOUT)))<28) {
       if(isfirstfile == FALSE)
 	break;
       Log("failed to bulk read first file info...not retrying");
@@ -51,26 +60,32 @@ gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
     return FALSE;
   }
   
-  if(data[0]==0x0f) { //we've already read the last file
+  if(data.unknown1[0]==0x0f) { //we've already read the last file
     Log("Last file.");
     return FALSE;
   }
+  {
+    // filename can, oddly, be padded with 0xff
+    char *cp = memchr(data.filename, 0xff, sizeof data.filename);
+    if(cp)
+        *cp = '\0';
+    memcpy(thisfileinfo->filename, data.filename, sizeof data.filename);
+    thisfileinfo->filename[sizeof data.filename] = '\0';
+  }
 
+  thisfileinfo->filesize = le32_to_cpu(data.filesize);
 
-  memset(tempname,0,14);
-  memcpy(tempname,data+4,12);
-  for(t=0;t<13;t++)
-    if(tempname[t]==0xff)
-      tempname[t]=0;
-
-
-
-  strcpy(thisfileinfo->filename, tempname);
-  thisfileinfo->filesize=*(unsigned int*)&data[20];
-  thisfileinfo->filetype=FIFILE;
-  if(data[18]==0x10)
-    thisfileinfo->filetype=FIDIR;
-	
+  switch(data.filetype){
+  case 0x10:
+        thisfileinfo->filetype = FIDIR;
+        break;
+  default:
+        Log("unknown file type");
+  case 0x20:
+        thisfileinfo->filetype = FIFILE;
+        break;
+  }
+        
   return TRUE;
 }
 

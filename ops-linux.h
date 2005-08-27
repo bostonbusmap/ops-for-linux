@@ -1,6 +1,47 @@
 #ifndef OPS_LINUX
 #define OPS_LINUX
 
+////////////////////////////////////////////////////////
+// big-endian and little-endian
+
+#define bswap16(x) ((unsigned short)( (((x)&0xffu)<<8u) | (((x)>>8u)&0xffu) ))
+
+#define bswap32(x) (\
+  ((x)&0xff000000u) >> 24 \
+  |                       \
+  ((x)&0x00ff0000u) >>  8 \
+  |                       \
+  ((x)&0x0000ff00u) <<  8 \
+  |                       \
+  ((x)&0x000000ffu) << 24 \
+)
+
+// these are compiler-defined, so we put this section BEFORE the includes
+
+#if defined(__BIG_ENDIAN__) || defined(_BIG_ENDIAN)
+#define cpu_to_le32(x) bswap32(x)
+#define le32_to_cpu(x) bswap32(x)
+#define cpu_to_le16(x) bswap16(x)
+#define le16_to_cpu(x) bswap16(x)
+#define cpu_to_be32(x) (x)
+#define be32_to_cpu(x) (x)
+#define cpu_to_be16(x) (x)
+#define be16_to_cpu(x) (x)
+#endif
+
+#if defined(__LITTLE_ENDIAN__) || defined(_LITTLE_ENDIAN)
+#define cpu_to_be32(x) bswap32(x)
+#define be32_to_cpu(x) bswap32(x)
+#define cpu_to_be16(x) bswap16(x)
+#define be16_to_cpu(x) bswap16(x)
+#define cpu_to_be32(x) (x)
+#define be32_to_cpu(x) (x)
+#define cpu_to_be16(x) (x)
+#define be16_to_cpu(x) (x)
+#endif
+
+/////////////////////////////////////////////////////////
+
 #include <gtk/gtk.h>
 #include <usb.h>
 #include <stdio.h>
