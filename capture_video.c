@@ -131,7 +131,7 @@ static gboolean capture_video_start( char* filename) {
     
     //    printf("x: %d\n", x);
     //    file.WriteHuge(buffer,count);
-    fwrite(buffer, sizeof(char), count, file);
+    fwrite(buffer, 1, count, file);
     //fprintf(stderr,"%d bytes, %d bytes total\n",count,x);
     //  break;
     //DoMessagePump();
@@ -142,7 +142,7 @@ static gboolean capture_video_start( char* filename) {
 
   /*  if (toggle_camera_lcd_screen_is_on == TRUE)
     msg = 0x1f30;
-  if(ControlMessageWrite(msg,(int *)msg, 0 ,TIMEOUT)==FALSE) { //SetMode
+  if(ControlMessageWrite(msg, NULL, 0 ,TIMEOUT)==FALSE) { //SetMode
     Log("Unable to toggle camera lcd screen.");
     return FALSE;
   }
