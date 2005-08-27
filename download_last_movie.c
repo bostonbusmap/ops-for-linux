@@ -5,7 +5,8 @@
 //static double global_filesize;
 
 static int GetMovieCount(void) {
-  short numofvideos = 0xffff;
+  short numofvideos_le16 = 0xffff;
+  short numofvideos;
   int dummy;
   
   if(ControlMessageWrite(0xb300,&dummy,0,TIMEOUT)==FALSE) {
@@ -13,7 +14,8 @@ static int GetMovieCount(void) {
     Log("try unplugging camcorder and starting over");
     return(-1);
   }
-  dummy = Read((unsigned char *)&numofvideos,2,TIMEOUT);
+  dummy = Read((char *)&numofvideos_le16,2,TIMEOUT);
+  numofvideos = le16_to_cpu(numofvideos_le16);
   if(dummy < 2) {
     //    fprintf(stderr,"%d\n",numofvideos);
     Log("failed to bulk read video count");

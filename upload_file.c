@@ -35,7 +35,7 @@ static gboolean UploadFile(char* saveto, char* filename, file_info* p) {
   unsigned char* pTempfilename = tempfilename;
   unsigned char buffer[BUFSIZE];
   char* directory;
-  unsigned int udata;
+  char udata[4];
   int filesize = 0;// p->filesize;
   strcpy(tempfilename, filename);
   //printf("DownloadFile(%s, %s, %s)\n",saveto,filename);
@@ -99,13 +99,13 @@ static gboolean UploadFile(char* saveto, char* filename, file_info* p) {
     Log("failed at 0xb1");
     return FALSE;
   }
-  //Endianness appears to be screwed with this command!!
-  udata=((GetLength(file) & 0xffff)<<16)|((GetLength(file)>>16));
-  filesize = GetLength(file); //please please don't call this function 3 times, compiler
-
-  
-  //data=0x00;
-  if(ControlMessageWrite(0x9500,(int*)&udata,4,TIMEOUT)==FALSE) { // Request Write
+  filesize = GetLength(file);
+  // It's a bisexual byte order! Arrrgh! The PDP-11 legacy lives on.
+  udata[1] = filesize >> 24;
+  udata[0] = filesize >> 16;
+  udata[3] = filesize >>  8;
+  udata[2] = filesize >>  0;
+  if(ControlMessageWrite(0x9500,udata,4,TIMEOUT)==FALSE) { // Request Write
     Log("failed at 0x95");
     return FALSE;
   }

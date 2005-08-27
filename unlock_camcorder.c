@@ -15,14 +15,14 @@ static gboolean Unlock (void)
 {
   int t;
 
+  // this struct is always kept in little-endian format
   struct parameters
   {
     int index;
     int keydata;
   } data;
 
-  unsigned char *keydatastr;
-  keydatastr = (unsigned char *) &data.keydata;
+  unsigned char *keydatastr = (unsigned char *) &data.keydata;
 
   char ResponseKey[STRINGSIZE*16];
   char ChallengeKey[STRINGSIZE*16];
@@ -31,8 +31,8 @@ static gboolean Unlock (void)
 
 
   for (t = 0; t < 0x80; t = t + 4) {
-    data.index = 0x80 + t;
-    data.keydata = 0;
+    data.index = cpu_to_le32(0x80 + t);
+    data.keydata = cpu_to_le32(0);
     if (ControlMessageWrite (0xfe01, &data.index, 4, TIMEOUT) == FALSE)	//set index to read response
     {
       Log ("Failed at 0xfe write (set response read index)");
@@ -60,7 +60,7 @@ static gboolean Unlock (void)
       }
     }
 
-    data.index = t;
+    data.index = cpu_to_le32(t);
     if (ControlMessageWrite (0xfa01, &data.index, 8, TIMEOUT) == FALSE) //write out index followed by keydata
     {
       Log ("Failed at 0xfa write (return 4 bytes of response)");
@@ -68,7 +68,7 @@ static gboolean Unlock (void)
     }
 
     //OK, lets gather the challenge while we're at it...
-    data.index = t;
+    data.index = cpu_to_le32(t);
     if (ControlMessageWrite (0xfe01, &data.index, 4, TIMEOUT) == FALSE)	//set index to read challenge
     {
       Log ("Failed at 0xfe write (set challenge read index)");
@@ -99,7 +99,7 @@ static gboolean Unlock (void)
     }
 
   }
-  data.index = 0x1a0;
+  data.index = cpu_to_le32(0x1a0);
   if (ControlMessageWrite (0xfe01, &data.index, 4, TIMEOUT) == FALSE)
     Log ("failed at 0xfe");
   ControlMessageRead (0xff01, &data.keydata, 4, TIMEOUT);
@@ -109,7 +109,7 @@ static gboolean Unlock (void)
   Log ("Response Key:");
   Log (ResponseKey);
   
-  if (data.keydata == 1) {
+  if (data.keydata == cpu_to_le32(1)) {
     Log ("succeeded in unlocking camcorder");
     return TRUE;
   }
