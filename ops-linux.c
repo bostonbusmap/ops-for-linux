@@ -4,12 +4,42 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+//////////////////////////////////////////
+// various true (multi-file) globals
+struct usb_device* m_usb_device;
+GtkWidget *main_window;
+file_info* root_directory;
+gboolean toggle_camera_lcd_screen_is_on;
+GtkWidget *m_ctl_progress;       
+GtkWidget* m_directory_tree;
+double m_progressbar_fraction;
 
-GtkWidget * m_ctl_progress = NULL;
+usb_dev_handle *m_p_handle;
+
+gboolean flipper_capture;
+int stopwatch;   //maybe time downloads in the future and printout a bitrate
+
+//////////////////////////////////////////
+
+static GtkWidget * button_open_camcorder, 
+  *button_unlock, 
+  *button_close_camcorder, 
+  *button_download_all_movies, 
+  *button_download_last_movie, 
+  *button_delete_file, 
+  *button_format_storage,
+  *button_send_monitor_command,
+  *button_update_directory_listing,
+  *button_download_file,
+  *button_upload_file,
+  *button_toggle_camera_lcd_screen,
+  *button_download_memory,
+  *button_powerdown_camcorder,
+  *button_capture_video,
+  *information_label;
 
 
-gboolean
-delete_event (GtkWidget * widget, GdkEvent * event, gpointer data)
+static gboolean delete_event (GtkWidget * widget, GdkEvent * event, gpointer data)
 {
   // quiet compiler
   widget=widget;
@@ -21,8 +51,7 @@ delete_event (GtkWidget * widget, GdkEvent * event, gpointer data)
 
 
 /* Another callback */
-void
-destroy (GtkWidget * widget, gpointer data)
+static void destroy (GtkWidget * widget, gpointer data)
 {
   // quiet compiler
   widget=widget;
@@ -31,6 +60,7 @@ destroy (GtkWidget * widget, gpointer data)
   gtk_main_quit ();
   
 }
+
 gboolean enable_buttons (GtkWidget* widget,
 			 GdkEvent *event,
 			 gpointer data) {
@@ -43,17 +73,18 @@ gboolean enable_buttons (GtkWidget* widget,
   return TRUE;
 
 }
-gboolean watch_progress_bar (gpointer data) {
+
+
+static gboolean watch_progress_bar (gpointer data) {
   // quiet compiler
   data=data;
-  
   
   gtk_progress_bar_set_fraction(m_ctl_progress, m_progressbar_fraction);
   
   return TRUE;
 }
 
-void reset_label(GtkTreeView* treeview,
+static void reset_label(GtkTreeView* treeview,
 		 GtkTreePath *arg1,
 		 GtkTreeViewColumn *arg2,
 		 gpointer data_null) {
@@ -84,10 +115,9 @@ void reset_label(GtkTreeView* treeview,
 }
 
 
-gboolean do_download = FALSE;
+static gboolean do_download = FALSE;
 
-void
-process_args(int argc, char * argv[])
+static void process_args(int argc, char * argv[])
 {
   int c;
 
@@ -125,8 +155,27 @@ c);
 }
 
 
-int
-main (int argc, char *argv[])
+void EnableControls(gboolean value) {
+ 
+  gtk_widget_set_sensitive(button_open_camcorder, value);
+  gtk_widget_set_sensitive(button_unlock, value);
+  gtk_widget_set_sensitive(button_close_camcorder, value);
+  gtk_widget_set_sensitive(button_download_all_movies, value);
+  gtk_widget_set_sensitive(button_download_last_movie, value);
+  //  gtk_widget_set_sensitive(button_upload_movie, value);
+  gtk_widget_set_sensitive(button_format_storage, value);
+  gtk_widget_set_sensitive(button_delete_file, value);
+  gtk_widget_set_sensitive(button_download_file, value);
+  gtk_widget_set_sensitive(button_upload_file, value);
+  gtk_widget_set_sensitive(button_send_monitor_command, value);
+  gtk_widget_set_sensitive(button_update_directory_listing, value);
+  gtk_widget_set_sensitive(m_directory_tree, value);
+  gtk_widget_set_sensitive(button_toggle_camera_lcd_screen, value);
+  gtk_widget_set_sensitive(button_capture_video, value);
+}
+
+
+int main (int argc, char *argv[])
 {
 
   /* GtkWidget is the storage type for widgets */
@@ -356,21 +405,3 @@ main (int argc, char *argv[])
 }
 
 
-void EnableControls(gboolean value) {
- 
-  gtk_widget_set_sensitive(button_open_camcorder, value);
-  gtk_widget_set_sensitive(button_unlock, value);
-  gtk_widget_set_sensitive(button_close_camcorder, value);
-  gtk_widget_set_sensitive(button_download_all_movies, value);
-  gtk_widget_set_sensitive(button_download_last_movie, value);
-  //  gtk_widget_set_sensitive(button_upload_movie, value);
-  gtk_widget_set_sensitive(button_format_storage, value);
-  gtk_widget_set_sensitive(button_delete_file, value);
-  gtk_widget_set_sensitive(button_download_file, value);
-  gtk_widget_set_sensitive(button_upload_file, value);
-  gtk_widget_set_sensitive(button_send_monitor_command, value);
-  gtk_widget_set_sensitive(button_update_directory_listing, value);
-  gtk_widget_set_sensitive(m_directory_tree, value);
-  gtk_widget_set_sensitive(button_toggle_camera_lcd_screen, value);
-  gtk_widget_set_sensitive(button_capture_video, value);
-}

@@ -1,5 +1,55 @@
 #include "ops-linux.h"
-file_info* global_fi;
+
+static file_info* global_fi;
+
+static gboolean DelFile(const char* name) {
+  unsigned char buffer[255];
+  memset(buffer,0,255);
+  snprintf((char *)buffer,254,"del %s",name);
+  if(ControlMessageWrite(0xef00,(int *)buffer,strlen((char *)buffer)+1,TIMEOUT)==TRUE) {
+    return TRUE;
+  }
+  Log("delete failed");
+  return FALSE;
+}
+
+static gboolean delete_file_confirmed(gpointer data) {
+  file_info* p = global_fi;
+  char tempstring[STRINGSIZE];
+  if(ChangePartition(p->partition)==FALSE) {
+    Log("ChangePartition failed in delete_file_confirmed");
+    return FALSE;
+  }
+
+  if(ChangeDirectory(p->dirpath)==FALSE) {
+    Log("ChangeDirectory failed in delete_file_confirmed");
+    return FALSE;
+  }
+  
+  EnableControls(FALSE);
+  
+  if(DelFile(p->filename)==FALSE) {
+    strcpy(tempstring, "Failed to delete ");
+    if (strlen(tempstring) + strlen(p->filename) < STRINGSIZE) {
+      strcat(tempstring, p->filename);
+    }
+    //Log("Failed to delete "+p->filename);
+    Log(tempstring);
+    EnableControls(TRUE);
+    return FALSE;
+  }
+  strcpy(tempstring, "Deleted ");
+  if (strlen(tempstring) + strlen(p->filename) + strlen("successfully") < STRINGSIZE) {
+    strcat(tempstring, p->filename);
+    strcat(tempstring, "successfully");
+  }
+  Log(tempstring);
+  EnableControls(TRUE);
+
+  return TRUE;
+}
+
+
 gboolean delete_file(GtkWidget* widget,
 		     GdkEvent* event,
 		     gpointer data) {
@@ -51,52 +101,4 @@ gboolean delete_file(GtkWidget* widget,
   }
   return FALSE;
 }
-  
-gboolean delete_file_confirmed(gpointer data) {
-  file_info* p = global_fi;
-  char tempstring[STRINGSIZE];
-  if(ChangePartition(p->partition)==FALSE) {
-    Log("ChangePartition failed in delete_file_confirmed");
-    return FALSE;
-  }
 
-  if(ChangeDirectory(p->dirpath)==FALSE) {
-    Log("ChangeDirectory failed in delete_file_confirmed");
-    return FALSE;
-  }
-  
-  EnableControls(FALSE);
-  
-  if(DelFile(p->filename)==FALSE) {
-    strcpy(tempstring, "Failed to delete ");
-    if (strlen(tempstring) + strlen(p->filename) < STRINGSIZE) {
-      strcat(tempstring, p->filename);
-    }
-    //Log("Failed to delete "+p->filename);
-    Log(tempstring);
-    EnableControls(TRUE);
-    return FALSE;
-  }
-  strcpy(tempstring, "Deleted ");
-  if (strlen(tempstring) + strlen(p->filename) + strlen("successfully") < STRINGSIZE) {
-    strcat(tempstring, p->filename);
-    strcat(tempstring, "successfully");
-  }
-  Log(tempstring);
-  EnableControls(TRUE);
-
-  return TRUE;
-}
-gboolean DelFile(const char* name) {
-  unsigned char buffer[255];
-  memset(buffer,0,255);
-  snprintf((char *)buffer,254,"del %s",name);
-  if(ControlMessageWrite(0xef00,(int *)buffer,strlen((char *)buffer)+1,TIMEOUT)==TRUE) {
-    return TRUE;
-  }
-  Log("delete failed");
-  return FALSE;
-
-
-
-}

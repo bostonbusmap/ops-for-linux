@@ -1,8 +1,9 @@
 #include "ops-linux.h"
 
-int global_filesize;
+static int global_filesize;
 
 char storedir_global[STRINGSIZE];
+
 gboolean DownloadFile(char* saveto, char* filename) {
 	// This function expects that you've already changed the parition and 
 	// directory to the correct path in the camcorder. dirpath is the Windows
@@ -81,7 +82,7 @@ gboolean DownloadFile(char* saveto, char* filename) {
 
 }
 
-gboolean download_file_start( gpointer data) {
+static gboolean download_file_start( gpointer data) {
   gboolean success = FALSE;
   //  string_combo* s_c = data;
   char* filename = data;
@@ -119,7 +120,7 @@ gboolean download_file_start( gpointer data) {
 
 
 
-gboolean download_file_store_filename (GtkWidget *widget) {
+static gboolean download_file_store_filename (GtkWidget *widget) {
   GError *error = NULL;
   GtkWidget* file_selection_box = widget;
   GtkTreeSelection* selection;

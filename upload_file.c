@@ -1,10 +1,13 @@
 #include "ops-linux.h"
-//gint idle_tag;
 
-file_info* global_p;
-gchar* global_filename;
+//static gint idle_tag;
+
+static file_info* global_p;
+
+static gchar* global_filename;
 char storedir_global[STRINGSIZE];
-int GetLength(FILE* fp) {
+
+static int GetLength(FILE* fp) {
   int l;
   fseek(fp, 0, SEEK_END);
   l = ftell(fp);
@@ -13,7 +16,7 @@ int GetLength(FILE* fp) {
   return l;
 }
 
-gboolean UploadFile(char* saveto, char* filename, file_info* p) {
+static gboolean UploadFile(char* saveto, char* filename, file_info* p) {
 	// This function expects that you've already changed the parition and 
 	// directory to the correct path in the camcorder. dirpath is the Windows
 	// path to the file to store in.
@@ -78,18 +81,14 @@ gboolean UploadFile(char* saveto, char* filename, file_info* p) {
   }
 
   //  EnableControls(FALSE);
-  
-
 
   //  strcpy(sfilename, filename);
   file = fopen(saveto, "r");
   if (file == NULL) {
-
     Log("Trouble opening: ");
     Log(filename);
     return FALSE;
   }
-  
   
   memset(sfilename,0,255);
   strncpy((char *)sfilename,pTempfilename, 12); //being extra careful?
@@ -161,7 +160,7 @@ gboolean UploadFile(char* saveto, char* filename, file_info* p) {
 
 }
 
-gboolean upload_file_start( gpointer data) {
+static gboolean upload_file_start( gpointer data) {
   file_info* p = global_p;
   gboolean success = FALSE;
   //  string_combo* s_c = data;
@@ -194,8 +193,36 @@ gboolean upload_file_start( gpointer data) {
 }
 
 
+static gboolean upload_file_confirmed (GtkWidget *widget) { 
+  file_info* p = global_p;
+  gchar* filename = global_filename;
+  GError* error = NULL;
+      ////
 
-gboolean upload_file_store_filename (GtkWidget *widget) {
+  //  EnableControls(FALSE);
+  
+  Log("Attempting to send: ");
+  Log(p->filename);
+  //dirpath_global = p->dirpath;
+  //  idle_tag = gtk_idle_add(GTK_SIGNAL_FUNC(upload_file_start), p->filename);
+  if (!g_thread_create(upload_file_start, p->filename, FALSE, &error)) {
+    Log(error->message);
+    return FALSE;
+  }
+
+  
+      //I know it's messy to send 2 global variables and a local one
+  
+  //Log();
+  //return FALSE; //no leaf in the tree is selected OR data can't be retrieved OR we're done..
+  
+  //EnableControls(TRUE);
+  return TRUE;
+}
+
+
+
+static gboolean upload_file_store_filename (GtkWidget *widget) {
   GtkWidget* file_selection_box = widget;
   GtkTreeSelection* selection;
   //  file_info* currently_selected_item;
@@ -254,41 +281,6 @@ gboolean upload_file_store_filename (GtkWidget *widget) {
   //  EnableControls(TRUE);
   return TRUE;
 }
-
-gboolean upload_file_confirmed (GtkWidget *widget) { 
-  file_info* p = global_p;
-  gchar* filename = global_filename;
-  GError* error = NULL;
-      ////
-
-  //  EnableControls(FALSE);
-  
-  Log("Attempting to send: ");
-  Log(p->filename);
-  //dirpath_global = p->dirpath;
-  //  idle_tag = gtk_idle_add(GTK_SIGNAL_FUNC(upload_file_start), p->filename);
-  if (!g_thread_create(upload_file_start, p->filename, FALSE, &error)) {
-    Log(error->message);
-    return FALSE;
-  }
-
-
-  
-      //I know it's messy to send 2 global variables and a local one
-  
-  //Log();
-  //return FALSE; //no leaf in the tree is selected OR data can't be retrieved OR we're done..
-  
-  
-  //EnableControls(TRUE);
-  return TRUE;
-  
-
-  
-  
-
-}
-
 
 gboolean upload_file( GtkWidget *widget,
 			GdkEvent *event,

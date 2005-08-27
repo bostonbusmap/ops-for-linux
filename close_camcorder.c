@@ -1,5 +1,6 @@
 #include "ops-linux.h"
-gboolean Close ()
+
+gboolean Close (void)
 {
   Log("Closing device");
   if (m_usb_device) {
@@ -14,9 +15,7 @@ gboolean Close ()
 }
 
 
-
-gboolean
-close_camcorder (GtkWidget * widget, GdkEvent * event, gpointer data)
+gboolean close_camcorder (GtkWidget * widget, GdkEvent * event, gpointer data)
 {
   return Close();
 }

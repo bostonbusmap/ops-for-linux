@@ -1,27 +1,13 @@
 #include "ops-linux.h"
 #include <string.h>
-gboolean
-open_camcorder (GtkWidget * widget, GdkEvent * event, gpointer data)
-{
-  if (Init () == FALSE) {
-    Log ("Init() == FALSE");	//update log with CCamcorder's's log
-    MessageBox ("Couldn't find camcorder");
-    return FALSE;
-  }
-  Log ("Found camcorder.");
-  if (Open () == FALSE) {
-    Log ("Open() == FALSE");	//update log with CCamcorders's log
-    MessageBox ("Couldn't connect to camcorder");
-    return FALSE;
-  }
+
+static unsigned short m_vendor_id;
+static unsigned short m_product_id;
+static char m_manufacturer[STRINGSIZE];
+static char m_product[STRINGSIZE];
 
 
-  return TRUE;
-
-}
-
-gboolean
-Open ()
+static gboolean Open (void)
 {
   gboolean success = FALSE;
 
@@ -57,14 +43,15 @@ Open ()
   return success;
 
 }
-void reset_values() {
+
+
+static void reset_values(void) {
   m_usb_device = NULL;
   m_p_handle = NULL;
 }
 
 
-gboolean
-Init ()
+static gboolean Init (void)
 {
   char tmp[256];
 
@@ -160,3 +147,23 @@ Init ()
   return TRUE;
 
 }
+
+gboolean open_camcorder (GtkWidget * widget, GdkEvent * event, gpointer data)
+{
+  if (Init () == FALSE) {
+    Log ("Init() == FALSE");	//update log with CCamcorder's's log
+    MessageBox ("Couldn't find camcorder");
+    return FALSE;
+  }
+  Log ("Found camcorder.");
+  if (Open () == FALSE) {
+    Log ("Open() == FALSE");	//update log with CCamcorders's log
+    MessageBox ("Couldn't connect to camcorder");
+    return FALSE;
+  }
+
+
+  return TRUE;
+
+}
+

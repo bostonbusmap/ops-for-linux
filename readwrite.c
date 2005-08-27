@@ -31,6 +31,7 @@ gboolean ControlMessageWrite(unsigned int command, int *data, int size, int time
   }
   return TRUE;
 }
+
 int Read(unsigned char *p_buffer, unsigned int length, int timeout)
 {
   int bytes_read = -1;

@@ -2,19 +2,16 @@
 #include <string.h>
 
 
-
-gboolean
-unlock_camcorder (GtkWidget * widget, GdkEvent * event, gpointer data)
-{
-  if (CheckCameraOpen () == FALSE)
+gboolean CheckCameraOpen (void) {
+  if (m_p_handle == NULL) {
+    Log ("Open camcorder first");
     return FALSE;
-
-  return Unlock ();
-
+  }
+  return TRUE;
 }
 
-gboolean
-Unlock ()
+
+static gboolean Unlock (void)
 {
   int t;
 
@@ -123,11 +120,12 @@ Unlock ()
 
 }
 
-gboolean
-CheckCameraOpen () {
-  if (m_p_handle == NULL) {
-    Log ("Open camcorder first");
+gboolean unlock_camcorder (GtkWidget * widget, GdkEvent * event, gpointer data)
+{
+  if (CheckCameraOpen () == FALSE)
     return FALSE;
-  }
-  return TRUE;
+
+  return Unlock ();
+
 }
+

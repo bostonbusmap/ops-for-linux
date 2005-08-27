@@ -1,15 +1,12 @@
 #include "ops-linux.h"
 
-gboolean WaitMediaStatus() {
+static gboolean WaitMediaStatus(void) {
   //	Another experimental function
   unsigned int cmd;
   unsigned char data[10];
   
   return TRUE;	//can't seem to get this to ensure media is available
 					//maybe it does something else
-
-
-
   cmd=0xb600;
   if(ControlMessageRead(cmd,(int *)data,10,TIMEOUT)) {
     return TRUE;
@@ -78,9 +75,6 @@ gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
 }
 
 
-
-
-
 gboolean ChangePartition(unsigned int partition) {
 
   int dummy=0x00;
@@ -100,7 +94,9 @@ gboolean ChangePartition(unsigned int partition) {
   return TRUE;
   
 }
-gboolean rTrim(char * c, const char e) {
+
+
+static gboolean rTrim(char * c, const char e) {
   char* d;
   if (strlen(c) == 0) return TRUE;
   d = c;
@@ -116,6 +112,7 @@ gboolean rTrim(char * c, const char e) {
   return TRUE;
 
 }
+
 
 gboolean ChangeDirectory(const char* d) {
   
@@ -189,7 +186,7 @@ gboolean ChangeDirectory(const char* d) {
 }
 
 
-void AddFileDataAsChild(file_info* temp, file_info* addeditem) {
+static void AddFileDataAsChild(file_info* temp, file_info* addeditem) {
   if (temp == NULL || addeditem == NULL)
     return;
   if (temp->number_of_children < MAX_NUMBER_OF_FILES_IN_DIRECTORY) {
@@ -200,7 +197,7 @@ void AddFileDataAsChild(file_info* temp, file_info* addeditem) {
 }
 
 
-file_info* AddFileDataToList(file_info* temp) {
+static file_info* AddFileDataToList(file_info* temp) {
   //note: returns malloc'd data
   file_info* pointer = (file_info*)malloc(sizeof(file_info));
   int count;
@@ -222,7 +219,9 @@ file_info* AddFileDataToList(file_info* temp) {
 
 
 }
-void FreeAllocatedFiles(file_info* temp) {
+
+
+static void FreeAllocatedFiles(file_info* temp) {
   int count;
   if (temp == NULL) return;
   for (count = 0; count < temp->number_of_children; ++count) {
@@ -232,29 +231,8 @@ void FreeAllocatedFiles(file_info* temp) {
 
 }
 
-gboolean update_directory_listing (GtkWidget *widget,
-				   GdkEvent *event,
-				   gpointer data) {
-  //  	HTREEITEM hItem[5],rItem;
-  GtkTreeModel* model;
 
-
-  if(CheckCameraOpen()==FALSE)
-    return FALSE;
-  EnableControls(FALSE);
-  model = create_model();
-  
-
-  Log("model created.");
-  FreeAllocatedFiles(root_directory);
-  root_directory = NULL;
-  gtk_tree_view_set_model(GTK_TREE_VIEW(m_directory_tree), GTK_TREE_MODEL(model));
-  //  gtk_object_unref(GTK_TREE_MODEL(model));
-  //gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW(m_directory_tree)), GTK_SELECTION_NONE);
-  EnableControls(TRUE);
-  return TRUE;
-}
-file_info* AddToTreeStore(GtkTreeStore* treestore, GtkTreeIter* toplevel, GtkTreeIter* child, file_info* current, file_info* parent) {
+static file_info* AddToTreeStore(GtkTreeStore* treestore, GtkTreeIter* toplevel, GtkTreeIter* child, file_info* current, file_info* parent) {
   file_info* addeditem;
   gtk_tree_store_append(GTK_TREE_STORE(treestore), child, toplevel); //child is created here
   addeditem = AddFileDataToList(current);
@@ -264,80 +242,9 @@ file_info* AddToTreeStore(GtkTreeStore* treestore, GtkTreeIter* toplevel, GtkTre
   return addeditem;
 }
 
-GtkTreeModel* create_model() {
-  GtkTreeStore* treestore = gtk_tree_store_new(2, G_TYPE_STRING, G_TYPE_POINTER);
-  GtkTreeIter rootlevel, toplevel, child;
-  int t;
-  file_info root_file_data, current_file_data, *addeditem = NULL;
-  
-  char tempstring[STRINGSIZE];
-  //  EnableControls(FALSE);
-
-  strcpy(root_file_data.filename, "/");
-  root_file_data.filesize = 0;
-  root_file_data.filetype = FIROOT;
-  strcpy(root_file_data.fullpath, "");
-  root_file_data.partition = 255;
-  root_file_data.number_of_children = 0;
-  
-
-  AddToTreeStore(treestore, NULL, &rootlevel, &root_file_data, NULL);
-  /*  gtk_tree_store_append(treestore, &rootlevel, NULL); //create blank entry
-  root_directory = AddFileDataToList(&root_file_data);
-  addeditem = root_directory;
-  gtk_tree_store_set(treestore, &rootlevel, COL_FILENAME, root_file_data.filename, COL_POINTER, addeditem, -1);*/
 
 
-  for (t=0; t<5; ++t) {
-    if (t == 1) continue; //skip the non-filesystem partition
-    
-    snprintf(tempstring, STRINGSIZE-1, "p%d",t);  //partition directory name
-    strcpy(current_file_data.filename, tempstring);
-    current_file_data.filesize = 0;
-    strcpy(current_file_data.fullpath, "/");
-    strcpy(current_file_data.dirpath, "/");
-    current_file_data.partition = t;
-    current_file_data.filetype = FIPART;
-    current_file_data.number_of_children = 0;
-    strcpy(tempstring, "add filename: ");
-    if (strlen(tempstring) + strlen(current_file_data.filename) < STRINGSIZE)
-      strcat(tempstring, current_file_data.filename);
-    //    Log("add filename:");
-    Log(current_file_data.filename);
-
-    AddToTreeStore(treestore, &rootlevel, &toplevel, &current_file_data, &root_file_data);
-
-    if (ChangePartition(t) == FALSE) {
-      Log("Couldn't change partitions");
-      EnableControls(TRUE);
-      return NULL;
-    }
-    if(ChangeDirectory("/")==FALSE) {
-      Log("Couldn't change directories");
-      EnableControls(TRUE);
-      return NULL;
-    }
-    //RecursiveListing("/",addeditem,t);
-    //    strcpy(tempstring, "/");
-    RecursiveListing("/", addeditem, &toplevel, t, 0, treestore);
-    //m_directory_tree.Expand(hItem[t],TVE_EXPAND);//hmm?
-    
-    //TODO: map filename data to some data in memory
-    
-  }
-
-  //m_directory_tree.Expand(rItem,TVE_EXPAND);
-	
-
-  ChangePartition(0); //make sure we're back at the media partition!!!
-  ChangeDirectory("/DCIM");
-
-  //Log();
-  EnableControls(TRUE);
-  return GTK_TREE_MODEL(treestore);
-	
-}
-void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* parent_place, int partition, int level, GtkTreeStore* treestore) {
+static void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* parent_place, int partition, int level, GtkTreeStore* treestore) {
   gboolean firstitem;
   char partname[STRINGSIZE];
   file_info rData, tData, pData;
@@ -374,15 +281,12 @@ void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* parent_p
     firstitem=FALSE;
     
     
-    
     if( (strcmp(tData.filename,".") == 0) ||
 	(strcmp(tData.filename,"..") == 0) ||
 	(tData.filename[0]==0x20) ) { //0x20 == space bar?
       t--;
       continue;
     }
-    
-    
     
     strcpy(pData.filename,tData.filename);
     pData.filesize = tData.filesize;
@@ -456,3 +360,100 @@ void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* parent_p
   
 }
 
+static GtkTreeModel* create_model(void) {
+  GtkTreeStore* treestore = gtk_tree_store_new(2, G_TYPE_STRING, G_TYPE_POINTER);
+  GtkTreeIter rootlevel, toplevel, child;
+  int t;
+  file_info root_file_data, current_file_data, *addeditem = NULL;
+  
+  char tempstring[STRINGSIZE];
+  //  EnableControls(FALSE);
+
+  strcpy(root_file_data.filename, "/");
+  root_file_data.filesize = 0;
+  root_file_data.filetype = FIROOT;
+  strcpy(root_file_data.fullpath, "");
+  root_file_data.partition = 255;
+  root_file_data.number_of_children = 0;
+  
+
+  AddToTreeStore(treestore, NULL, &rootlevel, &root_file_data, NULL);
+  /*  gtk_tree_store_append(treestore, &rootlevel, NULL); //create blank entry
+  root_directory = AddFileDataToList(&root_file_data);
+  addeditem = root_directory;
+  gtk_tree_store_set(treestore, &rootlevel, COL_FILENAME, root_file_data.filename, COL_POINTER, addeditem, -1);*/
+
+
+  for (t=0; t<5; ++t) {
+    if (t == 1) continue; //skip the non-filesystem partition
+    
+    snprintf(tempstring, STRINGSIZE-1, "p%d",t);  //partition directory name
+    strcpy(current_file_data.filename, tempstring);
+    current_file_data.filesize = 0;
+    strcpy(current_file_data.fullpath, "/");
+    strcpy(current_file_data.dirpath, "/");
+    current_file_data.partition = t;
+    current_file_data.filetype = FIPART;
+    current_file_data.number_of_children = 0;
+    strcpy(tempstring, "add filename: ");
+    if (strlen(tempstring) + strlen(current_file_data.filename) < STRINGSIZE)
+      strcat(tempstring, current_file_data.filename);
+    //    Log("add filename:");
+    Log(current_file_data.filename);
+
+    AddToTreeStore(treestore, &rootlevel, &toplevel, &current_file_data, &root_file_data);
+
+    if (ChangePartition(t) == FALSE) {
+      Log("Couldn't change partitions");
+      EnableControls(TRUE);
+      return NULL;
+    }
+    if(ChangeDirectory("/")==FALSE) {
+      Log("Couldn't change directories");
+      EnableControls(TRUE);
+      return NULL;
+    }
+    //RecursiveListing("/",addeditem,t);
+    //    strcpy(tempstring, "/");
+    RecursiveListing("/", addeditem, &toplevel, t, 0, treestore);
+    //m_directory_tree.Expand(hItem[t],TVE_EXPAND);//hmm?
+    
+    //TODO: map filename data to some data in memory
+    
+  }
+
+  //m_directory_tree.Expand(rItem,TVE_EXPAND);
+	
+
+  ChangePartition(0); //make sure we're back at the media partition!!!
+  ChangeDirectory("/DCIM");
+
+  //Log();
+  EnableControls(TRUE);
+  return GTK_TREE_MODEL(treestore);
+	
+}
+
+
+gboolean update_directory_listing (GtkWidget *widget,
+				   GdkEvent *event,
+				   gpointer data) {
+  //  	HTREEITEM hItem[5],rItem;
+  GtkTreeModel* model;
+
+
+  if(CheckCameraOpen()==FALSE)
+    return FALSE;
+  EnableControls(FALSE);
+  model = create_model();
+  
+
+  Log("model created.");
+  FreeAllocatedFiles(root_directory);
+  root_directory = NULL;
+  gtk_tree_view_set_model(GTK_TREE_VIEW(m_directory_tree), GTK_TREE_MODEL(model));
+  //  gtk_object_unref(GTK_TREE_MODEL(model));
+  //gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW(m_directory_tree)), GTK_SELECTION_NONE);
+  EnableControls(TRUE);
+  return TRUE;
+}

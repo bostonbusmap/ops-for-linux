@@ -1,6 +1,6 @@
 #include "ops-linux.h"
 
-double_widget global_dw;
+static double_widget global_dw;
 
 gboolean MessageBoxTextTwo (const char* st, gpointer data) {
   GtkWidget *window, 
@@ -73,10 +73,7 @@ gboolean MessageBoxTextTwo (const char* st, gpointer data) {
 }
 
 
-
-
-gboolean
-MessageBox (const char *st)
+gboolean MessageBox (const char *st)
 {
   GtkWidget *window, *ok_button, *label;
   window = gtk_dialog_new ();
@@ -98,6 +95,8 @@ MessageBox (const char *st)
   return TRUE;
 
 }
+
+
 gboolean MessageBoxText (const char* st, gpointer data) {
   GtkWidget *window, 
     *ok_button,
@@ -207,8 +206,7 @@ gboolean MessageBoxChoice (const char* st, gpointer data) {
   return TRUE;
 }
 
-void
-Log (const char *st)
+void Log (const char *st)
 {
   fprintf (stderr, "%s\n", st);
 

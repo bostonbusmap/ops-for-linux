@@ -2,7 +2,12 @@
 //gchar filename_global[STRINGSIZE];
 
 
-gboolean capture_video_start( char* filename) {
+static gboolean capture_video_store_filename_sub(void) {
+  flipper_capture = TRUE;
+  return TRUE;
+}
+
+static gboolean capture_video_start( char* filename) {
   unsigned short int twobytes = 0x0000;
   unsigned int fourbytes = 0x00000000;
   char log_string[STRINGSIZE];
@@ -149,11 +154,7 @@ gboolean capture_video_start( char* filename) {
   */
 }
 
-gboolean capture_video_store_filename_sub() {
-  flipper_capture = TRUE;
-  return TRUE;
-}
-gboolean capture_video_store_filename(GtkFileSelection* file_selection_box) {
+static gboolean capture_video_store_filename(GtkFileSelection* file_selection_box) {
   GError* error = NULL;
   gchar* filename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(file_selection_box));
   flipper_capture = FALSE;
