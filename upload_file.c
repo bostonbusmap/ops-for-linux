@@ -11,8 +11,6 @@ int GetLength(FILE* fp) {
   
   fseek(fp, 0, SEEK_SET);
   return l;
-  
-
 }
 
 gboolean UploadFile(char* saveto, char* filename, file_info* p) {
@@ -22,7 +20,11 @@ gboolean UploadFile(char* saveto, char* filename, file_info* p) {
 
   int count,x, tcount, alt_total;
   int data;
-  
+#ifdef _WIN32
+  char delimiter = '\\';
+#else
+  char delimiter = '/';
+#endif
   FILE* file = NULL;
   //char* sfilename = filename;
   unsigned char sfilename[256];
@@ -41,9 +43,10 @@ gboolean UploadFile(char* saveto, char* filename, file_info* p) {
     strcpy(tempfilename, saveto);
     pTempfilename = tempfilename + strlen(tempfilename);
     --pTempfilename;
-    while ((pTempfilename != tempfilename) && (*pTempfilename != '/'))
+    while ((pTempfilename != tempfilename) && (*pTempfilename != delimiter))
       --pTempfilename;
-    ++pTempfilename;
+    ++pTempfilename; 
+
     fprintf(stderr,"not file pTempfilename: %s\n", pTempfilename);
     if (strlen(pTempfilename) > 12) {
       MessageBox("Sorry, long filenames are not supported.");
@@ -116,8 +119,10 @@ gboolean UploadFile(char* saveto, char* filename, file_info* p) {
   while(1) {
     //    Log("writing...");
     count = fread(buffer, sizeof(char), BUFSIZE, file);
+    Log("read...");
     if (count < 1) break;
     tcount += count;
+    //    fprintf(stderr,"count: %d\n",count);
     if (tcount  - alt_total > 65536) {
       m_progressbar_fraction = (double)tcount / (double)filesize;
       //      fprintf(stderr,"m_progressbar: %f\n",m_progressbar_fraction);
