@@ -6,7 +6,6 @@ static unsigned short m_product_id;
 static char m_manufacturer[STRINGSIZE];
 static char m_product[STRINGSIZE];
 
-
 static gboolean Open (void)
 {
   gboolean success = FALSE;
@@ -43,7 +42,6 @@ static gboolean Open (void)
   return success;
 
 }
-
 
 static void reset_values(void) {
   m_usb_device = NULL;
@@ -161,9 +159,6 @@ gboolean open_camcorder (GtkWidget * widget, GdkEvent * event, gpointer data)
     MessageBox ("Couldn't connect to camcorder");
     return FALSE;
   }
-
-
   return TRUE;
-
 }
 

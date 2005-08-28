@@ -8,11 +8,11 @@ static int length_global;
 static gboolean DownloadMemory(const char* filename, unsigned long start, unsigned long length) {
 #define FBLOCKSZ (64*1024) //64k.D
 
-  unsigned long int t,i,count,tcount;
+  unsigned t,i,count,tcount;
   int data;
   char monitorcmd[STRINGSIZE];
   FILE* file = NULL;
-  unsigned char *buffer;
+  char *buffer;
   
   unsigned int fblocksz=1;	//The buffer size is softcoded so we can resize it
 				//for the first transfer (cam bug workaround) and for the last
@@ -20,7 +20,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
   
   char Tmpfile[255];
   
-  buffer=(unsigned char *)malloc(FBLOCKSZ);
+  buffer=malloc(FBLOCKSZ);
   if(buffer==NULL)
     {
       Log("Couldn't allocate transfer buffer");
@@ -55,7 +55,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
     i++;
     memset(Tmpfile,0,255);
     sprintf(Tmpfile,"%07x.BIN",1);
-    snprintf(monitorcmd, STRINGSIZE - 1,"dumpf %d %d %s",t,fblocksz,Tmpfile);
+    snprintf(monitorcmd, STRINGSIZE-1, "dumpf %u %u %s", t, fblocksz, Tmpfile);
     //    monitorcmd.Format("dumpf %d %d %s",t,fblocksz,Tmpfile);
     //		Log(monitorcmd);
     if(Monitor(monitorcmd)==FALSE) {
@@ -66,7 +66,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
       return FALSE;
     }
       
-    if(ControlMessageWrite(0xb101,(int *)Tmpfile,strlen((char *)Tmpfile)+1,TIMEOUT)==FALSE) { // SetFileName
+    if(ControlMessageWrite(0xb101, Tmpfile, strlen(Tmpfile)+1, TIMEOUT)==FALSE) { // SetFileName
        
       Log("failed at 0xb1");
       return FALSE;
@@ -75,7 +75,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
     
     
     data=0x00;
-    if(ControlMessageWrite(0x9301,&data,0,TIMEOUT)==FALSE) { // Request File Read
+    if(ControlMessageWrite(0x9301, (char*)&data, 0, TIMEOUT)==FALSE) { // Request File Read
       Log("failed at 0x93");
       return FALSE;
     }
@@ -108,8 +108,6 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
   Log("memory download succeeded");
   free(buffer);
   return TRUE;
-
-
 }
 
 
@@ -117,9 +115,10 @@ static gboolean download_memory_start(gpointer data) {
   return DownloadMemory(data, start_global, length_global);
 }
 
+
 static gboolean download_memory_store_filename(GtkFileSelection* file_selection_box) {
   GError *error;
-  gchar* winfilename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(file_selection_box));
+  const gchar* winfilename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(file_selection_box));
   if (!g_thread_create(download_memory_start, winfilename, FALSE, &error)) {
     Log(error->message);
     return FALSE;
@@ -128,9 +127,11 @@ static gboolean download_memory_store_filename(GtkFileSelection* file_selection_
   return TRUE;
 }
 
+
+
 static gboolean download_memory_confirmed(double_widget* d_w) {
-  gchar *start_s, *length_s;
-  unsigned long start, length;
+  const gchar *start_s, *length_s;
+//  unsigned long start, length;
   GtkFileSelection* file_selection_box;
   start_s = gtk_entry_get_text(d_w->a);
   length_s = gtk_entry_get_text(d_w->b);
@@ -172,8 +173,6 @@ static gboolean download_memory_confirmed(double_widget* d_w) {
 
   gtk_widget_show(file_selection_box);
 
-
-
 }
 
 
@@ -189,13 +188,13 @@ gboolean download_memory(GtkWidget* widget,
 
 gboolean Monitor(const char* command) {
   
-  FILE* file;
-  unsigned char buffer[255];
+//  FILE* file;
+  char buffer[255];
 
 
-  memset(buffer,0,255);
-  strcpy((char *)buffer,command);
-  if(ControlMessageWrite(0xef00,(int *)buffer,strlen((char *)buffer)+1,LONG_TIMEOUT)==TRUE) {
+  memset(buffer, 0, sizeof buffer);
+  strcpy(buffer,command);
+  if(ControlMessageWrite(0xef00, buffer, strlen(buffer)+1, LONG_TIMEOUT)==TRUE) {
     Log("monitor command succeeded.");
     return TRUE;
   }

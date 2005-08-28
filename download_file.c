@@ -14,10 +14,8 @@ gboolean DownloadFile(char* saveto, char* filename) {
   int round;
   FILE* file = NULL;
   //char* sfilename = filename;
-  unsigned char sfilename[256];
-  unsigned char tempfilename[STRINGSIZE];
-  unsigned char buffer[BUFSIZE];
-  gchar digits[5];
+  char sfilename[256];
+  char buffer[BUFSIZE];
   //printf("DownloadFile(%s, %s, %s)\n",saveto,filename);
   strcpy(sfilename, filename);
   file = fopen(saveto, "w");
@@ -29,10 +27,10 @@ gboolean DownloadFile(char* saveto, char* filename) {
 
   //EnableControls(FALSE);
 
-  memset(sfilename,0,255);
-  strcpy((char *)sfilename,filename);
+  memset(sfilename, '\0', sizeof sfilename);
+  strcpy(sfilename,filename);
 
-  if(ControlMessageWrite(0xb101,(int *)sfilename,strlen((char *)sfilename)+1,TIMEOUT)==FALSE) { //SetFileName
+  if(ControlMessageWrite(0xb101, sfilename, strlen(sfilename)+1, TIMEOUT)==FALSE) { //SetFileName
     Log("failed at 0xb1");
     EnableControls(TRUE);
     return FALSE;
@@ -65,7 +63,7 @@ gboolean DownloadFile(char* saveto, char* filename) {
     
     //    printf("x: %d\n", x);
     //    file.WriteHuge(buffer,count);
-    fwrite(buffer, sizeof(char), count, file);
+    fwrite(buffer, 1, count, file);
     if(count<BUFSIZE)
       break;
     //DoMessagePump();
@@ -136,8 +134,7 @@ static gboolean download_file_store_filename (GtkWidget *widget) {
   if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
     gpointer data;
     file_info* p;
-    gchar* filename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(file_selection_box));
-    char tempstring[STRINGSIZE];
+    const gchar *filename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(file_selection_box));
     //char [STRINGSIZE];
     //    char* storedir = dirpath;
     //string_combo s_c;
@@ -214,11 +211,6 @@ gboolean download_file( GtkWidget *widget,
 			GdkEvent *event,
 			gpointer data) {
   GtkWidget *file_selection_box = NULL;
-  char temporary[STRINGSIZE];
-  gboolean success = FALSE;
-  int i;
-  FILE* file = NULL;
-  
  
   //  GtkWidget* file_selection_box = NULL;
   

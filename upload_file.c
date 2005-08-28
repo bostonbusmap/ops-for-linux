@@ -30,10 +30,10 @@ static gboolean UploadFile(char* saveto, char* filename, file_info* p) {
 #endif
   FILE* file = NULL;
   //char* sfilename = filename;
-  unsigned char sfilename[256];
-  unsigned char tempfilename[STRINGSIZE];
-  unsigned char* pTempfilename = tempfilename;
-  unsigned char buffer[BUFSIZE];
+  char sfilename[256];
+  char tempfilename[STRINGSIZE];
+  char* pTempfilename = tempfilename;
+  char buffer[BUFSIZE];
   char* directory;
   char udata[4];
   int filesize = 0;// p->filesize;
@@ -91,11 +91,11 @@ static gboolean UploadFile(char* saveto, char* filename, file_info* p) {
   }
   
   memset(sfilename,0,255);
-  strncpy((char *)sfilename,pTempfilename, 12); //being extra careful?
+  strncpy(sfilename,pTempfilename, 12); //being extra careful?
   
   Log("sfilename ==");
   Log(sfilename);
-  if(ControlMessageWrite(0xb100,(int *)sfilename,strlen((char *)sfilename)+1,TIMEOUT)==FALSE) { //SetFileName
+  if(ControlMessageWrite(0xb100, sfilename, strlen(sfilename)+1, TIMEOUT)==FALSE) { //SetFileName
     Log("failed at 0xb1");
     return FALSE;
   }
@@ -166,14 +166,13 @@ static gboolean upload_file_start( gpointer data) {
   //  string_combo* s_c = data;
   char* filename = data;
   //  char* dirpath = s_c.b;
-  char tempstring[STRINGSIZE];
   /*  if (semiglobalfile == NULL) { 
     EnableControls(TRUE);
     return FALSE;
     }*/
   
   Log("starting UploadFile(storedir_global, filename, p");
-  fprintf(stderr, "%s, %s, %s\n",storedir_global, filename, p);
+  fprintf(stderr, "%s, %s, %p\n",storedir_global, filename, p);
   EnableControls(FALSE);
   if(UploadFile(storedir_global,filename, p)==FALSE) {
     Log("UploadFile(p->filename, tempstring) failed.");
@@ -195,7 +194,6 @@ static gboolean upload_file_start( gpointer data) {
 
 static gboolean upload_file_confirmed (GtkWidget *widget) { 
   file_info* p = global_p;
-  gchar* filename = global_filename;
   GError* error = NULL;
       ////
 
@@ -209,7 +207,6 @@ static gboolean upload_file_confirmed (GtkWidget *widget) {
     Log(error->message);
     return FALSE;
   }
-
   
       //I know it's messy to send 2 global variables and a local one
   
@@ -219,7 +216,6 @@ static gboolean upload_file_confirmed (GtkWidget *widget) {
   //EnableControls(TRUE);
   return TRUE;
 }
-
 
 
 static gboolean upload_file_store_filename (GtkWidget *widget) {
@@ -238,9 +234,8 @@ static gboolean upload_file_store_filename (GtkWidget *widget) {
   if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
     //    gpointer data = NULL;
     file_info* p = NULL;
-    gchar* winfilename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(file_selection_box));
+    const gchar* winfilename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(file_selection_box));
     gchar* filename;
-    char tempstring[STRINGSIZE];
     //char [STRINGSIZE];
     //    char* storedir = dirpath;
     //string_combo s_c;
@@ -286,10 +281,6 @@ gboolean upload_file( GtkWidget *widget,
 			GdkEvent *event,
 			gpointer data) {
   GtkWidget *file_selection_box = NULL;
-  char temporary[STRINGSIZE];
-  gboolean success = FALSE;
-  int i;
-  FILE* file = NULL;
   
  
   //  GtkWidget* file_selection_box = NULL;

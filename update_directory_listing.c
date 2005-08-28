@@ -3,12 +3,12 @@
 static gboolean WaitMediaStatus(void) {
   //	Another experimental function
   unsigned int cmd;
-  unsigned char data[10];
+  char data[10];
   
   return TRUE;	//can't seem to get this to ensure media is available
 					//maybe it does something else
   cmd=0xb600;
-  if(ControlMessageRead(cmd,(int *)data,10,TIMEOUT)) {
+  if(ControlMessageRead(cmd,data,10,TIMEOUT)) {
     return TRUE;
   }
   
@@ -68,7 +68,7 @@ gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
     // filename can, oddly, be padded with 0xff
     char *cp = memchr(data.filename, 0xff, sizeof data.filename);
     if(cp)
-        *cp = '\0';
+      *cp = '\0';
     memcpy(thisfileinfo->filename, data.filename, sizeof data.filename);
     thisfileinfo->filename[sizeof data.filename] = '\0';
   }
@@ -77,13 +77,14 @@ gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
 
   switch(data.filetype){
   case 0x10:
-        thisfileinfo->filetype = FIDIR;
-        break;
+    thisfileinfo->filetype = FIDIR;
+    break;
   default:
-        Log("unknown file type");
+    Log("unknown file type");
+    fprintf(stderr, "type 0x%02x\n", thisfileinfo->filetype);
   case 0x20:
-        thisfileinfo->filetype = FIFILE;
-        break;
+    thisfileinfo->filetype = FIFILE;
+    break;
   }
         
   return TRUE;
@@ -102,7 +103,7 @@ gboolean ChangePartition(unsigned int partition) {
 
   cmd=0xbf00 | partition;
   
-  ControlMessageWrite(cmd,&dummy,4,SHORT_TIMEOUT); // This cmd always fails!!
+  ControlMessageWrite(cmd,(char*)&dummy,4,SHORT_TIMEOUT); // This cmd always fails!!
   if(WaitMediaStatus()==FALSE)
     return FALSE;
   
@@ -150,13 +151,11 @@ gboolean ChangeDirectory(const char* d) {
   }
   
 
-  while((strlen(directory) > 1) &&
-	(memchr(directory,'/',sizeof(char)) != NULL) ) {
-    char temp[LIBUSB_PATH_MAX], *ptemp;
+  while( strlen(directory)>1 && directory[0]=='/' ) {
+    char temp[LIBUSB_PATH_MAX];
     strncpy(temp, directory, LIBUSB_PATH_MAX - 1);
-    if (memchr(directory,'/', sizeof(char)) != NULL)
-      *(char*)(memchr(directory, '/', sizeof(char))) = '\0';
-    
+    if (directory[0]=='/')
+      directory[0] = '\0';    
     
     if(ChangeDirectory(temp)==FALSE) {
       Log("failed to change directory for:");
@@ -165,7 +164,7 @@ gboolean ChangeDirectory(const char* d) {
     }
 
     strncpy(temp, directory, LIBUSB_PATH_MAX - 1);
-    directory = memchr(temp, '/', sizeof(char)) + 1;
+    directory = temp + 1;
     //ptemp[strlen(ptemp) - 1] = '\0';
     rTrim(directory, '/');
     //    directory=directory.Mid(directory.Find('/')+1,LIBUSB_PATH_MAX);
@@ -186,9 +185,9 @@ gboolean ChangeDirectory(const char* d) {
   
   //validation is done... we can procede with the actual command stuff.
   memset(data,0x00,LIBUSB_PATH_MAX);
-  strcpy((char *)data,directory);
+  strcpy(data,directory);
   
-  if(ControlMessageWrite(0xb800,(int *)data, strlen((char *)data)+1,TIMEOUT)==TRUE) {
+  if(ControlMessageWrite(0xb800,data, strlen(data)+1,TIMEOUT)==TRUE) {
     return TRUE;
   }
   strcpy(data, "change directory to ");
@@ -214,7 +213,7 @@ static void AddFileDataAsChild(file_info* temp, file_info* addeditem) {
 
 static file_info* AddFileDataToList(file_info* temp) {
   //note: returns malloc'd data
-  file_info* pointer = (file_info*)malloc(sizeof(file_info));
+  file_info* pointer = malloc(sizeof(file_info));
   int count;
   //  Log("begin AddFileDataToList");
   strcpy(pointer->filename, temp->fullpath);
@@ -231,10 +230,7 @@ static file_info* AddFileDataToList(file_info* temp) {
   }
   //Log("End AddFileDataToList");
   return pointer;
-
-
 }
-
 
 static void FreeAllocatedFiles(file_info* temp) {
   int count;
@@ -245,7 +241,6 @@ static void FreeAllocatedFiles(file_info* temp) {
   temp->number_of_children = 0;
 
 }
-
 
 static file_info* AddToTreeStore(GtkTreeStore* treestore, GtkTreeIter* toplevel, GtkTreeIter* child, file_info* current, file_info* parent) {
   file_info* addeditem;
@@ -261,11 +256,9 @@ static file_info* AddToTreeStore(GtkTreeStore* treestore, GtkTreeIter* toplevel,
 
 static void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* parent_place, int partition, int level, GtkTreeStore* treestore) {
   gboolean firstitem;
-  char partname[STRINGSIZE];
-  file_info rData, tData, pData;
+  file_info tData, pData;
   //  const char* parentpath = parentpath_cs.text;
   int t, end;
-  int number_of_hitems = 0;
   GtkTreeIter child;
   // file_info hitems[999];
   char recursedir[STRINGSIZE];
@@ -340,7 +333,7 @@ static void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* p
       RecursiveListing(recursedir, f_i, &child, partition, level + 1, GTK_TREE_STORE(treestore));
       //Log("end recursion");
     } else {
-      file_info* f_i = AddToTreeStore(treestore, parent_place, &child, &pData, parent);
+      AddToTreeStore(treestore, parent_place, &child, &pData, parent);
       strcpy(tempstring, "Not a directory: ");
       strcat(tempstring, pData.fullpath);
       Log(tempstring);
@@ -377,7 +370,7 @@ static void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* p
 
 static GtkTreeModel* create_model(void) {
   GtkTreeStore* treestore = gtk_tree_store_new(2, G_TYPE_STRING, G_TYPE_POINTER);
-  GtkTreeIter rootlevel, toplevel, child;
+  GtkTreeIter rootlevel, toplevel;
   int t;
   file_info root_file_data, current_file_data, *addeditem = NULL;
   

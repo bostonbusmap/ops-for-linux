@@ -3,10 +3,10 @@
 static file_info* global_fi;
 
 static gboolean DelFile(const char* name) {
-  unsigned char buffer[255];
-  memset(buffer,0,255);
-  snprintf((char *)buffer,254,"del %s",name);
-  if(ControlMessageWrite(0xef00,(int *)buffer,strlen((char *)buffer)+1,TIMEOUT)==TRUE) {
+  char buffer[255];
+  memset(buffer, '\0', sizeof buffer);
+  snprintf(buffer, sizeof buffer, "del %s", name);
+  if(ControlMessageWrite(0xef00,buffer,strlen(buffer)+1,TIMEOUT)==TRUE) {
     return TRUE;
   }
   Log("delete failed");
@@ -49,14 +49,12 @@ static gboolean delete_file_confirmed(gpointer data) {
   return TRUE;
 }
 
-
 gboolean delete_file(GtkWidget* widget,
 		     GdkEvent* event,
 		     gpointer data) {
   GtkTreeSelection* selection;
   GtkTreeModel* model;// = m_directory_model;
   GtkTreeIter iter;
-  gpointer data_item = NULL;
   
   if(CheckCameraOpen()==FALSE)
     return FALSE;

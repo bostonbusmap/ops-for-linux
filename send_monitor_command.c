@@ -23,7 +23,7 @@ static gboolean send_monitor_command_confirmed( GtkWidget* data) {
   GtkWidget* textentry = data;
   gboolean success = FALSE;
   //char commandtext[STRINGSIZE];
-  char* text;
+  const char* text;
   //printf("data: %08x\n",data);
   //Log("a");
   text = gtk_entry_get_text(textentry);

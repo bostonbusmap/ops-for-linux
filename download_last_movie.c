@@ -49,7 +49,7 @@ static gboolean DownloadMovie(int videonumber, FILE* file) {
   int data, count;
   int total_data = 0;
   int alt_total;
-  unsigned char buffer[BUFSIZE];
+  char buffer[BUFSIZE];
  
   // 0x9300 sets up a bulk transfer on endpoint 0x81
   data=0x0000;
@@ -98,7 +98,7 @@ static gboolean DownloadMovie(int videonumber, FILE* file) {
 static gboolean download_last_movie_start(gpointer data) {
   gboolean success = FALSE;
   FILE* semiglobalfile = data;
-  printf("%08x\n",data);
+  printf("%0*zx\n", sizeof(size_t), (size_t)data);
   if (semiglobalfile == NULL) { 
     //    EnableControls(TRUE);
     return FALSE;
@@ -133,10 +133,8 @@ static gboolean download_last_movie_store_filename(GtkWidget *widget) {
   GtkWidget *file_selection_box = widget;
   constant_string c_s;
   //char filename[STRINGSIZE]; 
-  char temporary[STRINGSIZE];
   char tempfilename[STRINGSIZE];
-  gboolean success = FALSE;
-  gchar* filename;
+  const gchar* filename;
   GError* error = NULL;
   //Log("before");
   filename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(file_selection_box));
@@ -186,10 +184,6 @@ gboolean download_last_movie( GtkWidget *widget,
 			      GdkEvent *event,
 			      gpointer data) {
   GtkWidget *file_selection_box = NULL;
-  char temporary[STRINGSIZE];
-  gboolean success = FALSE;
-  int i;
-  FILE* file = NULL;
   
  
   //  GtkWidget* file_selection_box = NULL;

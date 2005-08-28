@@ -12,7 +12,7 @@ gboolean MessageBoxTextTwo (const char* st, gpointer data) {
     *textentry_b,
     *vbox, *hbox_textentry;
   //  gpointer data = cc->function_pointer;
-  //  char* textbox = (char*)malloc(STRINGSIZE); //up to user to clean this up
+  //  char* textbox = malloc(STRINGSIZE); //up to user to clean this up
   window = gtk_dialog_new ();
   
   ok_button = gtk_button_new_with_label ("OK");
@@ -106,8 +106,8 @@ gboolean MessageBoxText (const char* st, gpointer data) {
     *textentry,
     *vbox, *hbox_textentry;
   //  gpointer data = cc->function_pointer;
-  //char* textbox = (char*)malloc(STRINGSIZE); //up to user to clean this up
-  char* textbox;
+  //char* textbox = malloc(STRINGSIZE); //up to user to clean this up
+  const char* textbox;
   window = gtk_dialog_new ();
   
   ok_button = gtk_button_new_with_label ("OK");
@@ -161,6 +161,8 @@ gboolean MessageBoxText (const char* st, gpointer data) {
   return TRUE;
   
 }
+
+
 gboolean MessageBoxChoice (const char* st, gpointer data) {
   GtkWidget *window, *ok_button, *cancel_button, *label, *hbox;
   //  gpointer data = cc->function_pointer;
@@ -209,6 +211,4 @@ gboolean MessageBoxChoice (const char* st, gpointer data) {
 void Log (const char *st)
 {
   fprintf (stderr, "%s\n", st);
-
-
 }

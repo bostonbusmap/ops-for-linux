@@ -4,7 +4,7 @@ static gboolean Format(void) {
   int data;
   
   data=0x0000;
-  if(ControlMessageWrite(0xb700,&data,0,LONG_TIMEOUT)== TRUE) {
+  if(ControlMessageWrite(0xb700, (char*)&data, 0, LONG_TIMEOUT)== TRUE) {
     Log("format successful. turn camera off and on to see change.");
     return TRUE;
   }
@@ -35,7 +35,5 @@ gboolean format_camcorder( GtkWidget *widget,
     return FALSE;
 
   return MessageBoxChoice("Do you really want to format the camcorder?\nYou will lose all of your movies.", format_camcorder_confirmed);
-  
-  
 }
 
