@@ -34,6 +34,11 @@ gboolean format_camcorder( GtkWidget *widget,
   if(CheckCameraOpen()==FALSE)
     return FALSE;
 
-  return MessageBoxChoice("Do you really want to format the camcorder?\nYou will lose all of your movies.", format_camcorder_confirmed);
+  if (main_window) {
+    return MessageBoxChoice("Do you really want to format the camcorder?\nYou will lose all of your movies.", format_camcorder_confirmed);
+  }
+  else {
+    format_camcorder_confirmed(NULL);
+  }
 }
 

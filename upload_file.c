@@ -1,11 +1,9 @@
 #include "ops-linux.h"
 
-//static gint idle_tag;
-
 static file_info* global_p;
 
 static gchar* global_filename;
-char storedir_global[STRINGSIZE];
+static char storedir_global[STRINGSIZE];
 
 static int GetLength(FILE* fp) {
   int l;

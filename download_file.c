@@ -2,7 +2,7 @@
 
 static int global_filesize;
 
-char storedir_global[STRINGSIZE];
+static char storedir_global[STRINGSIZE];
 
 gboolean DownloadFile(char* saveto, char* filename) {
 	// This function expects that you've already changed the parition and 

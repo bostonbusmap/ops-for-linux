@@ -18,26 +18,25 @@
 
 // these are compiler-defined, so we put this section BEFORE the includes
 
-#if defined(__BIG_ENDIAN__) || defined(_BIG_ENDIAN)
-#define cpu_to_le32(x) bswap32(x)
-#define le32_to_cpu(x) bswap32(x)
-#define cpu_to_le16(x) bswap16(x)
-#define le16_to_cpu(x) bswap16(x)
-#define cpu_to_be32(x) (x)
-#define be32_to_cpu(x) (x)
-#define cpu_to_be16(x) (x)
-#define be16_to_cpu(x) (x)
-#endif
-
-#if defined(__LITTLE_ENDIAN__) || defined(_LITTLE_ENDIAN)
-#define cpu_to_be32(x) bswap32(x)
-#define be32_to_cpu(x) bswap32(x)
-#define cpu_to_be16(x) bswap16(x)
-#define be16_to_cpu(x) bswap16(x)
-#define cpu_to_be32(x) (x)
-#define be32_to_cpu(x) (x)
-#define cpu_to_be16(x) (x)
-#define be16_to_cpu(x) (x)
+#include <endian.h>
+#if __BYTE_ORDER == __BIG_ENDIAN
+# define cpu_to_le32(x) bswap32(x)
+# define le32_to_cpu(x) bswap32(x)
+# define cpu_to_le16(x) bswap16(x)
+# define le16_to_cpu(x) bswap16(x)
+# define cpu_to_be32(x) (x)
+# define be32_to_cpu(x) (x)
+# define cpu_to_be16(x) (x)
+# define be16_to_cpu(x) (x)
+#else
+# define cpu_to_le32(x) (x)
+# define le32_to_cpu(x) (x)
+# define cpu_to_le16(x) (x)
+# define le16_to_cpu(x) (x)
+# define cpu_to_be32(x) bswap32(x)
+# define be32_to_cpu(x) bswap32(x)
+# define cpu_to_be16(x) bswap16(x)
+# define be16_to_cpu(x) bswap16(x)
 #endif
 
 /////////////////////////////////////////////////////////

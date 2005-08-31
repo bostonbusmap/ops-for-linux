@@ -7,11 +7,11 @@
 //////////////////////////////////////////
 // various true (multi-file) globals
 struct usb_device* m_usb_device;
-GtkWidget *main_window;
+GtkWidget *main_window = NULL;
 file_info* root_directory;
 gboolean toggle_camera_lcd_screen_is_on;
-GtkWidget *m_ctl_progress;       
-GtkWidget* m_directory_tree;
+GtkWidget *m_ctl_progress = NULL;
+GtkWidget* m_directory_tree = NULL;
 double m_progressbar_fraction;
 
 usb_dev_handle *m_p_handle;
@@ -116,6 +116,7 @@ static void reset_label(GtkTreeView* treeview,
 
 
 static gboolean do_download = FALSE;
+static gboolean do_format = FALSE;
 
 static void process_args(int argc, char * argv[])
 {
@@ -124,16 +125,21 @@ static void process_args(int argc, char * argv[])
   while (1) {
     int option_index = 0;
     static struct option long_options[] = {
-      {"download", 1, 0, 'd'},
+      {"download", 0, 0, 'd'},
+      {"format", 0, 0, 'f'},
       {0, 0, 0, 0}
     };
 
-    c = getopt_long (argc, argv, "d", long_options, &option_index);
+    c = getopt_long (argc, argv, "df", long_options, &option_index);
     if (c == -1) break;
 
     switch (c) {
       case 'd':
-	do_download = TRUE;
+        do_download = TRUE;
+        break;
+
+      case 'f':
+        do_format = TRUE;
         break;
 
       case '?':
@@ -156,22 +162,24 @@ c);
 
 
 void EnableControls(gboolean value) {
- 
-  gtk_widget_set_sensitive(button_open_camcorder, value);
-  gtk_widget_set_sensitive(button_unlock, value);
-  gtk_widget_set_sensitive(button_close_camcorder, value);
-  gtk_widget_set_sensitive(button_download_all_movies, value);
-  gtk_widget_set_sensitive(button_download_last_movie, value);
-  //  gtk_widget_set_sensitive(button_upload_movie, value);
-  gtk_widget_set_sensitive(button_format_storage, value);
-  gtk_widget_set_sensitive(button_delete_file, value);
-  gtk_widget_set_sensitive(button_download_file, value);
-  gtk_widget_set_sensitive(button_upload_file, value);
-  gtk_widget_set_sensitive(button_send_monitor_command, value);
-  gtk_widget_set_sensitive(button_update_directory_listing, value);
-  gtk_widget_set_sensitive(m_directory_tree, value);
-  gtk_widget_set_sensitive(button_toggle_camera_lcd_screen, value);
-  gtk_widget_set_sensitive(button_capture_video, value);
+
+  if (main_window) {
+    gtk_widget_set_sensitive(button_open_camcorder, value);
+    gtk_widget_set_sensitive(button_unlock, value);
+    gtk_widget_set_sensitive(button_close_camcorder, value);
+    gtk_widget_set_sensitive(button_download_all_movies, value);
+    gtk_widget_set_sensitive(button_download_last_movie, value);
+    //  gtk_widget_set_sensitive(button_upload_movie, value);
+    gtk_widget_set_sensitive(button_format_storage, value);
+    gtk_widget_set_sensitive(button_delete_file, value);
+    gtk_widget_set_sensitive(button_download_file, value);
+    gtk_widget_set_sensitive(button_upload_file, value);
+    gtk_widget_set_sensitive(button_send_monitor_command, value);
+    gtk_widget_set_sensitive(button_update_directory_listing, value);
+    gtk_widget_set_sensitive(m_directory_tree, value);
+    gtk_widget_set_sensitive(button_toggle_camera_lcd_screen, value);
+    gtk_widget_set_sensitive(button_capture_video, value);
+  }
 }
 
 
@@ -200,16 +208,20 @@ int main (int argc, char *argv[])
   // Handle the command line args
   process_args(argc,argv);
   
-  if (do_download) {
-    int ret=1;
+  if (do_download || do_format) {
+    int ret=0;
     
     if (open_camcorder(NULL,NULL,NULL)) {
-      if (unlock_camcorder(NULL,NULL,NULL) &&
-	  download_all_movies(NULL,NULL,NULL)) {
-	ret=0;
+      if (unlock_camcorder(NULL,NULL,NULL)) {
+
+        if (do_download && !download_all_movies(NULL,NULL,NULL)) ret=1;
+        if (do_format && !format_camcorder(NULL,NULL,NULL)) ret=1;
       }
+      else ret=1;
+
       close_camcorder(NULL,NULL,NULL);
     }
+    else ret=1;
     
     exit(ret);
   }
