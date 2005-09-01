@@ -117,6 +117,7 @@ static void reset_label(GtkTreeView* treeview,
 
 static gboolean do_download = FALSE;
 static gboolean do_format = FALSE;
+static gboolean do_help = FALSE;
 
 static void process_args(int argc, char * argv[])
 {
@@ -127,27 +128,32 @@ static void process_args(int argc, char * argv[])
     static struct option long_options[] = {
       {"download", 0, 0, 'd'},
       {"format", 0, 0, 'f'},
+      {"help", 0, 0, 'h'},
       {0, 0, 0, 0}
     };
 
-    c = getopt_long (argc, argv, "df", long_options, &option_index);
+    c = getopt_long (argc, argv, "dfh", long_options, &option_index);
     if (c == -1) break;
-
+    
     switch (c) {
-      case 'd':
-        do_download = TRUE;
-        break;
+    case 'd':
+      do_download = TRUE;
+      break;
 
-      case 'f':
-        do_format = TRUE;
-        break;
-
-      case '?':
-        break;
-
-      default:
-        printf ("?? getopt returned character code 0%o ??\n", 
-c);
+    case 'f':
+      do_format = TRUE;
+      break;
+      
+    case 'h':
+      do_help = TRUE;
+      break;
+      
+    case '?':
+      break;
+      
+    default:
+      printf ("?? getopt returned character code 0%o ??\n", 
+	      c);
     }
   }
 
@@ -208,7 +214,14 @@ int main (int argc, char *argv[])
   // Handle the command line args
   process_args(argc,argv);
   
-  if (do_download || do_format) {
+ if (do_help) {
+    printf("flags:\n");
+    printf("-d -- download all movies from the camcorder\n");
+    printf("-f -- clear camera's movie partition (erase all movies)\n");
+    printf("-h -- print this help info\n");
+    printf("Flags may be combined to get a combined effect\n");
+    exit(0);
+  } else if (do_download || do_format) {
     int ret=0;
     
     if (open_camcorder(NULL,NULL,NULL)) {
@@ -225,7 +238,6 @@ int main (int argc, char *argv[])
     
     exit(ret);
   }
-  
   
   stopwatch = 0;
     /* create a new window */
