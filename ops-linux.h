@@ -18,7 +18,14 @@
 
 // these are compiler-defined, so we put this section BEFORE the includes
 
+#if defined(_WIN32) || defined(_WIN64)
+#define __BYTE_ORDER 1
+#define __BIG_ENDIAN 0
+#define __LITTLE_ENDIAN 1
+#else
 #include <endian.h>
+#endif
+
 #if __BYTE_ORDER == __BIG_ENDIAN
 # define cpu_to_le32(x) bswap32(x)
 # define le32_to_cpu(x) bswap32(x)
