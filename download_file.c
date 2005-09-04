@@ -16,7 +16,7 @@ gboolean DownloadFile(char* saveto, char* filename) {
   //char* sfilename = filename;
   char sfilename[256];
   char buffer[BUFSIZE];
-  //printf("DownloadFile(%s, %s, %s)\n",saveto,filename);
+  printf("DownloadFile(%s, %s)\n", saveto, filename);
   strcpy(sfilename, filename);
   file = fopen(saveto, "w");
   if (file == NULL) {

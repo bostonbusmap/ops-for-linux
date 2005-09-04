@@ -21,12 +21,14 @@ int stopwatch;   //maybe time downloads in the future and printout a bitrate
 
 //////////////////////////////////////////
 
-static GtkWidget * button_open_camcorder, 
-  *button_unlock, 
-  *button_close_camcorder, 
-  *button_download_all_movies, 
-  *button_download_last_movie, 
-  *button_delete_file, 
+static GtkWidget
+  *button_open_camcorder,
+  *button_unlock,
+  *button_close_camcorder,
+  *button_download_all_movies,
+  *button_change_camera_settings,
+  *button_download_last_movie,
+  *button_delete_file,
   *button_format_storage,
   *button_send_monitor_command,
   *button_update_directory_listing,
@@ -171,6 +173,7 @@ void EnableControls(gboolean value) {
 
   if (main_window) {
     gtk_widget_set_sensitive(button_open_camcorder, value);
+    gtk_widget_set_sensitive(button_change_camera_settings, value);
     gtk_widget_set_sensitive(button_unlock, value);
     gtk_widget_set_sensitive(button_close_camcorder, value);
     gtk_widget_set_sensitive(button_download_all_movies, value);
@@ -331,6 +334,7 @@ int main (int argc, char *argv[])
   button_update_directory_listing = gtk_button_new_with_label ("Update Directory Listing");
   button_download_file = gtk_button_new_with_label ("Download file");
   button_upload_file = gtk_button_new_with_label ("Upload file");
+  button_change_camera_settings = gtk_button_new_with_label ("Camera settings");
   button_toggle_camera_lcd_screen = gtk_button_new_with_label ("Toggle camera lcd screen");
   button_download_memory = gtk_button_new_with_label("Download memory");
   button_powerdown_camcorder = gtk_button_new_with_label("Powerdown camcorder");
@@ -372,6 +376,8 @@ int main (int argc, char *argv[])
 		      GTK_SIGNAL_FUNC(powerdown_camcorder), NULL);
   gtk_signal_connect (GTK_OBJECT (button_capture_video), "clicked",
 		      GTK_SIGNAL_FUNC(capture_video), NULL);
+  gtk_signal_connect (GTK_OBJECT (button_change_camera_settings), "clicked",
+		      GTK_SIGNAL_FUNC(change_camera_settings), NULL);
 
   
   gtk_box_pack_start (GTK_BOX (hbox1), button_open_camcorder, TRUE, TRUE, 0);
@@ -382,6 +388,7 @@ int main (int argc, char *argv[])
   gtk_box_pack_start (GTK_BOX (hbox2), button_download_last_movie, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox2), button_delete_file, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox2), button_capture_video, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (hbox2), button_change_camera_settings, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox3), button_format_storage, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox_progressbar), m_ctl_progress, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox3), button_send_monitor_command, TRUE, TRUE, 0);
@@ -401,6 +408,7 @@ int main (int argc, char *argv[])
   gtk_widget_show (button_download_all_movies);
   gtk_widget_show (button_download_last_movie);
   gtk_widget_show (button_upload_movie);
+  gtk_widget_show (button_change_camera_settings);
   gtk_widget_show (button_format_storage);
   gtk_widget_show (m_ctl_progress);
   gtk_widget_show (m_directory_tree);

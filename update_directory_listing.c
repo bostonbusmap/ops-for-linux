@@ -81,7 +81,7 @@ gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
     break;
   default:
     Log("unknown file type");
-    fprintf(stderr, "type 0x%02x\n", thisfileinfo->filetype);
+    fprintf(stderr, "type 0x%02x attr 0x%02x\n", data.filetype, data.fileattr);
   case 0x20:
     thisfileinfo->filetype = FIFILE;
     break;
@@ -132,6 +132,7 @@ static gboolean rTrim(char * c, const char e) {
 
 gboolean ChangeDirectory(const char* d) {
   
+  printf("ChangeDirectory \"%s\"\n", d);
   char data[LIBUSB_PATH_MAX];
   int c;
   char directory_p[LIBUSB_PATH_MAX], *directory;
