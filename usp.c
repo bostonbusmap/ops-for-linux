@@ -222,6 +222,8 @@ static int put_usp_file(usp_file *uf){
 
 /////////////////////////////////////////////////////////////////////////////////
 
+static GtkWidget *window;
+
 // I keep forgetting
 #define button_default button_defaults
 #define settings_defaults settings_default
@@ -298,6 +300,7 @@ static gboolean settings_write(GtkWidget *widget, GdkEvent *event, gpointer data
 }
 
 static gboolean settings_cancel(GtkWidget *widget, GdkEvent *event, gpointer data){
+  gtk_widget_destroy(window);
   return FALSE;
 }
 
@@ -358,7 +361,7 @@ static void do_fps(GtkWidget *widget, gpointer data){
 
 static gboolean SettingsDialog(usp_data *ud){
   GtkTooltips *tooltips = gtk_tooltips_new();
-  GtkWidget *window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
   GtkWidget *box1 = gtk_vbox_new (FALSE, 0);
   gtk_container_add (GTK_CONTAINER (window), box1);
