@@ -36,7 +36,7 @@ static gboolean Open (void)
   if (success == TRUE) {
     Log ("Connected to camcorder.");
   } else {
-    Log ("Error: Couldn't connect to camcorder.");
+    Log ("Error: Couldn't connect to camcorder. (not running as root maybe?)");
   }
 
   return success;
