@@ -76,7 +76,7 @@ static char *verify_usp_data(usp_data *ud){
     return "resolution not a 4:3 ratio";
   if(xres > 640)
     return "resolution too high";
-  if(xres < 64)
+  if(xres < 192)
     return "resolution too low";
 
   if(memcmp(ud->magic7, "\x00\x00\x00\x1e", sizeof ud->magic7))
