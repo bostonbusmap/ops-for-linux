@@ -371,7 +371,7 @@ static gboolean SettingsDialog(usp_data *ud){
   gtk_box_pack_start(GTK_BOX(box1), table, TRUE, TRUE, 0);
   gtk_widget_show(table);
 
-  size_scale = gtk_hscale_new_with_range(64,640,64);
+  size_scale = gtk_hscale_new_with_range(192,640,64);
   soft_scale = gtk_hscale_new_with_range(1,255,1);
   hard_scale = gtk_hscale_new_with_range(1,255,1);
 #if 0
