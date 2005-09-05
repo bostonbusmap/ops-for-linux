@@ -81,7 +81,10 @@ static gboolean watch_progress_bar (gpointer data) {
   // quiet compiler
   data=data;
   
-  gtk_progress_bar_set_fraction(m_ctl_progress, m_progressbar_fraction);
+  if (m_ctl_progress) {
+    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(m_ctl_progress),
+                                  m_progressbar_fraction);
+  }
   
   return TRUE;
 }
@@ -121,7 +124,7 @@ static gboolean do_download = FALSE;
 static gboolean do_format = FALSE;
 static gboolean do_help = FALSE;
 
-static void process_args(int argc, char * argv[])
+static gboolean process_args(int argc, char * argv[])
 {
   int c;
 
@@ -160,12 +163,17 @@ static void process_args(int argc, char * argv[])
   }
 
   if (optind < argc) {
+    return FALSE;
+    /*
     printf ("non-option ARGV-elements: ");
     while (optind < argc) {
       printf ("%s ", argv[optind++]);
       printf ("\n");
     }
+    */
   }
+
+  return TRUE;
 }
 
 
@@ -215,16 +223,17 @@ int main (int argc, char *argv[])
   toggle_camera_lcd_screen_is_on = TRUE;
  
   // Handle the command line args
-  process_args(argc,argv);
-  
- if (do_help) {
-    printf("flags:\n");
-    printf("-d -- download all movies from the camcorder\n");
-    printf("-f -- clear camera's movie partition (erase all movies)\n");
-    printf("-h -- print this help info\n");
-    printf("Flags may be combined to get a combined effect\n");
+  if (!process_args(argc,argv) || do_help) {
+    printf("Usage: %s [OPTIONS]\n",argv[0]);
+    printf("  -d, --download    Download all movies from the camcorder\n");
+    printf("  -f, --format      Format camcorder, erasing all movies\n");
+    printf("  -h, --help        Display this help info\n");
+    printf("\n");
+    printf("Flags may be combined to get a combined effect.\n");
     exit(0);
-  } else if (do_download || do_format) {
+  }
+ 
+  if (do_download || do_format) {
     int ret=0;
     
     if (open_camcorder(NULL,NULL,NULL)) {
@@ -287,7 +296,8 @@ int main (int argc, char *argv[])
 			       300,
 			       300);
 
-  s_w = gtk_scrolled_window_new(hadjustment, vadjustment);
+  s_w = gtk_scrolled_window_new(GTK_ADJUSTMENT(hadjustment),
+                                GTK_ADJUSTMENT(vadjustment));
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(s_w),
 				  GTK_POLICY_AUTOMATIC,
 				  GTK_POLICY_AUTOMATIC);
@@ -424,7 +434,7 @@ int main (int argc, char *argv[])
   gtk_widget_show_all (window);
   //  gdk_threads_enter();
   m_progressbar_fraction = 0; // 0 % complete :)
-  gtk_timeout_add(1000,GTK_SIGNAL_FUNC(watch_progress_bar), NULL);
+  gtk_timeout_add(1000, watch_progress_bar, NULL);
   //if (!g_thread_create(watch_progress_bar, NULL, FALSE, &error)) {
   //Log(error->message);
     //go without if error
