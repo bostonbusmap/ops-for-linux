@@ -38,6 +38,7 @@ static GtkWidget
   *button_download_memory,
   *button_powerdown_camcorder,
   *button_capture_video,
+  *button_download_flash,
   *information_label;
 
 
@@ -344,6 +345,8 @@ int main (int argc, char *argv[])
   button_toggle_camera_lcd_screen = gtk_button_new_with_label ("Toggle camera lcd screen");
   button_download_memory = gtk_button_new_with_label("Download memory");
   button_powerdown_camcorder = gtk_button_new_with_label("Powerdown camcorder");
+  button_download_flash = gtk_button_new_with_label("Download flash");
+  
   gtk_signal_connect (GTK_OBJECT (button_open_camcorder), "clicked", 
 		      GTK_SIGNAL_FUNC(open_camcorder), NULL);
   gtk_signal_connect (GTK_OBJECT (button_unlock), "clicked",
@@ -384,7 +387,8 @@ int main (int argc, char *argv[])
 		      GTK_SIGNAL_FUNC(capture_video), NULL);
   gtk_signal_connect (GTK_OBJECT (button_change_camera_settings), "clicked",
 		      GTK_SIGNAL_FUNC(change_camera_settings), NULL);
-
+  gtk_signal_connect (GTK_OBJECT (button_download_flash), "clicked",
+		      GTK_SIGNAL_FUNC(download_flash), NULL);
   
   gtk_box_pack_start (GTK_BOX (hbox1), button_open_camcorder, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox1), button_unlock, TRUE, TRUE, 0);
@@ -392,6 +396,7 @@ int main (int argc, char *argv[])
   gtk_box_pack_start (GTK_BOX (hbox1), button_powerdown_camcorder, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox2), button_download_all_movies, TRUE, TRUE, 0);
   //  gtk_box_pack_start (GTK_BOX (hbox2), button_download_last_movie, TRUE, TRUE, 0);
+  
   gtk_box_pack_start (GTK_BOX (hbox2), button_delete_file, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox2), button_capture_video, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox2), button_change_camera_settings, TRUE, TRUE, 0);
@@ -401,6 +406,7 @@ int main (int argc, char *argv[])
   gtk_box_pack_start (GTK_BOX (hbox3), button_download_file, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox_tree), s_w, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox3), button_upload_file, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (hbox3), button_download_flash, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox_label), information_label, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox_label), button_toggle_camera_lcd_screen, TRUE, TRUE, 0);
   gtk_container_add (GTK_CONTAINER (s_w), m_directory_tree);

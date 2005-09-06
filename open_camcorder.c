@@ -15,7 +15,7 @@ static gboolean Open (void)
       usb_close (m_p_handle);
     }
 
-    m_p_handle = usb_open (m_usb_device);
+    m_p_handle = usb_open (m_usb_device); 
    
     if (m_p_handle) {  
       if (usb_set_configuration (m_p_handle, DEFAULT_CONFIGURATION) >= 0) {
@@ -36,7 +36,7 @@ static gboolean Open (void)
   if (success == TRUE) {
     Log ("Connected to camcorder.");
   } else {
-    Log ("Error: Couldn't connect to camcorder. (not running as root maybe?)");
+    Log ("Error: Couldn't connect to camcorder.");
   }
 
   return success;
@@ -156,7 +156,9 @@ gboolean open_camcorder (GtkWidget * widget, GdkEvent * event, gpointer data)
   Log ("Found camcorder.");
   if (Open () == FALSE) {
     Log ("Open() == FALSE");	//update log with CCamcorders's log
-    MessageBox ("Couldn't connect to camcorder");
+    Log ("Camera can be found but can't be opened.");
+    Log("Maybe you're not running as superuser (root)?");
+    MessageBox ("Couldn't connect to camcorder\nMaybe you're not running as superuser (root)?");
     return FALSE;
   }
   return TRUE;

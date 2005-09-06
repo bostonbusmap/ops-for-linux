@@ -194,6 +194,7 @@ gboolean update_directory_listing (GtkWidget *widget,
 				   gpointer data);
 
 gboolean change_camera_settings(GtkWidget *widget, GdkEvent *event, gpointer data);
+gboolean download_flash(GtkWidget *widget, GdkEvent *event, gpointer data);
 
  
 /*  accessory functions to functions called from buttons  */
