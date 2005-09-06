@@ -205,6 +205,7 @@ gboolean enable_buttons (GtkWidget* widget,
 /*  GUI-manipulating functions  */
 gboolean MessageBox(const char* st);
 gboolean MessageBoxChoice(const char* st, gpointer data);
+gboolean MessageBoxConfirm(const char* st);
 void EnableControls(gboolean value);
 
 
