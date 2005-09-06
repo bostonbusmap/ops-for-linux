@@ -47,7 +47,7 @@ gboolean DownloadFile(char* saveto, char* filename) {
   //NOTE: we keep grabbing bytes until the camcorder is done feeding us.
   x=0;
   round = 0;
-  if (m_ctl_progress) gtk_progress_bar_set_fraction(m_ctl_progress, 0);
+  //  if (m_ctl_progress) gtk_progress_bar_set_fraction(m_ctl_progress, 0);
   while(1) {
     count=Read(buffer,BUFSIZE,TIMEOUT);
     //Log("reading...");

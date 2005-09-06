@@ -29,6 +29,7 @@ typedef struct cvs_dir_entry {
                                // 28  (this is a 28-byte struct)
 } cvs_dir_entry;
 
+
 gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
   cvs_dir_entry data;
   int dummy,command,s,t;
@@ -75,7 +76,7 @@ gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
 
   thisfileinfo->filesize = le32_to_cpu(data.filesize);
 
-  switch(data.filetype){
+  switch(data.fileattr){
   case 0x10:
     thisfileinfo->filetype = FIDIR;
     break;
@@ -113,6 +114,7 @@ gboolean ChangePartition(unsigned int partition) {
 
 
 static gboolean rTrim(char * c, const char e) {
+  //erase all chars of value e to the right of c
   char* d;
   if (strlen(c) == 0) return TRUE;
   d = c;
@@ -152,7 +154,7 @@ gboolean ChangeDirectory(const char* d) {
   }
   
 
-  while( strlen(directory)>1 && directory[0]=='/' ) {
+  while( strlen(directory)>1 && directory[0]=='/' ) { //FIXME
     char temp[LIBUSB_PATH_MAX];
     strncpy(temp, directory, LIBUSB_PATH_MAX - 1);
     if (directory[0]=='/')
