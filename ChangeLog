@@ -1,0 +1,4 @@
+2005-09-06	Kees Cook  <kees@outflux.net>
+
+  * messagebox.c: added MessageBoxConfirm with dialog_run()-style handling.
+

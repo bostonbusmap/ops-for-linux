@@ -208,6 +208,42 @@ gboolean MessageBoxChoice (const char* st, gpointer data) {
   return TRUE;
 }
 
+gboolean MessageBoxConfirm (const char* st) {
+  gboolean confirm;
+  GtkWidget * dialog, * label;
+  gint result;
+
+  // assume "OK" if running in batch mode
+  if (!main_window) return TRUE;
+
+  // create dialog with ok/cancel buttons
+  dialog = gtk_dialog_new_with_buttons("Confirm",main_window,
+                                       0,
+                                       GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                       GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                       NULL);
+  // add the box contents
+  label = gtk_label_new (st);
+  gtk_box_pack_start(GTK_BOX (GTK_DIALOG (dialog)->vbox), label, TRUE, TRUE, 0);
+  gtk_widget_show (label);
+
+  // run the dialog and check the result
+  result = gtk_dialog_run( GTK_DIALOG(dialog) );
+  switch (result) {
+    case GTK_RESPONSE_ACCEPT:
+      confirm = TRUE;
+      break;
+    default:
+      confirm = FALSE;
+      break;
+  }
+
+  // destroy the dialog
+  gtk_widget_destroy(dialog);
+
+  return confirm;
+}
+
 void Log (const char *st)
 {
   fprintf (stderr, "%s\n", st);

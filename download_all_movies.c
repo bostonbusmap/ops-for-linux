@@ -18,9 +18,8 @@ gboolean download_all_movies(GtkWidget *widget,
 	event=event;
 	data=data;
 
-  if(CheckCameraOpen()==FALSE)
-    return FALSE;
-	
+    if(CheckCameraOpen()==FALSE)
+      return FALSE;
 
 	Log("Changing to p0 ...");
 	if (!ChangePartition(0)) return FALSE;
