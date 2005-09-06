@@ -1,6 +1,161 @@
 #include "ops-linux.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+gboolean GetAnyFileInfo(const char* filename, file_info *thisfileinfo) {
+  unsigned char data[29],tempname[29],sfilename[256];
+  int t;
+  
+  //this function assumes that you've already changed to the right partition
+  //and directory
+  Log("GetAnyFileInfo start");
+  memset(data,0,29);
+  memset(sfilename,0,255);
+  
+  //first we set the filename
+  strncpy((char *)sfilename,filename,12);
+  if(ControlMessageWrite(0xb101,(int *)sfilename,strlen((char *)sfilename)+1,TIMEOUT)==FALSE) { //SetFileName
+    Log("failed to set filename");
+    return FALSE;
+  }
+  ///  //b901 doesn't work for some reason... defaulting to bc00 for the time being
+  //nevermind...
+  ControlMessageWrite(0xb901,(int *)data,0,TIMEOUT);
+  if(Read(data,28,TIMEOUT)<28) {
+    Log("failed to retrieve file information");
+    return FALSE;
+  }
+  
+  Log("success in Read in GetAnyFileInfo");
+  memset(tempname,0,14);
+  memcpy(tempname,data+4,12);
+  for(t=0;t<13;t++)
+    if(tempname[t]==0xff)
+      tempname[t]=0;
+
+  strncpy(thisfileinfo->filename, tempname, STRINGSIZE);
+  thisfileinfo->filesize=*(unsigned int*)&data[20];
+  thisfileinfo->filetype=FIFILE;
+  if(data[18]==0x10)
+    thisfileinfo->filetype=FIDIR;
+  Log("success in GetAnyFileInfo");
+  return TRUE;
+}
+
+gboolean FileToMemory(const char* filename, unsigned char *buffer, unsigned int maxlength) {
+
+  // This function expects that you've already changed the parition and 
+  // directory to the correct path in the camcorder.
+  
+  int count,x,i;
+  int data;
+  //CFile file;
+  
+  unsigned char sfilename[256];
+  
+  file_info fileinfo;
+
+
+  if(GetAnyFileInfo(filename,&fileinfo)==FALSE) {
+    Log("Trouble getting file size information");
+    return FALSE;
+  }
+  
+  if(fileinfo.filesize>maxlength) {
+    //Log("Failed "+filename+" is larger than memory buffer.");
+    Log("Failed, file is larger than memory buffer.");
+    return(FALSE);
+  }
+  
+  memset(sfilename,0,255);
+  strcpy((char *)sfilename,filename);
+  
+  if(ControlMessageWrite(0xb101,(int *)sfilename,strlen((char *)sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
+	
+    Log("failed at 0xb1");
+    return(FALSE);
+  }
+  
+  
+  data=0x00;
+  if(ControlMessageWrite(0x9301,&data,0,TIMEOUT)==FALSE) { // Request File Read
+    
+    Log("failed at 0x93");
+    return FALSE;
+  }
+  
+  
+  //NOTE: we keep grabbing bytes until the camcorder is done feeding us.
+  x=0;
+  
+  for(i=0;;i++) {
+    count=Read(buffer+x,BUFSIZE,TIMEOUT);
+    if(count<1)
+      break;
+    x=x+count;
+    fprintf(stderr,"%d bytes done\n",x);
+    if(count<BUFSIZE)
+      break;
+    //DoMessagePump();
+  }
+
+  return TRUE;
+}
+
+gboolean MemoryToFile(const char* filename, unsigned char *buffer, unsigned int filesize)
+{
+	// This function expects that you've already changed the parition and 
+	// directory.
+  Log("entering MemoryToFile");
+  unsigned int x,t;
+  unsigned int udata;
+  //CFile file;
+  //FILE* file = NULL;
+
+  unsigned char sfilename[256];
+  
+  int bufsize;
+  
+  if(strlen(filename)>12) {
+    Log("Can't upload files with long filenames");
+    return(FALSE);
+  }
+
+  memset(sfilename,0,255);
+  strncpy((char *)sfilename,filename,12);
+  if(ControlMessageWrite(0xb105,(int *)sfilename,strlen((char *)sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
+    
+    Log("failed at 0xb1");
+    return FALSE;
+  }
+
+  //Endianess appears to be screwed with this command!!
+  udata=((filesize&0xffff)<<16)|((filesize>>16));
+  
+  if(ControlMessageWrite(0x9505,(int *)&udata,4, TIMEOUT)== FALSE) { // Request Write
+    
+    Log("failed at 0x95");
+    return FALSE;
+  }
+  
+  bufsize=BUFSIZE;
+  for(t=0;t<filesize;t=t+bufsize) {
+    if(t+BUFSIZE>filesize)
+      bufsize=filesize-t; //last chunk... make the buffer smaller
+    x=Write(buffer+t,bufsize,TIMEOUT);
+    if(x<1) {
+      //Log("Error writing file "+filename+" to camera");
+      Log("Error writing file to camera");
+      
+      //file.Close();
+      return FALSE;
+    }
+    //DoMessagePump();
+  }
+  Log("Leaving MemoryToFile");
+  return TRUE;
+}
+
+
 
 #pragma pack(push,0)
 typedef struct usp_data { // file  data
@@ -47,8 +202,11 @@ static char *verify_usp_data(usp_data *ud){
 
   if(memcmp(ud->magic0, "\x10\x00\x01\x00\x00\x08\x00\x00", sizeof ud->magic0))
     return "bad magic0";
-  if(!memcmp(ud->serial, "Not Initialized", sizeof ud->serial))
-    return "serial number \"Not Initialized\", maybe a FSP.BIN file?";
+  if(!memcmp(ud->serial, "Not Initialized", sizeof ud->serial)) {
+    //fprintf(stderr,"serial: %s\n",ud->serial);
+    fprintf(stderr, "WARNING: serial number \"Not Initialized\", maybe a FSP.BIN file?");
+
+  }
   if(memcmp(ud->zero0, zero, sizeof ud->zero0))
     return "bad zero0";
   if(memcmp(ud->zero1, zero, sizeof ud->zero1))
@@ -87,8 +245,10 @@ static char *verify_usp_data(usp_data *ud){
     return "bad magic9";
   if(memcmp(ud->zero2, zero, sizeof ud->zero2))
     return "bad zero2";
-  if(!ud->magic10[0] && !ud->magic10[1])  // zero in the FSP, which we don't want
-    return "bad magic10 (an FSP.BIN file?)";
+  if(!ud->magic10[0] && !ud->magic10[1]) { // zero in the FSP, which we don't want
+    
+    fprintf(stderr,"WARNING: bad magic10 (an FSP.BIN file?)");
+  }
   if(memcmp(ud->zero3, zero, sizeof ud->zero3))
     return "bad zero3";
 
@@ -106,6 +266,7 @@ static char *verify_usp_data(usp_data *ud){
 
 static int get_usp_file(usp_file *uf) {
   // make sure the magic won't match by accident
+  char name[10] = "USP.BIN";
   uf->header = cpu_to_le16(0xdead);
   uf->footer = cpu_to_le16(0xb00b);
 
@@ -120,8 +281,9 @@ static int get_usp_file(usp_file *uf) {
     return FALSE;
   }
 
-  char name[] = "/USP.BIN";
-  if(ControlMessageWrite(0xb101, name, sizeof name, TIMEOUT)==FALSE) { //SetFileName
+  
+  
+  /* if(ControlMessageWrite(0xb101, name, sizeof name, TIMEOUT)==FALSE) { //SetFileName
     Log("failed at 0xb1");
     EnableControls(TRUE);
     return FALSE;
@@ -131,7 +293,7 @@ static int get_usp_file(usp_file *uf) {
   if(ControlMessageWrite(0x9301,(char*)&data,0,TIMEOUT)==FALSE) { // Request File Read
     Log("failed at 0x93");
     return FALSE;
-  }
+    }
 
   int count;
   count=Read((char*)uf, sizeof *uf, TIMEOUT);
@@ -141,13 +303,22 @@ static int get_usp_file(usp_file *uf) {
   }
 
   fprintf(stderr, "Got 0x%03x (%d) bytes\n", count, count);  
-
+  
   // make sure there isn't any more to come
   count=Read((char*)&data, sizeof data, TIMEOUT);
   if(count != sizeof data){
-    Log("excess data");
+  Log("excess data");
 //    return FALSE;
+}*/
+  
+  if(FileToMemory("USP.BIN",(char*)uf,(sizeof(usp_file)))==FALSE) {
+    Log("FileToMemory failed in get_usp_file");
+    
+
   }
+      
+  //fprintf(stderr, "Got 0x%03x (%d) bytes\n", count, count);  
+
 
   return uf->header==cpu_to_le16(0xfaac) && uf->footer==cpu_to_le16(0xfaac);
 }
@@ -179,7 +350,7 @@ static int put_usp_file(usp_file *uf){
     return FALSE;
   }
 
-  char name[] = "/USP.BIN";
+  /*  char name[] = "/USP.BIN";
   char udata[4];
 
   if(ControlMessageWrite(0xb100, name, sizeof name, TIMEOUT)==FALSE) { //SetFileName
@@ -204,6 +375,12 @@ static int put_usp_file(usp_file *uf){
     return FALSE;
   }
   Log("Success sending file");
+  */
+  if(MemoryToFile("USP.BIN",(char*)uf,(sizeof(usp_file)))==FALSE) {
+    Log("FileToMemory failed in get_usp_file");
+    
+
+  }
 
   return TRUE;
 }
@@ -236,13 +413,15 @@ static GtkAdjustment *hard_adj, *soft_adj, *size_adj;
 
 static GtkWidget *button30, *button24, *checkbox;
 
-static GtkWidget *button_revert, *button_write, *button_cancel, *button_defaults;
+static GtkWidget *button_revert = NULL, *button_write = NULL, *button_cancel = NULL, *button_defaults = NULL;
 
 static void set_button_states(void){
-  gtk_widget_set_sensitive(button_default, !!memcmp(&current_usp, &default_usp, sizeof current_usp)); 
-  gtk_widget_set_sensitive(button_revert, !!memcmp(&current_usp, &original_usp, sizeof current_usp)); 
-  gtk_widget_set_sensitive(button_write, !!memcmp(&current_usp, &original_usp, sizeof current_usp)); 
-  gtk_widget_set_sensitive(hard_scale, gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox)));
+  if (button_default) { //chances are all or none exist
+    gtk_widget_set_sensitive(button_default, !!memcmp(&current_usp, &default_usp, sizeof current_usp)); 
+    gtk_widget_set_sensitive(button_revert, !!memcmp(&current_usp, &original_usp, sizeof current_usp)); 
+    gtk_widget_set_sensitive(button_write, !!memcmp(&current_usp, &original_usp, sizeof current_usp)); 
+    gtk_widget_set_sensitive(hard_scale, gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox)));
+  }
 }
 
 static gboolean settings_defaults(GtkWidget *widget, GdkEvent *event, gpointer data){
