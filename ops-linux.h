@@ -127,7 +127,7 @@ extern file_info* root_directory;
 extern gboolean toggle_camera_lcd_screen_is_on;
 extern GtkWidget *m_ctl_progress;
 extern GtkWidget* m_directory_tree;
-extern double m_progressbar_fraction;
+//extern double m_progressbar_fraction;
 
 extern usb_dev_handle *m_p_handle;
 
@@ -138,7 +138,7 @@ extern usb_dev_handle *m_p_handle;
 //char m_manufacturer[STRINGSIZE];
 //char m_product[STRINGSIZE];
 
-extern gboolean flipper_capture;
+extern gboolean flipper_capture; //is ccd-to-lcd display on?
 extern int stopwatch;   //maybe time downloads in the future and printout a bitrate
 
 
@@ -207,7 +207,7 @@ gboolean MessageBox(const char* st);
 gboolean MessageBoxChoice(const char* st, gpointer data);
 gboolean MessageBoxConfirm(const char* st);
 void EnableControls(gboolean value);
-
+gboolean set_progress_bar(double value);
 
 /*  GUI-independent workhorse functions  */
 gboolean ChangePartition(unsigned int partition); 
@@ -222,7 +222,7 @@ gboolean Close(void);
 gboolean Monitor(const char* command);
 gboolean MessageBoxText (const char* st, gpointer data);
 gboolean MessageBoxTextTwo (const char* st, gpointer data);
-gboolean DownloadFile(char* saveto, char* filename);
+gboolean DownloadFile(char* saveto, char* filename, int filesize);
 gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile);
 
 gboolean delete_file(GtkWidget* widget,

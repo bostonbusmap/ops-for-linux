@@ -105,7 +105,7 @@ gboolean MemoryToFile(const char* filename, unsigned char *buffer, unsigned int 
 {
 	// This function expects that you've already changed the parition and 
 	// directory.
-  Log("entering MemoryToFile");
+  //Log("entering MemoryToFile");
   unsigned int x,t;
   unsigned int udata;
   //CFile file;

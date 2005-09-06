@@ -77,14 +77,20 @@ gboolean enable_buttons (GtkWidget* widget,
 }
 
 
-static gboolean watch_progress_bar (gpointer data) {
+/*static gboolean watch_progress_bar (gpointer data) {
   // quiet compiler
   data=data;
   
   gtk_progress_bar_set_fraction(m_ctl_progress, m_progressbar_fraction);
   
   return TRUE;
+  }*/
+gboolean set_progress_bar(double value) {
+  gtk_progress_bar_set_fraction(m_ctl_progress, value);
+  return TRUE;
+
 }
+
 
 static void reset_label(GtkTreeView* treeview,
 		 GtkTreePath *arg1,
@@ -177,7 +183,7 @@ void EnableControls(gboolean value) {
     gtk_widget_set_sensitive(button_unlock, value);
     gtk_widget_set_sensitive(button_close_camcorder, value);
     gtk_widget_set_sensitive(button_download_all_movies, value);
-    gtk_widget_set_sensitive(button_download_last_movie, value);
+    //    gtk_widget_set_sensitive(button_download_last_movie, value);
     //  gtk_widget_set_sensitive(button_upload_movie, value);
     gtk_widget_set_sensitive(button_format_storage, value);
     gtk_widget_set_sensitive(button_delete_file, value);
@@ -385,7 +391,7 @@ int main (int argc, char *argv[])
   gtk_box_pack_start (GTK_BOX (hbox1), button_close_camcorder, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox1), button_powerdown_camcorder, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox2), button_download_all_movies, TRUE, TRUE, 0);
-  gtk_box_pack_start (GTK_BOX (hbox2), button_download_last_movie, TRUE, TRUE, 0);
+  //  gtk_box_pack_start (GTK_BOX (hbox2), button_download_last_movie, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox2), button_delete_file, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox2), button_capture_video, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox2), button_change_camera_settings, TRUE, TRUE, 0);
@@ -423,8 +429,9 @@ int main (int argc, char *argv[])
   gtk_widget_show (vbox1);*/
   gtk_widget_show_all (window);
   //  gdk_threads_enter();
-  m_progressbar_fraction = 0; // 0 % complete :)
-  gtk_timeout_add(1000,GTK_SIGNAL_FUNC(watch_progress_bar), NULL);
+  //  m_progressbar_fraction = 0; // 0 % complete :)
+  //  gtk_timeout_add(1000,GTK_SIGNAL_FUNC(watch_progress_bar), NULL); //irrelevant now
+  
   //if (!g_thread_create(watch_progress_bar, NULL, FALSE, &error)) {
   //Log(error->message);
     //go without if error

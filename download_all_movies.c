@@ -35,7 +35,7 @@ gboolean download_all_movies(GtkWidget *widget,
 				sprintf(logstr,"%s already exists locally: skipping!",info.filename);
 				Log(logstr);
 			}
-			else if (!DownloadFile(info.filename,info.filename)) {
+			else if (!DownloadFile(info.filename,info.filename, info.filesize)) {
 				return FALSE;
 			}
 		}

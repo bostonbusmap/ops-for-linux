@@ -87,7 +87,7 @@ gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
     thisfileinfo->filetype = FIFILE;
     break;
   }
-        
+  
   return TRUE;
 }
 

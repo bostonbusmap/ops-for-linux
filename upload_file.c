@@ -1,9 +1,9 @@
 #include "ops-linux.h"
 
-static file_info* global_p;
+//static file_info* global_p;
 
-static gchar* global_filename;
-static char storedir_global[STRINGSIZE];
+//static gchar* global_filename;
+//static char storedir_global[STRINGSIZE];
 
 static int GetLength(FILE* fp) {
   int l;
@@ -13,115 +13,65 @@ static int GetLength(FILE* fp) {
   fseek(fp, 0, SEEK_SET);
   return l;
 }
+//gboolean MemoryToFile(const char* filename, unsigned char *buffer, unsigned int filesize)
 
-static gboolean UploadFile(char* saveto, char* filename, file_info* p) {
+static gboolean UploadFile(char* saveto, char* filename, int filesize) {
 	// This function expects that you've already changed the parition and 
 	// directory to the correct path in the camcorder. dirpath is the Windows
 	// path to the file to store in.
 
-  int count,x, tcount, alt_total;
-  int data;
-#ifdef _WIN32
-  char delimiter = '\\';
-#else
-  char delimiter = '/';
-#endif
+	// directory.
+  //Log("entering MemoryToFile");
+  unsigned int x,t;
+  unsigned int count = 0, tcount = 0, alt_total = 0;
+  unsigned int udata;
+  //CFile file;
   FILE* file = NULL;
-  //char* sfilename = filename;
-  char sfilename[256];
-  char tempfilename[STRINGSIZE];
-  char* pTempfilename = tempfilename;
-  char buffer[BUFSIZE];
-  char* directory;
-  char udata[4];
-  int filesize = 0;// p->filesize;
-  strcpy(tempfilename, filename);
-  //printf("DownloadFile(%s, %s, %s)\n",saveto,filename);
-  Log("in UploadFile");
-  if (p->filetype != FIFILE) { //FIDIR or FIPART
-    //    char* endTempfilename = tempfilename + strlen(tempfilename);
-    //    strcpy(tempfilename, p->filetype);
-    strcpy(tempfilename, saveto);
-    pTempfilename = tempfilename + strlen(tempfilename);
-    --pTempfilename;
-    while ((pTempfilename != tempfilename) && (*pTempfilename != delimiter))
-      --pTempfilename;
-    ++pTempfilename; 
-
-    fprintf(stderr,"not file pTempfilename: %s\n", pTempfilename);
-    if (strlen(pTempfilename) > 12) {
-      MessageBox("Sorry, long filenames are not supported.");
-      return FALSE;
-    }
-    directory = p->fullpath;
-  } else {
-    strcpy(tempfilename, p->filename);
-    pTempfilename = tempfilename + strlen(tempfilename);
-    --pTempfilename;
-    while ((pTempfilename != tempfilename) && (*pTempfilename != '/'))
-      --pTempfilename;
-    ++pTempfilename;
-    Log("p->filename == FIFILE");
-    Log(tempfilename);
-    directory = p->dirpath;
+  unsigned buffer [BUFSIZE];
+  unsigned char sfilename[256];
+  
+  int bufsize;
+  
+  if(strlen(filename)>12) {
+    Log("Can't upload files with long filenames");
+    return(FALSE);
   }
-
-  if(ChangePartition(p->partition)==FALSE) {
-    Log("ChangePartition(p->partition) failed for upload.");
-    return FALSE;
-  }
-
-  Log("directory ==");
-  Log(directory);
-  if(ChangeDirectory(directory)== FALSE) {
-    Log("ChangeDirectory(directory) failed for upload.");
-    return FALSE;
-  }
-
-  //  EnableControls(FALSE);
-
-  //  strcpy(sfilename, filename);
   file = fopen(saveto, "r");
   if (file == NULL) {
+
     Log("Trouble opening: ");
-    Log(filename);
+    Log(saveto);
     return FALSE;
   }
   
+
+
+
   memset(sfilename,0,255);
-  strncpy(sfilename,pTempfilename, 12); //being extra careful?
-  
-  Log("sfilename ==");
-  Log(sfilename);
-  if(ControlMessageWrite(0xb100, sfilename, strlen(sfilename)+1, TIMEOUT)==FALSE) { //SetFileName
+  strncpy((char *)sfilename,filename,12);
+  if(ControlMessageWrite(0xb105,(int *)sfilename,strlen((char *)sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
+    
     Log("failed at 0xb1");
     return FALSE;
   }
-  filesize = GetLength(file);
-  // It's a bisexual byte order! Arrrgh! The PDP-11 legacy lives on.
-  udata[1] = filesize >> 24;
-  udata[0] = filesize >> 16;
-  udata[3] = filesize >>  8;
-  udata[2] = filesize >>  0;
-  if(ControlMessageWrite(0x9500,udata,4,TIMEOUT)==FALSE) { // Request Write
+
+  //Endianess appears to be screwed with this command!!
+  udata=((filesize&0xffff)<<16)|((filesize>>16));
+  
+  if(ControlMessageWrite(0x9505,(int *)&udata,4, TIMEOUT)== FALSE) { // Request Write
+    
     Log("failed at 0x95");
     return FALSE;
   }
-
-  tcount = 0;
-  alt_total = 0;
-  //NOTE: we keep grabbing bytes until the camcorder is done feeding us.
   x=0;
   //  EnableControls(FALSE);
   while(1) {
     //    Log("writing...");
     count = fread(buffer, sizeof(char), BUFSIZE, file);
-    Log("read...");
     if (count < 1) break;
     tcount += count;
-    //    fprintf(stderr,"count: %d\n",count);
     if (tcount  - alt_total > 65536) {
-      m_progressbar_fraction = (double)tcount / (double)filesize;
+      set_progress_bar((double)tcount / (double)filesize);
       //      fprintf(stderr,"m_progressbar: %f\n",m_progressbar_fraction);
       alt_total = tcount;
     }
@@ -132,7 +82,8 @@ static gboolean UploadFile(char* saveto, char* filename, file_info* p) {
       Log("Error writing file to camera");
       fclose(file);
       //EnableControls(TRUE);
-      m_progressbar_fraction = 0;
+      //      m_progressbar_fraction = 0;
+      set_progress_bar(0.0);
       return FALSE;
     }
 
@@ -148,132 +99,23 @@ static gboolean UploadFile(char* saveto, char* filename, file_info* p) {
   }
 
   //CString msg; msg.Format("file was %d bytes in size",x); Log(msg);
-  m_progressbar_fraction = 0;
+  // m_progressbar_fraction = 0;
+  set_progress_bar(0.0);
 
   fclose(file);
-  Log("Success sending file");
-  //EnableControls(TRUE);
+  //  Log("Success sending file");
+
+
+
+
+
+
+  Log("Leaving MemoryToFile");
   return TRUE;
 
 
 }
 
-static gboolean upload_file_start( gpointer data) {
-  file_info* p = global_p;
-  gboolean success = FALSE;
-  //  string_combo* s_c = data;
-  char* filename = data;
-  //  char* dirpath = s_c.b;
-  /*  if (semiglobalfile == NULL) { 
-    EnableControls(TRUE);
-    return FALSE;
-    }*/
-  
-  Log("starting UploadFile(storedir_global, filename, p");
-  fprintf(stderr, "%s, %s, %p\n",storedir_global, filename, p);
-  EnableControls(FALSE);
-  if(UploadFile(storedir_global,filename, p)==FALSE) {
-    Log("UploadFile(p->filename, tempstring) failed.");
-    EnableControls(TRUE);
-    return FALSE;
-  } else {
-    Log("Success sending data file.");
-  }
-  EnableControls(TRUE);
-
-
-  //  Log(temporary);
-  //EnableControls(TRUE);
-  //  gtk_idle_remove(idle_tag);
-  return success;
-
-}
-
-
-static gboolean upload_file_confirmed (GtkWidget *widget) { 
-  file_info* p = global_p;
-  GError* error = NULL;
-      ////
-
-  //  EnableControls(FALSE);
-  
-  Log("Attempting to send: ");
-  Log(p->filename);
-  //dirpath_global = p->dirpath;
-  //  idle_tag = gtk_idle_add(GTK_SIGNAL_FUNC(upload_file_start), p->filename);
-  if (!g_thread_create(upload_file_start, p->filename, FALSE, &error)) {
-    Log(error->message);
-    return FALSE;
-  }
-  
-      //I know it's messy to send 2 global variables and a local one
-  
-  //Log();
-  //return FALSE; //no leaf in the tree is selected OR data can't be retrieved OR we're done..
-  
-  //EnableControls(TRUE);
-  return TRUE;
-}
-
-
-static gboolean upload_file_store_filename (GtkWidget *widget) {
-  GtkWidget* file_selection_box = widget;
-  GtkTreeSelection* selection;
-  //  file_info* currently_selected_item;
-  GtkTreeModel* model;// = m_directory_model;
-  GtkTreeIter iter;
-  gpointer data = NULL;
-  
-  //  FILE* semiglobalfile = NULL;
-  
-  if(CheckCameraOpen()== FALSE)
-    return FALSE;
-  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(m_directory_tree));
-  if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
-    //    gpointer data = NULL;
-    file_info* p = NULL;
-    const gchar* winfilename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(file_selection_box));
-    gchar* filename;
-    //char [STRINGSIZE];
-    //    char* storedir = dirpath;
-    //string_combo s_c;
-    
-    strncpy(storedir_global, winfilename, STRINGSIZE - 1);
-
-    
-    gtk_tree_model_get (model, &iter, COL_FILENAME, &filename,
-			COL_POINTER, &data, -1);
-    p = data;
-    //	m_file_info = "";
-
-       
-    //	FILE_INFO* p = (FILE_INFO*)m_directory_tree.GetItemData(hItem);
-
-    if (p) {
-      if(p->filetype==FIROOT) {
-	MessageBox("Sorry, can't upload to the meta root.");
-	return FALSE;
-      }
-      global_p = p; //pass this to upload_file_confirmed
-      global_filename = filename;
-      if (p->partition != 0) {
-	return MessageBoxChoice("Do you really want to upload a file to a non-movie partition?\nThis could easily kill your camera.", upload_file_confirmed);
-	
-	
-      }
-      return MessageBoxChoice("Are you sure?", upload_file_confirmed); //widget value doesn't matter here
-      
-      
-      //Ok, looks like this is going to work! Let the user pick the storage dir
-      //		CString storedir=BrowseForFolder();
-      //if(storedir=="")
-      //return;
-      //storedir.TrimRight("\\");
-    }
-  }
-  //  EnableControls(TRUE);
-  return TRUE;
-}
 
 gboolean upload_file( GtkWidget *widget,
 			GdkEvent *event,
@@ -288,40 +130,103 @@ gboolean upload_file( GtkWidget *widget,
 
   //  using_dialog_mutex = TRUE;
 
-  file_selection_box = gtk_file_selection_new("Please select a file to upload");
+  GtkWidget *file_selection_dialog = NULL;
+  char* save_filename;
+  //  GtkWidget* file_selection_box = NULL;
   
-  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->ok_button),
-			     "clicked",
-			     GTK_SIGNAL_FUNC (upload_file_store_filename),
-			     file_selection_box);
+  // fill in name of file for easy clicking
+  GtkTreeModel* model;
+  GtkTreeIter iter;
+  GtkTreeSelection* selection;
+  char* temp_save_filename;
+  //  gpointer data;
+  file_info* currently_selected_file;
+  //char tempfilename[STRINGSIZE];
+  char delimiter;
+#ifdef _WIN32
+  delimiter = '\\';
+#else
+  delimiter = '/';
+#endif
+  if(CheckCameraOpen()==FALSE)
+    return FALSE;
+
+  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(m_directory_tree));
+  if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+    //    gchar* filename = NULL;
+    gtk_tree_model_get(model, &iter, COL_POINTER, &currently_selected_file, -1);
+    if (currently_selected_file == NULL) {//not too likely
+      return FALSE;
+    }
+  } else {
+    return FALSE; //nothing selected for download
+  }
+
+
+
+  file_selection_dialog =
+    gtk_file_chooser_dialog_new("Please select a file to upload",
+				widget, //meaingless except if program killed
+				GTK_FILE_CHOOSER_ACTION_SAVE,
+				GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+				GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+				NULL);
+  gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(file_selection_dialog),currently_selected_file->filename );
+  if (gtk_dialog_run(GTK_DIALOG(file_selection_dialog)) == GTK_RESPONSE_ACCEPT) {
+    save_filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_selection_dialog));
+  } else { //user cancelled
+    return FALSE;
+  }
+
+
+
+
   
-  /*  gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->ok_button),
-		      "clicked",
-		      GTK_SIGNAL_FUNC (start_download_file),
-		      NULL);*/
-
-  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->ok_button),
-			     "clicked",
-			     GTK_SIGNAL_FUNC(gtk_widget_destroy),
-			     (gpointer) (file_selection_box));
-  gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->cancel_button),
-		      "clicked",
-		      GTK_SIGNAL_FUNC (enable_buttons),
-		      (gpointer) file_selection_box);
-
-  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->cancel_button),
-			     "clicked",
-			     GTK_SIGNAL_FUNC(gtk_widget_destroy),
-			     (gpointer) file_selection_box);
+  if(currently_selected_file->filetype==FIPART ||
+     currently_selected_file->filetype==FIROOT) {
+    MessageBox("Sorry, uploading partitions is not supported");
+    return FALSE;
+  }
   
+  if(ChangePartition(currently_selected_file->partition)==FALSE) {
+    Log("ChangePartition(p->partition) failed.");
+    return FALSE;
+  }
 
-  gtk_widget_show(file_selection_box);
-  //  EnableControls(FALSE);
-  //  for (i=0;i<100000;++i);
-  //if the program's going to stall it might as well be here
-
+  if(ChangeDirectory(currently_selected_file->dirpath)== FALSE) {
+    Log("ChangeDirectory(p->dirpath) failed.");
+    return FALSE;
+  }
   
+  //if uploading to directory, make it use a filename you're saving to instead
+  
+  temp_save_filename = save_filename;
+  while (*temp_save_filename++); //go to end
+  while (temp_save_filename != save_filename) //back up to delimiter point
+    if (*temp_save_filename == delimiter)
+      break;
+  ++temp_save_filename;
+  if (strlen(temp_save_filename) > 12) {
+    Log("Please rename this file to an 8.3 filename (ABCDEFGH.IJK for instance)");
+    return FALSE;
+  }
+
+  EnableControls(FALSE);
+  if(UploadFile(temp_save_filename, save_filename, currently_selected_file->filesize)==FALSE) {
+    Log("DownloadFile(p->filename, tempstring) failed.");
+    EnableControls(TRUE);
+    return FALSE;
+  } else {
+    Log("Success retrieving data file.");
+  }
+  
+  
+  
+  
+  EnableControls(TRUE);
+  set_progress_bar(0.0);
   return TRUE;
+
   
 }
 
