@@ -92,7 +92,7 @@ gboolean FileToMemory(const char* filename, unsigned char *buffer, unsigned int 
     if(count<1)
       break;
     x=x+count;
-    fprintf(stderr,"%d bytes done\n",x);
+    //    fprintf(stderr,"%d bytes done\n",x);
     if(count<BUFSIZE)
       break;
     //DoMessagePump();
@@ -204,7 +204,7 @@ static char *verify_usp_data(usp_data *ud){
     return "bad magic0";
   if(!memcmp(ud->serial, "Not Initialized", sizeof ud->serial)) {
     //fprintf(stderr,"serial: %s\n",ud->serial);
-    fprintf(stderr, "WARNING: serial number \"Not Initialized\", maybe a FSP.BIN file?");
+    fprintf(stderr, "WARNING: serial number \"Not Initialized\", maybe a FSP.BIN file?\n");
 
   }
   if(memcmp(ud->zero0, zero, sizeof ud->zero0))
@@ -247,7 +247,7 @@ static char *verify_usp_data(usp_data *ud){
     return "bad zero2";
   if(!ud->magic10[0] && !ud->magic10[1]) { // zero in the FSP, which we don't want
     
-    fprintf(stderr,"WARNING: bad magic10 (an FSP.BIN file?)");
+    fprintf(stderr,"WARNING: bad magic10 (an FSP.BIN file?)\n");
   }
   if(memcmp(ud->zero3, zero, sizeof ud->zero3))
     return "bad zero3";
@@ -313,8 +313,6 @@ static int get_usp_file(usp_file *uf) {
   
   if(FileToMemory("USP.BIN",(char*)uf,(sizeof(usp_file)))==FALSE) {
     Log("FileToMemory failed in get_usp_file");
-    
-
   }
       
   //fprintf(stderr, "Got 0x%03x (%d) bytes\n", count, count);  
@@ -652,6 +650,8 @@ static gboolean SettingsDialog(usp_data *ud){
 }
 
 gboolean change_camera_settings(GtkWidget *widget, GdkEvent *event, gpointer data){
+  if (CheckCameraOpen() == FALSE)
+    return FALSE;
   if(sizeof original_usp != 0x804 || !get_usp_file(&original_usp)){
     return FALSE; // is anybody checking this???
   }
