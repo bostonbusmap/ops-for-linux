@@ -25,10 +25,76 @@ static int GetMovieCount(void) {
   return(numofvideos);
 }
 
+static constant_string GetMovieName(char * directory) {
+  constant_string testname;//yes it's hackish
+  FILE *in;
+  int t;
+  //Just a helper function to find a free movie name
+  for(t=1;t<10000;t++) {
+    //  testname.Format("%s\\Movie_%04d.avi",directory,t);
+    snprintf(testname.text, STRINGSIZE-1, "%s/Movie_%04d.avi",directory,t);
+    in=fopen(testname.text,"rb");
+    if(in==NULL)
+      return(testname);
+
+    fclose(in);
+  }
+  return(testname);
+}
 
 
 
-/*
+static gboolean DownloadMovie(int videonumber, FILE* file) {
+  
+  int data, count;
+  int total_data = 0;
+  int alt_total;
+  char buffer[BUFSIZE];
+ 
+  // 0x9300 sets up a bulk transfer on endpoint 0x81
+  data=0x0000;
+  if(ControlMessageWrite(0x9300,&data,0,TIMEOUT)==FALSE) {
+    Log("failed at 0x93 (initiating bulk read of video)");
+    Log("try unplugging camcorder and starting over");
+    return FALSE;
+  }
+
+  //gtk_widget_set_sensitive(file_selection_box, FALSE);
+  //  gtk_widget_set_sensitive(GTK_FILE_SELECTION(file_selection_box)->ok_button, FALSE);
+  //  EnableControls(FALSE);
+  alt_total = 0;
+  total_data = 0;
+  while (1) {
+    //int received;
+    count=Read(buffer,BUFSIZE,TIMEOUT);
+    total_data += count;
+    //    if (total_data - alt_total > 65536) {
+      //      m_progressbar_fraction = (double)total_data / (double)filesize;
+    //      alt_total = total_data;
+
+    //    }
+    
+    //total_data += count;
+    //if(count<1)
+    //break;
+    //    file.WriteHuge(buffer,count);
+    //    fprintf(stderr, "fwrite %d\n",fwrite(buffer, sizeof(char), count, file));
+    //gtk_progress_bar_set_orientation( m_ctl_progress, (gfloat)total_data / (gfloat)sizeofdata);
+
+    fwrite(buffer, sizeof(char), count, file);
+    
+    if(count<BUFSIZE)
+      break;
+    //    DoMessagePump();
+  }
+  //  m_progressbar_fraction = 0;
+  fclose(file);
+  //gtk_widget_set_sensitive(file_selection_box, TRUE);
+  //  EnableControls(TRUE);
+  return TRUE;
+  
+}
+
 static gboolean download_last_movie_start(gpointer data) {
   gboolean success = FALSE;
   FILE* semiglobalfile = data;
@@ -111,13 +177,12 @@ static gboolean download_last_movie_store_filename(GtkWidget *widget) {
   return TRUE;
 }
 
-*/
+
 
 
 gboolean download_last_movie( GtkWidget *widget,
 			      GdkEvent *event,
 			      gpointer data) {
-  /*
   GtkWidget *file_selection_box = NULL;
   
  
@@ -127,64 +192,40 @@ gboolean download_last_movie( GtkWidget *widget,
     return FALSE;
 
   //  using_dialog_mutex = TRUE;
-  file_selection_dialog = gtk_file_chooser_dialog_new("Please select a place to download to",
-						      widget, //meaingless?
-						      GTK_FILE_CHOOSER_ACTION_SAVE,
-						      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-						      GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-						      NULL);
-  
-  if (gtk_dialog_run(GTK_DIALOG(file_selection_dialog)) == GTK_RESPONSE_ACCEPT) {
-    save_filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_selection_dialog));
-  } else { //user cancelled
-    return FALSE;
-  }
 
+  file_selection_box = gtk_file_selection_new("Please select a directory to download to.");
+  
+  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->ok_button),
+		      "clicked",
+		      GTK_SIGNAL_FUNC (download_last_movie_store_filename),
+		      file_selection_box);
+  
+  /*  gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->ok_button),
+		      "clicked",
+		      GTK_SIGNAL_FUNC (start_download_file),
+		      NULL);*/
 
-  EnableControls(FALSE);
-  if(DownloadFile(save_filename,currently_selected_file->filename)==FALSE) {
-    Log("DownloadFile(p->filename, tempstring) failed.");
-    EnableControls(TRUE);
-    return FALSE;
-  } else {
-    Log("Success retrieving data file.");
-  }
+  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->ok_button),
+			     "clicked",
+			     GTK_SIGNAL_FUNC(gtk_widget_destroy),
+			     (gpointer) (file_selection_box));
+  gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->cancel_button),
+		      "clicked",
+		      GTK_SIGNAL_FUNC (enable_buttons),
+		      (gpointer) file_selection_box);
 
+  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->cancel_button),
+			     "clicked",
+			     GTK_SIGNAL_FUNC(gtk_widget_destroy),
+			     (gpointer) file_selection_box);
+  
 
-  EnableControls(TRUE);
-  set_progress_bar(0.0);
-
+  gtk_widget_show(file_selection_box);
+  //EnableControls(FALSE);
+  //  for (i=0;i<100000;++i);
+  //if the program's going to stall it might as well be here
 
   
-  if(currently_selected_file->filetype!=FIFILE) {
-    MessageBox("Sorry, downloading directory/partitions is not supported");
-    return FALSE;
-  }
-  
-  if(ChangePartition(currently_selected_file->partition)==FALSE) {
-    Log("ChangePartition(p->partition) failed.");
-    return FALSE;
-  }
-
-  EnableControls(FALSE);
-  if(DownloadFile(currently_selected_file->filename,save_filename)==FALSE) {
-    Log("DownloadFile(p->filename, tempstring) failed.");
-    EnableControls(TRUE);
-    return FALSE;
-  } else {
-    Log("Success retrieving data file.");
-  }
-  
-  
-  
-  
-  EnableControls(TRUE);
-  set_progress_bar(0.0);
   return TRUE;
-
-  
-  return TRUE;*/
   
 }
-
-
