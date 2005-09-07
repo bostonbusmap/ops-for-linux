@@ -212,8 +212,8 @@ int main (int argc, char *argv[])
   GtkObject* hadjustment, *vadjustment;
   //GError* error = NULL;
   //camcorder_files_size = 0;
-  g_thread_init(NULL);
-  gdk_threads_init();
+  //g_thread_init(NULL);
+  //gdk_threads_init();
   
   root_directory = NULL;
   /* This is called in all GTK applications. Arguments are parsed
