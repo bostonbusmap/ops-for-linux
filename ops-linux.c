@@ -184,7 +184,7 @@ void EnableControls(gboolean value) {
     gtk_widget_set_sensitive(button_unlock, value);
     gtk_widget_set_sensitive(button_close_camcorder, value);
     gtk_widget_set_sensitive(button_download_all_movies, value);
-    //    gtk_widget_set_sensitive(button_download_last_movie, value);
+    gtk_widget_set_sensitive(button_download_last_movie, value);
     //  gtk_widget_set_sensitive(button_upload_movie, value);
     gtk_widget_set_sensitive(button_format_storage, value);
     gtk_widget_set_sensitive(button_delete_file, value);
@@ -395,7 +395,8 @@ int main (int argc, char *argv[])
   gtk_box_pack_start (GTK_BOX (hbox1), button_close_camcorder, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox1), button_powerdown_camcorder, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox2), button_download_all_movies, TRUE, TRUE, 0);
-  //  gtk_box_pack_start (GTK_BOX (hbox2), button_download_last_movie, TRUE, TRUE, 0);
+
+  gtk_box_pack_start (GTK_BOX (hbox2), button_download_last_movie, TRUE, TRUE, 0);
   
   gtk_box_pack_start (GTK_BOX (hbox2), button_delete_file, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox2), button_capture_video, TRUE, TRUE, 0);
