@@ -74,11 +74,13 @@ static gboolean Init (void)
 
   Close ();			// Just in case if already connected.
   m_usb_device = NULL;
-
+  
   while (p_bus) {
     struct usb_device *p_device = p_bus->devices;
-
+    
     while (p_device) {
+      
+      fprintf(stderr, "usb device with VID==%04x PID==%04x\n", p_device->descriptor.idVendor, p_device->descriptor.iProduct);
       if (p_device->descriptor.idVendor == VENDOROLD)	//Fujitsu (testmarket revision Saturn)
       {
 	MessageBox ("Unsupported testmarket camcorder found\r\nWarning: this will not work with Ops");
