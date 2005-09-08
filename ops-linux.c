@@ -13,6 +13,8 @@ gboolean toggle_camera_lcd_screen_is_on;
 GtkWidget *m_ctl_progress = NULL;
 GtkWidget* m_directory_tree = NULL;
 double m_progressbar_fraction;
+int m_current_bytes;
+int m_previous_bytes;
 
 usb_dev_handle *m_p_handle;
 
@@ -39,7 +41,8 @@ static GtkWidget
   *button_powerdown_camcorder,
   *button_capture_video,
   *button_download_flash,
-  *information_label;
+  *information_label,
+  *bitrate_label;
 
 
 static gboolean delete_event (GtkWidget * widget, GdkEvent * event, gpointer data)
@@ -78,19 +81,39 @@ gboolean enable_buttons (GtkWidget* widget,
 }
 
 
-/*static gboolean watch_progress_bar (gpointer data) {
+static gboolean watch_progress_bar (gpointer data) {
   // quiet compiler
+  char tempstring[STRINGSIZE];
+  double rate = (double)(m_current_bytes - m_previous_bytes) / 1024.0 * (1000.0 / REFRESH_DATA_MS);
+  
   data=data;
   
   gtk_progress_bar_set_fraction(m_ctl_progress, m_progressbar_fraction);
+  if (m_current_bytes && m_previous_bytes)
+    snprintf(tempstring, STRINGSIZE - 1, "%f kbytes/sec", rate);
+  else
+    strcpy(tempstring, "");
+  gtk_label_set_text(GTK_LABEL(bitrate_label), tempstring);
+  m_previous_bytes = m_current_bytes;
   
   return TRUE;
-  }*/
+}
 gboolean set_progress_bar(double value) {
-  gtk_progress_bar_set_fraction(m_ctl_progress, value);
+  //  gtk_progress_bar_set_fraction(m_ctl_progress, value);
+  
+  m_progressbar_fraction = value;
+  //if (so_far)
+    
   return TRUE;
 
 }
+gboolean set_bitrate(double bytes) {
+  m_current_bytes = bytes;
+  if (bytes == 0)
+    m_previous_bytes = 0; //initialization
+  return TRUE;
+}
+
 
 
 static void reset_label(GtkTreeView* treeview,
@@ -102,12 +125,14 @@ static void reset_label(GtkTreeView* treeview,
   GtkTreeModel* model;
   gpointer data;
   gchar* filename;
-
+  char strfiletype[STRINGSIZE];
   // quiet compiler
   treeview=treeview;
   arg1=arg1;
   arg2=arg2;
   data_null=data_null;
+
+  
 
   selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(m_directory_tree));
   if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
@@ -117,8 +142,26 @@ static void reset_label(GtkTreeView* treeview,
    
     gtk_tree_model_get (model, &iter, COL_FILENAME, &filename,
 			COL_POINTER, &data, -1);
-    p = data;
-    snprintf(tempstring, STRINGSIZE - 1, "%s %d bytes", filename, p->filesize);
+    p = (file_info*)data;
+    switch (p->filetype) {
+    case FIROOT: //shouldn't happen
+      strcpy(strfiletype, "ROOT");
+      break;
+    case FIDIR:
+      strcpy(strfiletype, "DIRECTORY");
+      break;
+    case FIFILE:
+      strcpy(strfiletype, "FILE");
+      break;
+    case FIPART:
+      strcpy(strfiletype, "PARTITION");
+      break;
+    default:
+      strcpy(strfiletype, "UNKNOWN");
+      break;
+    };
+    
+    snprintf(tempstring, STRINGSIZE - 1, "%s %d bytes   %s", filename, p->filesize, strfiletype);
     gtk_label_set_text(GTK_LABEL(information_label), tempstring);
   }
 }
@@ -195,6 +238,10 @@ void EnableControls(gboolean value) {
     gtk_widget_set_sensitive(m_directory_tree, value);
     gtk_widget_set_sensitive(button_toggle_camera_lcd_screen, value);
     gtk_widget_set_sensitive(button_capture_video, value);
+    gtk_widget_set_sensitive(button_download_flash, value);
+    gtk_widget_set_sensitive(button_download_memory, value);
+    gtk_widget_set_sensitive(button_powerdown_camcorder, value);
+    
   }
 }
 
@@ -212,10 +259,11 @@ int main (int argc, char *argv[])
   GtkObject* hadjustment, *vadjustment;
   //GError* error = NULL;
   //camcorder_files_size = 0;
-  //g_thread_init(NULL);
-  //gdk_threads_init();
+  g_thread_init(NULL);
+  gdk_threads_init();
   
   root_directory = NULL;
+  set_bitrate(0);
   /* This is called in all GTK applications. Arguments are parsed
    * from the command line and are returned to the application. */
   gtk_init (&argc, &argv);
@@ -322,7 +370,7 @@ int main (int argc, char *argv[])
   
   
   information_label = gtk_label_new("");
-
+  bitrate_label = gtk_label_new("");
 
   m_ctl_progress = gtk_progress_bar_new();
 
@@ -409,6 +457,7 @@ int main (int argc, char *argv[])
   gtk_box_pack_start (GTK_BOX (hbox3), button_upload_file, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox3), button_download_flash, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox_label), information_label, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (hbox_label), bitrate_label, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox_label), button_toggle_camera_lcd_screen, TRUE, TRUE, 0);
   gtk_container_add (GTK_CONTAINER (s_w), m_directory_tree);
 
@@ -437,16 +486,16 @@ int main (int argc, char *argv[])
   gtk_widget_show_all (window);
   //  gdk_threads_enter();
   //  m_progressbar_fraction = 0; // 0 % complete :)
-  //  gtk_timeout_add(1000,GTK_SIGNAL_FUNC(watch_progress_bar), NULL); //irrelevant now
+  gtk_timeout_add(REFRESH_DATA_MS,GTK_SIGNAL_FUNC(watch_progress_bar), NULL);
   
   //if (!g_thread_create(watch_progress_bar, NULL, FALSE, &error)) {
   //Log(error->message);
     //go without if error
   //}
  
-
+  gdk_threads_enter();
   gtk_main ();
-  //  gdk_threads_leave();
+  gdk_threads_leave();
   return 0;
 }
 

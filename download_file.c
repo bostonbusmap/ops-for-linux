@@ -4,6 +4,7 @@
 
 //static char storedir_global[STRINGSIZE];
 
+
 gboolean DownloadFile(char* saveto, char* filename, int filesize) {
 	// This function expects that you've already changed the parition and 
 	// directory to the correct path in the camcorder. dirpath is the Windows
@@ -52,6 +53,7 @@ gboolean DownloadFile(char* saveto, char* filename, int filesize) {
       set_progress_bar((double)x / (double)filesize);
       round = x;
     }
+    set_bitrate(x);
     fwrite(buffer, 1, count, file);
     if(count<BUFSIZE)
       break;
@@ -64,6 +66,25 @@ gboolean DownloadFile(char* saveto, char* filename, int filesize) {
   return TRUE;
 
 
+}
+
+void download_file_start_thread(gpointer data) {
+  threesome* ts = data; //see DownloadFile for args
+  //EnableControls(FALSE);
+  if(DownloadFile((char*)(ts->a), (char*)(ts->b), *(int*)(ts->c))==FALSE) {
+    Log("DownloadFile(p->filename, tempstring) failed.");
+  } else {
+    Log("Success retrieving data file.");
+  }
+  free(ts->a);
+  free(ts);
+  
+  
+  
+  EnableControls(TRUE);
+  set_progress_bar(0.0);
+  set_bitrate(0);
+ 
 }
 
 
@@ -80,6 +101,9 @@ gboolean download_file( GtkWidget *widget,
   GtkTreeSelection* selection;
   //  gpointer data;
   file_info* currently_selected_file;
+  GError* error;
+  threesome* ts=NULL;
+  char saveto[STRINGSIZE];
   if(CheckCameraOpen()==FALSE)
     return FALSE;
 
@@ -98,7 +122,7 @@ gboolean download_file( GtkWidget *widget,
 
   file_selection_dialog =
     gtk_file_chooser_dialog_new("Please select a place to download to",
-				widget, //meaingless except if program killed
+				main_window, //meaningless?
 				GTK_FILE_CHOOSER_ACTION_SAVE,
 				GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 				GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
@@ -106,10 +130,13 @@ gboolean download_file( GtkWidget *widget,
   gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(file_selection_dialog),currently_selected_file->filename );
   if (gtk_dialog_run(GTK_DIALOG(file_selection_dialog)) == GTK_RESPONSE_ACCEPT) {
     save_filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_selection_dialog));
+    strncpy(saveto, save_filename, STRINGSIZE); //make things easier later on
   } else { //user cancelled
+    gtk_widget_destroy(file_selection_dialog);
     return FALSE;
   }
   
+  gtk_widget_destroy(file_selection_dialog); //does save_filename now point to garbage?
   if(currently_selected_file->filetype!=FIFILE) {
     MessageBox("Sorry, downloading directory/partitions is not supported");
     return FALSE;
@@ -124,22 +151,28 @@ gboolean download_file( GtkWidget *widget,
     Log("ChangeDirectory(p->dirpath) failed.");
     return FALSE;
   }
-
-
+  /* if function ends before thread initializes its variables
+     and we pass a local variable to the thread, bad things happen */
+  ts = malloc(sizeof(ts));
+  if (ts == NULL) return FALSE;
+  ts->a = malloc(sizeof(char) * (strlen(save_filename) + 1));
+  if (ts->a == NULL) { 
+    free(ts);
+    return FALSE;
+  } //very, very unlikely
+  strcpy(ts->a, saveto); //char*
+  ts->b = currently_selected_file->filename; //char*
+  ts->c = &(currently_selected_file->filesize); //int
   EnableControls(FALSE);
-  if(DownloadFile(currently_selected_file->filename,save_filename, currently_selected_file->filesize)==FALSE) {
-    Log("DownloadFile(p->filename, tempstring) failed.");
+  if (!g_thread_create(download_file_start_thread, ts, FALSE, &error)) {
+    Log(error->message);
+    free(ts->a);
+    free(ts);
     EnableControls(TRUE);
     return FALSE;
-  } else {
-    Log("Success retrieving data file.");
   }
   
   
-  
-  
-  EnableControls(TRUE);
-  set_progress_bar(0.0);
   return TRUE;
 
     

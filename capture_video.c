@@ -117,6 +117,7 @@ static gboolean capture_video_start( char* filename) {
     //if(count<BUFSIZE)
     //break;
     x += count;
+    set_bitrate(x);
     if (x - round > 65536) {
       //gtk_progress_bar_set_fraction(m_ctl_progress, (gdouble)x / (gdouble)filesize);
       //      m_progressbar_fraction = (double)x / (double)filesize;

@@ -81,6 +81,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
     }
     
     tcount=0;
+    set_bitrate(t);
     while (1) {
       count=Read(buffer,BUFSIZE,TIMEOUT);
       if(count<1)
@@ -88,6 +89,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
       tcount+=count;
       //file.WriteHuge(buffer,count);
       fwrite(buffer,sizeof(char), count, file);
+      
       if(count<BUFSIZE)
 	break;
       //DoMessagePump();
@@ -111,7 +113,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
 }
 
 
-static gboolean download_memory_start(gpointer data) {
+static gboolean download_memory_start_thread(gpointer data) {
   return DownloadMemory(data, start_global, length_global);
 }
 
@@ -119,7 +121,7 @@ static gboolean download_memory_start(gpointer data) {
 static gboolean download_memory_store_filename(GtkFileSelection* file_selection_box) {
   GError *error;
   const gchar* winfilename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(file_selection_box));
-  if (!g_thread_create(download_memory_start, winfilename, FALSE, &error)) {
+  if (!g_thread_create(download_memory_start_thread, winfilename, FALSE, &error)) {
     Log(error->message);
     return FALSE;
   }

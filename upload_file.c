@@ -15,13 +15,13 @@ static int GetLength(FILE* fp) {
 }
 //gboolean MemoryToFile(const char* filename, unsigned char *buffer, unsigned int filesize)
 
-static gboolean UploadFile(char* saveto, char* filename, int filesize) {
+static gboolean UploadFile(char* saveto, char* filename) {
 	// This function expects that you've already changed the parition and 
 	// directory to the correct path in the camcorder. dirpath is the Windows
 	// path to the file to store in.
 
 	// directory.
-  //Log("entering MemoryToFile");
+  int filesize;
   unsigned int x,t;
   unsigned int count = 0, tcount = 0, alt_total = 0;
   unsigned int udata;
@@ -32,25 +32,26 @@ static gboolean UploadFile(char* saveto, char* filename, int filesize) {
   
   int bufsize;
   
+  Log("entering UploadFile");
+  printf("UploadFile(%s, %s)\n",saveto,filename);
+
   if(strlen(filename)>12) {
     Log("Can't upload files with long filenames");
     return(FALSE);
   }
   file = fopen(saveto, "r");
   if (file == NULL) {
-
     Log("Trouble opening: ");
     Log(saveto);
     return FALSE;
   }
+  filesize = GetLength(file);
   
-
-
+  //  Log("proceeding in UploadFile...");
 
   memset(sfilename,0,255);
   strncpy((char *)sfilename,filename,12);
   if(ControlMessageWrite(0xb105,(int *)sfilename,strlen((char *)sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
-    
     Log("failed at 0xb1");
     return FALSE;
   }
@@ -70,6 +71,7 @@ static gboolean UploadFile(char* saveto, char* filename, int filesize) {
     count = fread(buffer, sizeof(char), BUFSIZE, file);
     if (count < 1) break;
     tcount += count;
+    set_bitrate(tcount);
     if (tcount  - alt_total > 65536) {
       set_progress_bar((double)tcount / (double)filesize);
       //      fprintf(stderr,"m_progressbar: %f\n",m_progressbar_fraction);
@@ -101,7 +103,7 @@ static gboolean UploadFile(char* saveto, char* filename, int filesize) {
   //CString msg; msg.Format("file was %d bytes in size",x); Log(msg);
   // m_progressbar_fraction = 0;
   set_progress_bar(0.0);
-
+  set_bitrate(0);
   fclose(file);
   //  Log("Success sending file");
 
@@ -109,20 +111,32 @@ static gboolean UploadFile(char* saveto, char* filename, int filesize) {
 
 
 
-
+  
   Log("Leaving MemoryToFile");
   return TRUE;
 
 
 }
-
+void upload_file_start_thread(gpointer data) {
+  threesome* ts = data; //see DownloadFile for args
+  //EnableControls(FALSE);
+  if(UploadFile((char*)(ts->a), (char*)(ts->b))==FALSE) {
+    Log("UpFile(p->filename, tempstring) failed.");
+  } else {
+    Log("Success retrieving data file.");
+  }
+  free(ts->a);
+  free(ts);
+  set_progress_bar(0.0);
+  EnableControls(TRUE);
+}
 
 gboolean upload_file( GtkWidget *widget,
 			GdkEvent *event,
 			gpointer data) {
   GtkWidget *file_selection_box = NULL;
-  
- 
+  //  threesome ts;
+  GError* error;
   //  GtkWidget* file_selection_box = NULL;
   
   if(CheckCameraOpen()==FALSE)
@@ -143,6 +157,8 @@ gboolean upload_file( GtkWidget *widget,
   file_info* currently_selected_file;
   //char tempfilename[STRINGSIZE];
   char delimiter;
+  char saveto[STRINGSIZE];
+  threesome* ts = NULL;
 #ifdef _WIN32
   delimiter = '\\';
 #else
@@ -166,18 +182,21 @@ gboolean upload_file( GtkWidget *widget,
 
   file_selection_dialog =
     gtk_file_chooser_dialog_new("Please select a file to upload",
-				widget, //meaingless except if program killed
+				main_window, //meaingless except if program killed
 				GTK_FILE_CHOOSER_ACTION_SAVE,
 				GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 				GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
 				NULL);
-  gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(file_selection_dialog),currently_selected_file->filename );
+  //  gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(file_selection_dialog),currently_selected_file->filename );
   if (gtk_dialog_run(GTK_DIALOG(file_selection_dialog)) == GTK_RESPONSE_ACCEPT) {
     save_filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_selection_dialog));
+    strncpy(saveto, save_filename, STRINGSIZE); //make things easier later on
   } else { //user cancelled
+    gtk_widget_destroy(file_selection_dialog);
     return FALSE;
   }
-
+  
+  gtk_widget_destroy(file_selection_dialog); //does save_filename now point to garbage?
 
 
 
@@ -199,32 +218,44 @@ gboolean upload_file( GtkWidget *widget,
   }
   
   //if uploading to directory, make it use a filename you're saving to instead
-  
-  temp_save_filename = save_filename;
-  while (*temp_save_filename++); //go to end
-  while (temp_save_filename != save_filename) //back up to delimiter point
-    if (*temp_save_filename == delimiter)
-      break;
-  ++temp_save_filename;
-  if (strlen(temp_save_filename) > 12) {
-    Log("Please rename this file to an 8.3 filename (ABCDEFGH.IJK for instance)");
+  if (currently_selected_file->filetype == FIDIR) {
+    temp_save_filename = saveto;
+    while (*temp_save_filename++); //go to end
+    while (--temp_save_filename != saveto) //back up to delimiter point
+      if (*temp_save_filename == delimiter)
+	break;
+    ++temp_save_filename;
+    if (strlen(temp_save_filename) > 12) {
+      Log("Please rename this file to an 8.3 filename (ABCDEFGH.IJK for instance)");
+      return FALSE;
+    }
+  } else {
+    temp_save_filename = currently_selected_file->filename;
+  }
+  ts = malloc(sizeof(threesome));
+  if (ts == NULL) return FALSE;
+  ts->a = malloc(sizeof(char) * (strlen(saveto) + 1));
+  if (ts->a == NULL) { //extraordinarily rare...
+    free(ts);
+    return FALSE;
+  }
+  //temp_save_filename overlaps saveto, but this shouldn't cause trouble
+  //  ts->b = temp_save_filename; //char*
+  strcpy(ts->a, saveto); //char*
+  if (currently_selected_file->filetype == FIDIR) {
+    ts->b = (temp_save_filename - saveto) + ts->a;
+  } else {
+    ts->b = currently_selected_file->filename + strlen(currently_selected_file->dirpath);
+  }
+  //  ts->c = &(currently_selected_file->filesize); //int
+  EnableControls(FALSE);
+  if (!g_thread_create(upload_file_start_thread, ts, FALSE, &error)) {
+    Log(error->message);
+    EnableControls(TRUE);
     return FALSE;
   }
 
-  EnableControls(FALSE);
-  if(UploadFile(temp_save_filename, save_filename, currently_selected_file->filesize)==FALSE) {
-    Log("DownloadFile(p->filename, tempstring) failed.");
-    EnableControls(TRUE);
-    return FALSE;
-  } else {
-    Log("Success retrieving data file.");
-  }
   
-  
-  
-  
-  EnableControls(TRUE);
-  set_progress_bar(0.0);
   return TRUE;
 
   

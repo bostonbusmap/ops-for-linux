@@ -118,6 +118,25 @@ typedef struct file_info { //each one of these is at least 4000 bytes... :(
   int number_of_children;
 } file_info;
 
+/* structs for passing data to other threads and callbacks */
+typedef struct {
+  void* a;
+  void* b;
+
+} twosome;
+typedef struct {
+  void* a;
+  void* b;
+  void* c;
+} threesome;
+typedef struct {
+  void* a;
+  void* b;
+  void* c;
+  void* d;
+} foursome;
+
+
 ////////////////////////////////////////////////////////////////////
 
 /*  global variables  */
@@ -127,10 +146,12 @@ extern file_info* root_directory;
 extern gboolean toggle_camera_lcd_screen_is_on;
 extern GtkWidget *m_ctl_progress;
 extern GtkWidget* m_directory_tree;
-//extern double m_progressbar_fraction;
+extern double m_progressbar_fraction;
+extern int m_previous_bytes;
+extern int m_current_bytes;
 
 extern usb_dev_handle *m_p_handle;
-
+#define REFRESH_DATA_MS 250
 
 
 //unsigned short m_vendor_id;
@@ -138,7 +159,7 @@ extern usb_dev_handle *m_p_handle;
 //char m_manufacturer[STRINGSIZE];
 //char m_product[STRINGSIZE];
 
-extern gboolean flipper_capture; //is ccd-to-lcd display on?
+extern gboolean flipper_capture; //does user wish to stop video capture?
 extern int stopwatch;   //maybe time downloads in the future and printout a bitrate
 
 
@@ -209,6 +230,7 @@ gboolean MessageBoxChoice(const char* st, gpointer data);
 gboolean MessageBoxConfirm(const char* st);
 void EnableControls(gboolean value);
 gboolean set_progress_bar(double value);
+gboolean set_bitrate(double kbyterate);
 
 /*  GUI-independent workhorse functions  */
 gboolean ChangePartition(unsigned int partition); 

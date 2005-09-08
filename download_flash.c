@@ -176,7 +176,7 @@ gboolean DownloadFlash(const char* filename, int partition, int size) {
     if(x>0) {
       //      file.WriteHuge(buffer,(DWORD)x);
       fwrite(buffer, sizeof(char), x, file);
-      count=count+x;
+      count+=x;
       if(count+bufsize>size) { //we gotta shrink the buffer
 	bufsize=size-count;
       }
@@ -187,6 +187,7 @@ gboolean DownloadFlash(const char* filename, int partition, int size) {
       // p_ctl_progress->SendMessage(PBM_SETBARCOLOR,0,(LPARAM)RGB(0,0,220)); //clear the text
       //p_ctl_progress->StepIt();
     }
+    set_bitrate(count);
     //  DoMessagePump();
     if((x<bufsize)||(count==size))
       break;
@@ -210,7 +211,21 @@ gboolean DownloadFlash(const char* filename, int partition, int size) {
 
 }
 
+void download_flash_start_thread(gpointer data) {
+  twosome* ts = data;
+  
+  if(DownloadFlash((char*)(ts->a), (int)(ts->b), -1)==FALSE) {
+    Log("DownloadFlash(p->filename, tempstring) failed.");
+    EnableControls(TRUE);
+    return FALSE;
+  } else {
+    Log("Success retrieving data file.");
+  }
+  free(ts->a);
+  free(ts);
 
+
+}
 
 
 
@@ -221,6 +236,9 @@ gboolean download_flash( GtkWidget *widget,
 			 gpointer data) {
   GtkWidget *file_selection_dialog = NULL;
   char* save_filename;
+  char saveto[STRINGSIZE];
+  twosome* ts = NULL;
+  GError* error = NULL;
   //  GtkWidget* file_selection_box = NULL;
   
   // fill in name of file for easy clicking
@@ -234,28 +252,36 @@ gboolean download_flash( GtkWidget *widget,
     return FALSE;
 
 
-  partition_value = 0; //replace with option box like windows ops has
+  partition_value = 0; //FIXME: replace with option box like windows ops has
   
   file_selection_dialog =
     gtk_file_chooser_dialog_new("Please select a place to download the flash to",
-				widget, //meaingless except if program killed
+				main_window, //meaingless except if program killed
 				GTK_FILE_CHOOSER_ACTION_SAVE,
 				GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 				GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
 				NULL);
-  gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(file_selection_dialog),currently_selected_file->filename );
+  //  gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(file_selection_dialog),currently_selected_file->filename );
   if (gtk_dialog_run(GTK_DIALOG(file_selection_dialog)) == GTK_RESPONSE_ACCEPT) {
     save_filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_selection_dialog));
+    strncpy(saveto, save_filename, STRINGSIZE - 1);
   } else { //user cancelled
+    gtk_widget_destroy(file_selection_dialog);
     return FALSE;
   }
-  
+  gtk_widget_destroy(file_selection_dialog);
   
   if(ChangePartition(partition_value)==FALSE) {
     Log("ChangePartition(p->partition) failed.");
     return FALSE;
   }
 
+  ts = malloc(sizeof(twosome));
+  if (ts == NULL) return FALSE;
+  ts->a = malloc(sizeof(char) * (strlen(saveto) + 1));
+  if (ts->a == NULL) { free(ts); return FALSE; }
+  strcpy(ts->a, saveto);
+  ts->b = partition_value;
   /*if(ChangeDirectory(currently_selected_file->dirpath)== FALSE) {
     Log("ChangeDirectory(p->dirpath) failed.");
     return FALSE;
@@ -263,13 +289,15 @@ gboolean download_flash( GtkWidget *widget,
 
 
   EnableControls(FALSE);
-  if(DownloadFlash(save_filename, partition_value, -1)==FALSE) {
-    Log("DownloadFile(p->filename, tempstring) failed.");
+
+  if (!g_thread_create(download_flash_start_thread, ts, FALSE, &error)) {
+    Log(error->message);
+    free(ts->a);
+    free(ts);
     EnableControls(TRUE);
     return FALSE;
-  } else {
-    Log("Success retrieving data file.");
   }
+
   
   
   
