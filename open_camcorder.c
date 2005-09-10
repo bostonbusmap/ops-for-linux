@@ -52,7 +52,7 @@ static void reset_values(void) {
 static gboolean Init (void)
 {
   char tmp[256];
-
+  int bus_no = 0;
   static int attempt = 0;
   reset_values();
   
@@ -70,14 +70,15 @@ static gboolean Init (void)
     }
   }
 
-  struct usb_bus *p_bus = usb_get_busses ();
+  struct usb_bus *p_bus = NULL;
+  // = usb_get_busses ();
 
   Close ();			// Just in case if already connected.
   m_usb_device = NULL;
   
-  while (p_bus) {
+  for (p_bus = usb_get_busses(); p_bus != NULL; p_bus = p_bus->next, ++bus_no) {
     struct usb_device *p_device = p_bus->devices;
-    
+    fprintf(stderr, "trying bus %d\n", bus_no);
     while (p_device) {
       
       fprintf(stderr, "usb device with VID==%04x PID==%04x\n", p_device->descriptor.idVendor, p_device->descriptor.iProduct);
