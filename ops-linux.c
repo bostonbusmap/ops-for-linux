@@ -41,6 +41,7 @@ static GtkWidget
   *button_powerdown_camcorder,
   *button_capture_video,
   *button_download_flash,
+  *button_enable_mass_storage,
   *information_label,
   *bitrate_label;
 
@@ -239,6 +240,7 @@ void EnableControls(gboolean value) {
     gtk_widget_set_sensitive(button_toggle_camera_lcd_screen, value);
     gtk_widget_set_sensitive(button_capture_video, value);
     gtk_widget_set_sensitive(button_download_flash, value);
+    gtk_widget_set_sensitive(button_enable_mass_storage, value);
     gtk_widget_set_sensitive(button_download_memory, value);
     gtk_widget_set_sensitive(button_powerdown_camcorder, value);
     
@@ -455,6 +457,7 @@ int main (int argc, char *argv[])
   button_download_memory = gtk_button_new_with_label("Download memory");
   button_powerdown_camcorder = gtk_button_new_with_label("Powerdown camcorder");
   button_download_flash = gtk_button_new_with_label("Download flash");
+  button_enable_mass_storage = gtk_button_new_with_label("Enable Mass Storage");
   
   gtk_signal_connect (GTK_OBJECT (button_open_camcorder), "clicked", 
 		      GTK_SIGNAL_FUNC(open_camcorder), NULL);
@@ -498,6 +501,8 @@ int main (int argc, char *argv[])
 		      GTK_SIGNAL_FUNC(change_camera_settings), NULL);
   gtk_signal_connect (GTK_OBJECT (button_download_flash), "clicked",
 		      GTK_SIGNAL_FUNC(download_flash), NULL);
+  gtk_signal_connect (GTK_OBJECT (button_enable_mass_storage), "clicked",
+		      GTK_SIGNAL_FUNC(enable_mass_storage), NULL);
   
   gtk_box_pack_start (GTK_BOX (hbox1), button_open_camcorder, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox1), button_unlock, TRUE, TRUE, 0);
@@ -510,6 +515,7 @@ int main (int argc, char *argv[])
   gtk_box_pack_start (GTK_BOX (hbox2), button_delete_file, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox2), button_capture_video, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox2), button_change_camera_settings, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (hbox2), button_enable_mass_storage, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox3), button_format_storage, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox_progressbar), m_ctl_progress, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox3), button_send_monitor_command, TRUE, TRUE, 0);
