@@ -66,8 +66,9 @@
 #define DEFAULT_INTERFACE	0
 #define DEFAULT_ALT_INTERFACE	0
 
-#define COL_FILENAME 0
-#define COL_POINTER 1
+#define COL_FILENAME 1
+#define COL_POINTER 2
+#define COL_ICON 0
 
 #define SHORT_TIMEOUT			500
 #define TIMEOUT					4000
@@ -151,6 +152,10 @@ extern int m_previous_bytes;
 extern int m_current_bytes;
 
 extern usb_dev_handle *m_p_handle;
+extern GdkPixbuf* icon_root;
+extern GdkPixbuf* icon_partition;
+extern GdkPixbuf* icon_directory;
+extern GdkPixbuf* icon_file;
 #define REFRESH_DATA_MS 250
 
 

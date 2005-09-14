@@ -15,7 +15,7 @@ GtkWidget* m_directory_tree = NULL;
 double m_progressbar_fraction;
 int m_current_bytes;
 int m_previous_bytes;
-
+GdkPixbuf* icon_root = NULL, *icon_partition = NULL, *icon_directory = NULL, *icon_file = NULL;
 usb_dev_handle *m_p_handle;
 
 gboolean flipper_capture;
@@ -244,6 +244,44 @@ void EnableControls(gboolean value) {
     
   }
 }
+gboolean load_file_icons() {
+  GError *error = NULL;
+  icon_file = gdk_pixbuf_new_from_file("opspic1.png", &error);
+  if (error) {
+    g_warning ("Could not load icon: %s\n", error->message);
+    g_error_free(error);
+    error = NULL;
+    return FALSE;
+  }
+
+  
+  icon_directory = gdk_pixbuf_new_from_file("opspic2.png", &error);
+  if (error) {
+    g_warning ("Could not load icon: %s\n", error->message);
+    g_error_free(error);
+    error = NULL;
+    return FALSE;
+  }
+  
+  icon_partition = gdk_pixbuf_new_from_file("opspic3.png", &error);
+  if (error) {
+    g_warning ("Could not load icon: %s\n", error->message);
+    g_error_free(error);
+    error = NULL;
+    return FALSE;
+  }
+  
+  icon_root = gdk_pixbuf_new_from_file("opspic4.png", &error);
+  if (error) {
+    g_warning ("Could not load icon: %s\n", error->message);
+    g_error_free(error);
+    error = NULL;
+    return FALSE;
+  }
+  
+
+}
+
 
 
 int main (int argc, char *argv[])
@@ -350,6 +388,15 @@ int main (int argc, char *argv[])
 				  GTK_POLICY_AUTOMATIC);
   //  gtk_container_set_height (GTK_TREE_VIEW (m_directory_tree), 300);
 
+  //ICON COLUMN
+  col = gtk_tree_view_column_new();
+  gtk_tree_view_append_column(GTK_TREE_VIEW(m_directory_tree), col);
+  renderer = gtk_cell_renderer_pixbuf_new();
+  gtk_tree_view_column_pack_start(col, renderer, FALSE);
+  gtk_tree_view_column_add_attribute(col, renderer, "pixbuf", COL_ICON);
+
+
+
   //COLUMN 1
   col = gtk_tree_view_column_new();
   gtk_tree_view_column_set_title(col, "filename");
@@ -360,17 +407,29 @@ int main (int argc, char *argv[])
 
   //COLUMN 2
   col = gtk_tree_view_column_new();
-  gtk_tree_view_column_set_title(col, "pointers");
   gtk_tree_view_append_column(GTK_TREE_VIEW(m_directory_tree), col);
   renderer = gtk_cell_renderer_text_new();
   gtk_tree_view_column_pack_start(col, renderer, TRUE);
+
+  
+
+
+
+
+
   //  gtk_tree_view_column_add_attribute(col, renderer, "text", COL_POINTER);
   /*if (!g_thread_create(watch_progress_bar, NULL, FALSE, &error)) {
     Log(error->message);
     //go without if error
     }*/
   
-  
+  if (load_file_icons() == FALSE) { 
+    Log("unable to load file icons for the camcorder directory listing (not related to regular file dialog boxes)");
+    return 1;
+  }
+
+
+
   information_label = gtk_label_new("");
   bitrate_label = gtk_label_new("");
 

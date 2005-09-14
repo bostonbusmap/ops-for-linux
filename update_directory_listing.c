@@ -286,11 +286,29 @@ static void FreeAllocatedFiles(file_info* temp) {
 
 static file_info* AddToTreeStore(GtkTreeStore* treestore, GtkTreeIter* toplevel, GtkTreeIter* child, file_info* current, file_info* parent) {
   file_info* addeditem;
+  GdkPixbuf* pixbuf = NULL;
   gtk_tree_store_append(GTK_TREE_STORE(treestore), child, toplevel); //child is created here
   addeditem = AddFileDataToList(current);
   AddFileDataAsChild(parent, addeditem);
- 
-  gtk_tree_store_set(GTK_TREE_STORE(treestore), child, COL_FILENAME, current->filename, COL_POINTER, addeditem, -1);
+  
+  switch (addeditem->filetype) {
+  case FIFILE:
+    pixbuf = icon_file;
+    break;
+  case FIDIR:
+    pixbuf = icon_directory;
+    break;
+  case FIPART:
+    pixbuf = icon_partition;
+    break;
+  case FIROOT:
+    pixbuf = icon_root;
+    break;
+  default:
+    break;
+  };
+    
+  gtk_tree_store_set(GTK_TREE_STORE(treestore), child, COL_ICON, pixbuf, COL_FILENAME, current->filename, COL_POINTER, addeditem, -1);
   return addeditem;
 }
 
@@ -430,7 +448,7 @@ static void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* p
 }
 
 static GtkTreeModel* create_model(void) {
-  GtkTreeStore* treestore = gtk_tree_store_new(2, G_TYPE_STRING, G_TYPE_POINTER);
+  GtkTreeStore* treestore = gtk_tree_store_new(3, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_POINTER);
   GtkTreeIter rootlevel, toplevel;
   int t;
   file_info root_file_data, current_file_data, *addeditem = NULL;
