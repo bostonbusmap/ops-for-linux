@@ -73,9 +73,10 @@ gboolean MessageBoxTextTwo (const char* st, gpointer data) {
 }
 
 
-gboolean MessageBox (const char *st)
+gboolean MessageBox(const char *st)
 {
   GtkWidget *window, *ok_button, *label;
+  Log(st);
   window = gtk_dialog_new ();
 
   ok_button = gtk_button_new_with_label ("OK");

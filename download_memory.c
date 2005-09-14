@@ -32,7 +32,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
   ChangeDirectory("/DCIM");
   
   //  if (file.Open((LPCSTR)filename, CFile::modeCreate | CFile::modeWrite)==false)
-  file = fopen(filename, "w");
+  file = fopen(filename, "wb");
   if (file == NULL) {
     Log("Trouble creating: ");
     Log(filename);

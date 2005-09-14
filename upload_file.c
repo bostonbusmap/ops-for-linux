@@ -39,7 +39,7 @@ static gboolean UploadFile(char* saveto, char* filename) {
     Log("Can't upload files with long filenames");
     return(FALSE);
   }
-  file = fopen(saveto, "r");
+  file = fopen(saveto, "rb");
   if (file == NULL) {
     Log("Trouble opening: ");
     Log(saveto);
@@ -67,7 +67,7 @@ static gboolean UploadFile(char* saveto, char* filename) {
   x=0;
   //  EnableControls(FALSE);
   while(1) {
-    //    Log("writing...");
+    Log("writing...");
     count = fread(buffer, sizeof(char), BUFSIZE, file);
     if (count < 1) break;
     tcount += count;
@@ -77,7 +77,7 @@ static gboolean UploadFile(char* saveto, char* filename) {
       //      fprintf(stderr,"m_progressbar: %f\n",m_progressbar_fraction);
       alt_total = tcount;
     }
-    //printf("tcount: %d count: %d\n", tcount, count);
+    printf("tcount: %d count: %d\n", tcount, count);
     x=Write(buffer,count,TIMEOUT);
     //printf("x: %d\n",x);
     if(x<1) {
@@ -132,8 +132,8 @@ void upload_file_start_thread(gpointer data) {
 }
 
 gboolean upload_file( GtkWidget *widget,
-			GdkEvent *event,
-			gpointer data) {
+		      GdkEvent *event,
+		      gpointer data) {
   GtkWidget *file_selection_box = NULL;
   //  threesome ts;
   GError* error;
@@ -141,7 +141,7 @@ gboolean upload_file( GtkWidget *widget,
   
   if(CheckCameraOpen()==FALSE)
     return FALSE;
-
+  
   //  using_dialog_mutex = TRUE;
 
   GtkWidget *file_selection_dialog = NULL;
@@ -177,13 +177,16 @@ gboolean upload_file( GtkWidget *widget,
   } else {
     return FALSE; //nothing selected for download
   }
-
+  if (currently_selected_file->filetype != FIDIR) {
+    MessageBox("Only uploads to directories are currently supported.\nTry renaming your file and uploading it to a directory on the camcorder\nto overwrite another file on the camcorder.");
+    return FALSE;
+  }
 
 
   file_selection_dialog =
     gtk_file_chooser_dialog_new("Please select a file to upload",
 				main_window, //meaingless except if program killed
-				GTK_FILE_CHOOSER_ACTION_SAVE,
+				GTK_FILE_CHOOSER_ACTION_OPEN,
 				GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 				GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
 				NULL);
@@ -211,14 +214,14 @@ gboolean upload_file( GtkWidget *widget,
     Log("ChangePartition(p->partition) failed.");
     return FALSE;
   }
-
-  if(ChangeDirectory(currently_selected_file->dirpath)== FALSE) {
-    Log("ChangeDirectory(p->dirpath) failed.");
-    return FALSE;
-  }
+  
   
   //if uploading to directory, make it use a filename you're saving to instead
   if (currently_selected_file->filetype == FIDIR) {
+    if(ChangeDirectory(currently_selected_file->fullpath) == FALSE) {
+      Log("ERROR: ChangeDirectory to upload directory failed.");
+      return FALSE;
+    }
     temp_save_filename = saveto;
     while (*temp_save_filename++); //go to end
     while (--temp_save_filename != saveto) //back up to delimiter point
@@ -230,6 +233,11 @@ gboolean upload_file( GtkWidget *widget,
       return FALSE;
     }
   } else {
+    if(ChangeDirectory(currently_selected_file->dirpath) == FALSE) {
+      Log("ERROR: ChangeDirectory to upload directory failed.");
+      return FALSE;
+    }
+
     temp_save_filename = currently_selected_file->filename;
   }
   ts = malloc(sizeof(threesome));

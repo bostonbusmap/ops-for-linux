@@ -54,32 +54,32 @@ static gboolean Init (void)
   char tmp[256];
   int bus_no = 0;
   static int attempt = 0;
+  struct usb_bus *p_bus = NULL;
   reset_values();
   
-  if (m_usb_device == NULL) {
-    usb_init ();
-
-    if (usb_find_busses () < 0) {
-      Log ("Error: Couldn't find USB bus.");
-      return FALSE;
-    }
-
-    if (usb_find_devices () < 0) {
-      Log ("Error: Couldn't find any USB devices.");
-      return FALSE;
-    }
+  
+  usb_init ();
+  
+  if (usb_find_busses () < 0) {
+    Log ("Error: Couldn't find USB bus.");
+    return FALSE;
   }
+  
+  if (usb_find_devices () < 0) {
+    Log ("Error: Couldn't find any USB devices.");
+    return FALSE;
+  }
+  
 
-  struct usb_bus *p_bus = NULL;
   // = usb_get_busses ();
 
   Close ();			// Just in case if already connected.
   m_usb_device = NULL;
   
   for (p_bus = usb_get_busses(); p_bus != NULL; p_bus = p_bus->next, ++bus_no) {
-    struct usb_device *p_device = p_bus->devices;
+    struct usb_device *p_device;// = p_bus->devices;
     fprintf(stderr, "trying bus %d\n", bus_no);
-    while (p_device) {
+    for (p_device = p_bus->devices; p_device != NULL; p_device = p_device->next ) {
       
       fprintf(stderr, "usb device with VID==%04x PID==%04x\n", p_device->descriptor.idVendor, p_device->descriptor.iProduct);
       if (p_device->descriptor.idVendor == VENDOROLD)	//Fujitsu (testmarket revision Saturn)
@@ -128,14 +128,12 @@ static gboolean Init (void)
 	}
 
       }
-      p_device = p_device->next;
     }
 
     if (m_usb_device) {
       break;
     }
 
-    p_bus = p_bus->next;
   }
 
   if (m_usb_device == NULL) {

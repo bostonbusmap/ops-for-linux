@@ -123,7 +123,7 @@ gboolean DownloadFlash(const char* filename, int partition, int size) {
 
   
   
-  FILE* file = fopen(filename, "w");
+  FILE* file = fopen(filename, "wb");
   if (file == NULL) {
     Log("Trouble creating filename");
     return FALSE;

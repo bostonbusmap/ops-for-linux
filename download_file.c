@@ -19,7 +19,7 @@ gboolean DownloadFile(char* saveto, char* filename, int filesize) {
   char buffer[BUFSIZE];
   printf("DownloadFile(%s, %s)\n", saveto, filename);
   strcpy(sfilename, filename);
-  file = fopen(saveto, "w");
+  file = fopen(saveto, "wb");
   if (file == NULL) {
     Log("Trouble opening: ");
     Log(filename);

@@ -23,7 +23,7 @@ $(SRCS):
 	$(CC) $(CFLAGS) -c $*.c
 
 ops-linux: $(OBJS)
-	$(CC) -o $@ $(OBJS) $(LDFLAGS)
+	$(CC) -o $(@).exe $(OBJS) $(LDFLAGS)
 
 clean:
-	rm ops-linux *~ *.o -f
+	rm ops-linux.exe *~ *.o -f

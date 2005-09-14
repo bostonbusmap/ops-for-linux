@@ -259,20 +259,22 @@ int main (int argc, char *argv[])
   GtkObject* hadjustment, *vadjustment;
   //GError* error = NULL;
   //camcorder_files_size = 0;
+  Log("Starting threading...");
   g_thread_init(NULL);
   gdk_threads_init();
-  
+  Log("Threading started");
   root_directory = NULL;
   set_bitrate(0);
   /* This is called in all GTK applications. Arguments are parsed
    * from the command line and are returned to the application. */
+  Log("Starting gtk...");
   gtk_init (&argc, &argv);
   toggle_camera_lcd_screen_is_on = TRUE;
  
   // Handle the command line args
   process_args(argc,argv);
   
- if (do_help) {
+  if (do_help) {
     printf("flags:\n");
     printf("-d -- download all movies from the camcorder\n");
     printf("-f -- clear camera's movie partition (erase all movies)\n");
@@ -302,7 +304,7 @@ int main (int argc, char *argv[])
   main_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   window = main_window;
   gtk_window_set_title (GTK_WINDOW (window), "Ops for linux");
-  
+  Log("main window created");
     /* When the window is given the "delete_event" signal (this is given
      * by the window manager, usually by the "close" option, or on the
      * titlebar), we ask it to call the delete_event () function
@@ -423,7 +425,7 @@ int main (int argc, char *argv[])
 		      GTK_SIGNAL_FUNC(upload_file), NULL);
   gtk_signal_connect (GTK_OBJECT (button_delete_file), "clicked",
 		      GTK_SIGNAL_FUNC(delete_file), NULL);
-  gtk_signal_connect (GTK_OBJECT (m_directory_tree), "row-activated",
+  gtk_signal_connect (GTK_OBJECT (m_directory_tree), "cursor-changed", /* "row-activated",*/
 		      GTK_SIGNAL_FUNC(reset_label), NULL);
   gtk_signal_connect (GTK_OBJECT (button_toggle_camera_lcd_screen), "clicked",
 		      GTK_SIGNAL_FUNC(toggle_camera_lcd_screen), NULL);

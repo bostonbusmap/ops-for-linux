@@ -141,7 +141,7 @@ static gboolean download_last_movie_store_filename(GtkWidget *widget) {
   Log("Filename: ");
   //  Log(filename);
   //Log("after");
-  semiglobalfile = fopen(filename, "w");
+  semiglobalfile = fopen(filename, "wb");
   if (semiglobalfile == NULL) {
     //reuse c_s
     strncpy(tempfilename, filename, STRINGSIZE - 3);
@@ -150,7 +150,7 @@ static gboolean download_last_movie_store_filename(GtkWidget *widget) {
     c_s = GetMovieName(tempfilename);
     
 
-    semiglobalfile = fopen(c_s.text, "w");
+    semiglobalfile = fopen(c_s.text, "wb");
   
     if (semiglobalfile == NULL) {
 

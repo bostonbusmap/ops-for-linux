@@ -1,45 +1,6 @@
 #include "ops-linux.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-gboolean GetAnyFileInfo(const char* filename, file_info *thisfileinfo) {
-  unsigned char data[29],tempname[29],sfilename[256];
-  int t;
-  
-  //this function assumes that you've already changed to the right partition
-  //and directory
-  Log("GetAnyFileInfo start");
-  memset(data,0,29);
-  memset(sfilename,0,255);
-  
-  //first we set the filename
-  strncpy((char *)sfilename,filename,12);
-  if(ControlMessageWrite(0xb101,(int *)sfilename,strlen((char *)sfilename)+1,TIMEOUT)==FALSE) { //SetFileName
-    Log("failed to set filename");
-    return FALSE;
-  }
-  ///  //b901 doesn't work for some reason... defaulting to bc00 for the time being
-  //nevermind...
-  ControlMessageWrite(0xb901,(int *)data,0,TIMEOUT);
-  if(Read(data,28,TIMEOUT)<28) {
-    Log("failed to retrieve file information");
-    return FALSE;
-  }
-  
-  Log("success in Read in GetAnyFileInfo");
-  memset(tempname,0,14);
-  memcpy(tempname,data+4,12);
-  for(t=0;t<13;t++)
-    if(tempname[t]==0xff)
-      tempname[t]=0;
-
-  strncpy(thisfileinfo->filename, tempname, STRINGSIZE);
-  thisfileinfo->filesize=*(unsigned int*)&data[20];
-  thisfileinfo->filetype=FIFILE;
-  if(data[18]==0x10)
-    thisfileinfo->filetype=FIDIR;
-  Log("success in GetAnyFileInfo");
-  return TRUE;
-}
 
 gboolean FileToMemory(const char* filename, unsigned char *buffer, unsigned int maxlength) {
 
@@ -324,7 +285,7 @@ static int get_usp_file(usp_file *uf) {
 #else
 
 static int get_usp_file(usp_file *uf){
-  FILE *fp = fopen("cam.BIN","r");
+  FILE *fp = fopen("cam.BIN","rb");
   if(!fp) return 0;
   int rc = fread(uf, sizeof *uf, 1, fp);
   fclose(fp);
@@ -386,7 +347,7 @@ static int put_usp_file(usp_file *uf){
 #else
 
 static int put_usp_file(usp_file *uf){
-  FILE *fp = fopen("cam.BIN","w");
+  FILE *fp = fopen("cam.BIN","wb");
   if(!fp) return 1;
   int rc = fwrite(uf, sizeof *uf, 1, fp);
   fclose(fp);

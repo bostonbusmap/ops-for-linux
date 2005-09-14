@@ -28,6 +28,45 @@ typedef struct cvs_dir_entry {
   unsigned short moddate;      // 26  crazy DOS date
                                // 28  (this is a 28-byte struct)
 } cvs_dir_entry;
+gboolean GetAnyFileInfo(const char* filename, file_info *thisfileinfo) {
+  unsigned char data[29],tempname[29],sfilename[256];
+  int t;
+  
+  //this function assumes that you've already changed to the right partition
+  //and directory
+  Log("GetAnyFileInfo start");
+  memset(data,0,29);
+  memset(sfilename,0,255);
+  
+  //first we set the filename
+  strncpy((char *)sfilename,filename,12);
+  if(ControlMessageWrite(0xb101,(int *)sfilename,strlen((char *)sfilename)+1,TIMEOUT)==FALSE) { //SetFileName
+    Log("failed to set filename");
+    return FALSE;
+  }
+  ///  //b901 doesn't work for some reason... defaulting to bc00 for the time being
+  //nevermind...
+  ControlMessageWrite(0xb901,(int *)data,0,TIMEOUT);
+  if(Read(data,28,TIMEOUT)<28) {
+    Log("failed to retrieve file information");
+    return FALSE;
+  }
+  
+  Log("success in Read in GetAnyFileInfo");
+  memset(tempname,0,14);
+  memcpy(tempname,data+4,12);
+  for(t=0;t<13;t++)
+    if(tempname[t]==0xff)
+      tempname[t]=0;
+
+  strncpy(thisfileinfo->filename, tempname, STRINGSIZE);
+  thisfileinfo->filesize=*(unsigned int*)&data[20];
+  thisfileinfo->filetype=FIFILE;
+  if(data[18]==0x10)
+    thisfileinfo->filetype=FIDIR;
+  Log("success in GetAnyFileInfo");
+  return TRUE;
+}
 
 
 gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
@@ -260,12 +299,15 @@ static file_info* AddToTreeStore(GtkTreeStore* treestore, GtkTreeIter* toplevel,
 static void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* parent_place, int partition, int level, GtkTreeStore* treestore) {
   gboolean firstitem;
   file_info tData, pData;
+  int count;
   //  const char* parentpath = parentpath_cs.text;
   int t, end;
   GtkTreeIter child;
   // file_info hitems[999];
   char recursedir[STRINGSIZE];
   char tempstring[STRINGSIZE];
+  file_info* f_i = NULL, tempfileinfo;
+  int total_getfileinfo_calls = 0;
   firstitem = TRUE;
   
   strcpy(tempstring, "RecursiveListing: ");
@@ -286,8 +328,9 @@ static void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* p
   
   for(t=0;t<1000;t++)  { //don't bitch. 1000 items in one directory is a lot.
     Log("Getfileinfo?");
-    if(GetFileInfo(&tData,firstitem)==FALSE)
+    if(GetFileInfo(&tData, firstitem)==FALSE)
       break; //we've passed the last item.
+    ++total_getfileinfo_calls;
     Log("Getfileinfo.");
     firstitem=FALSE;
     
@@ -311,10 +354,12 @@ static void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* p
       strcat(pData.fullpath, tData.filename);
     pData.partition=partition;
     Log(pData.fullpath);
+      
+      
+    f_i = AddToTreeStore(GTK_TREE_STORE(treestore), parent_place, &child, &pData, parent);
+    //from here on in f_i and pData should contain the same info (at different memory locations)
+    //also, AddToTreeStore stores data elsewhere so don't delete f_i
     if(pData.filetype==FIDIR) {
-      
-      
-      file_info* f_i = AddToTreeStore(GTK_TREE_STORE(treestore), parent_place, &child, &pData, parent);
       Log("if (pData.filetype == FIDIR)");
       strncpy (recursedir, pData.fullpath, STRINGSIZE - 2);
       strcat (recursedir, "/");
@@ -326,7 +371,9 @@ static void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* p
 	//Log("Couldn't recurse into:");
 	Log(tempstring);
 	return;
+	
       }
+
       //      RecursiveListing(recursedir, f_i);
       //hItem[t] = m_directory_tree.InsertItem(pData->filename,0,0,parent);
       //Log("enter recursion");
@@ -334,9 +381,20 @@ static void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* p
       //RecursiveListing(NULL, NULL, NULL, 0, 0, NULL);
       Log("RecursiveListing recursion.");
       RecursiveListing(recursedir, f_i, &child, partition, level + 1, GTK_TREE_STORE(treestore));
+      //      strncpy(tempstring, f_i->dirpath, STRINGSIZE - 2); //really hoping dirpath is this dir
+      //      strcat(tempstring, "/");
+      if (ChangeDirectory(pData.dirpath) == FALSE) {
+	Log("PROBLEM: couldn't change back to current directory after recursion");
+	return;
+      }
+      if (firstitem == TRUE) firstitem = FALSE;
+      GetFileInfo(&pData, TRUE);
+      for (count = 1; count < total_getfileinfo_calls; ++count) {
+	GetFileInfo(&pData, FALSE);
+      }
       //Log("end recursion");
     } else {
-      AddToTreeStore(treestore, parent_place, &child, &pData, parent);
+	//AddToTreeStore(treestore, parent_place, &child, &pData, parent);
       strcpy(tempstring, "Not a directory: ");
       strcat(tempstring, pData.fullpath);
       Log(tempstring);
@@ -347,7 +405,7 @@ static void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* p
     //SetItemData(hItem[t],(DWORD)pData);;
     
   }
-  end = t;
+  //end = t;
 
   //return; //debug... don't recurse
 
@@ -435,7 +493,6 @@ static GtkTreeModel* create_model(void) {
 
   //m_directory_tree.Expand(rItem,TVE_EXPAND);
 	
-
   ChangePartition(0); //make sure we're back at the media partition!!!
   ChangeDirectory("/DCIM");
 
@@ -463,8 +520,7 @@ gboolean update_directory_listing (GtkWidget *widget,
   FreeAllocatedFiles(root_directory);
   root_directory = NULL;
   gtk_tree_view_set_model(GTK_TREE_VIEW(m_directory_tree), GTK_TREE_MODEL(model));
-  //  gtk_object_unref(GTK_TREE_MODEL(model));
-  //gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW(m_directory_tree)), GTK_SELECTION_NONE);
+  gtk_tree_view_expand_all(GTK_TREE_VIEW(m_directory_tree)); 
   EnableControls(TRUE);
   return TRUE;
 }
