@@ -4,6 +4,8 @@ gboolean get_clock(GtkWidget* widget,
 		   GdkEvent* event,
 		   gpointer data) {
   unsigned short int buffer[7];
+  if (CheckCameraOpen() == FALSE)
+    return FALSE;
   if (ControlMessageRead(0xcc00, (char*)buffer, 14, TIMEOUT) == FALSE) {
     Log("get_clock failed");
     return FALSE;
