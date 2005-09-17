@@ -28,42 +28,49 @@ typedef struct cvs_dir_entry {
   unsigned short moddate;      // 26  crazy DOS date
                                // 28  (this is a 28-byte struct)
 } cvs_dir_entry;
+
+
+// this function assumes that you've already changed to the right partition
+// and directory
 gboolean GetAnyFileInfo(const char* filename, file_info *thisfileinfo) {
-  unsigned char data[29],tempname[29],sfilename[256];
-  int t;
-  
-  //this function assumes that you've already changed to the right partition
-  //and directory
+  cvs_dir_entry data;
+
   Log("GetAnyFileInfo start");
-  memset(data,0,29);
-  memset(sfilename,0,255);
+  memset(&data, 0, sizeof data);
   
-  //first we set the filename
-  strncpy((char *)sfilename,filename,12);
-  if(ControlMessageWrite(0xb101,(int *)sfilename,strlen((char *)sfilename)+1,TIMEOUT)==FALSE) { //SetFileName
+  // first we set the filename
+  if(ControlMessageWrite(0xb101, filename, strlen(filename)+1, TIMEOUT)==FALSE) { //SetFileName
     Log("failed to set filename");
     return FALSE;
   }
   ///  //b901 doesn't work for some reason... defaulting to bc00 for the time being
   //nevermind...
-  ControlMessageWrite(0xb901,(int *)data,0,TIMEOUT);
-  if(Read(data,28,TIMEOUT)<28) {
+  ControlMessageWrite(0xb901, (const char *)&data, 0, TIMEOUT);
+  if(Read((char*)&data,28,TIMEOUT)<28) {
     Log("failed to retrieve file information");
     return FALSE;
   }
   
   Log("success in Read in GetAnyFileInfo");
-  memset(tempname,0,14);
-  memcpy(tempname,data+4,12);
-  for(t=0;t<13;t++)
-    if(tempname[t]==0xff)
-      tempname[t]=0;
 
-  strncpy(thisfileinfo->filename, tempname, STRINGSIZE);
-  thisfileinfo->filesize=*(unsigned int*)&data[20];
-  thisfileinfo->filetype=FIFILE;
-  if(data[18]==0x10)
-    thisfileinfo->filetype=FIDIR;
+  // filename may have trailing 0xff garbage
+  char *cp = memchr(data.filename, '\xff', 12);
+  if(!cp)
+    cp = memchr(data.filename, '\0', 12);
+  if(!cp)
+    cp = data.filename + 12;
+
+  size_t len = cp - data.filename;
+
+  memcpy(thisfileinfo->filename, data.filename, len);
+  data.filename[len] = '\0';
+
+  thisfileinfo->filesize = le32_to_cpu(data.filesize);
+
+  thisfileinfo->filetype = FIFILE;
+  if(data.fileattr==0x10)
+    thisfileinfo->filetype = FIDIR;
+
   Log("success in GetAnyFileInfo");
   return TRUE;
 }
@@ -226,7 +233,7 @@ gboolean ChangeDirectory(const char* d) {
   }
   
   //validation is done... we can procede with the actual command stuff.
-  memset(data,0x00,LIBUSB_PATH_MAX);
+  memset(&data,0x00,LIBUSB_PATH_MAX);
   strcpy(data,directory);
   
   if(ControlMessageWrite(0xb800,data, strlen(data)+1,TIMEOUT)==TRUE) {

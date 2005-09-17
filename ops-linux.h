@@ -259,4 +259,6 @@ gboolean delete_file(GtkWidget* widget,
                GdkEvent* event,
                gpointer data);
 
+gboolean GetAnyFileInfo(const char* filename, file_info *thisfileinfo);
+
 #endif
