@@ -35,7 +35,7 @@ typedef struct
 #pragma pack (pop)
 
 
-int GetPartitionSize(int partition, gboolean rounded) {
+static int GetPartitionSize(int partition, gboolean rounded) {
   int data[2];
   int y;
   BootRecord bootrec;
@@ -86,30 +86,30 @@ int GetPartitionSize(int partition, gboolean rounded) {
     Log("Couldn't retrieve partition's boot record");
     return(-1);
   }
-  if(bootrec.BR_Signature!=0xaa55) {
+  if(bootrec.BR_Signature != cpu_to_le16(0xaa55)) {
     Log("Bad signature retrieved from partition's boot record");
     return(-1);
   }
   
-  sectors=bootrec.LargeSectors+bootrec.SmallSectors;
+  sectors = le16_to_cpu(bootrec.SmallSectors);
+  if(!sectors) sectors = le32_to_cpu(bootrec.LargeSectors);
   
   //stupid cam doesn't want to provide/send a number of sectors that isn't
   //evenly divisible by the clusters, so we have to round up the size
-  if((rounded==TRUE)&&((sectors%bootrec.SectorsPerCluster)!=0)) {
+  if((rounded==TRUE) && ((sectors%bootrec.SectorsPerCluster)!=0)) {
     //round up the sectors to the next evenly divisible cluster count
-    sectors=sectors+bootrec.SectorsPerCluster-(sectors%bootrec.SectorsPerCluster);
+    sectors = sectors + bootrec.SectorsPerCluster - (sectors%bootrec.SectorsPerCluster);
   }
   
-  size=sectors*bootrec.BytesPerSector;
+  size = sectors * le16_to_cpu(bootrec.BytesPerSector);
   
-  return(size);
-  
+  return size;
 }
 
 
 
 
-gboolean DownloadFlash(const char* filename, int partition, int size) {
+static gboolean DownloadFlash(const char* filename, int partition, int size) {
 
   //Ok, this one's pretty ugly... The problem is that the firmware
   //doesn't want to send a file who's sector count isn't divisible
@@ -119,7 +119,7 @@ gboolean DownloadFlash(const char* filename, int partition, int size) {
   //...it could be something else, but assuming the above fixes
   //a "rounded down" bug when delivering the NO_NAME partition.
   
-  unsigned char buffer[BUFSIZE];
+  char buffer[BUFSIZE];
   int data[3];
   int dummy;
   int i,x;
@@ -151,10 +151,10 @@ gboolean DownloadFlash(const char* filename, int partition, int size) {
     roundedsize=size;
 
   data[0]=0;
-  data[1]=roundedsize;
+  data[1]=cpu_to_le32(roundedsize);
   if(partition==2) {
     //skip the first 512 bytes (the EBR) by setting data[0]=512
-    data[0]=512;
+    data[0]=cpu_to_le32(512);
   }
   
   /*  p_ctl_progress->SetRange32(0,(roundedsize/BUFSIZE)/32);
@@ -174,10 +174,10 @@ gboolean DownloadFlash(const char* filename, int partition, int size) {
   int count=0;
   for(i=0;;i++) {
     memset(buffer,0,BUFSIZE);
-    x=Read((unsigned char *)buffer,bufsize,TIMEOUT);
+    x=Read(buffer,bufsize,TIMEOUT);
     if(x>0) {
       //      file.WriteHuge(buffer,(DWORD)x);
-      fwrite(buffer, sizeof(char), x, file);
+      fwrite(buffer, 1, x, file);
       count+=x;
       if(count+bufsize>size) { //we gotta shrink the buffer
 	bufsize=size-count;
@@ -198,7 +198,7 @@ gboolean DownloadFlash(const char* filename, int partition, int size) {
   if(roundedsize!=size) { //we need to bleed off the excess requested bytes.
     
     for(;;) {
-      x=Read((unsigned char *)buffer,BUFSIZE,TIMEOUT); //applying leeches
+      x=Read(buffer,BUFSIZE,TIMEOUT); //applying leeches
       if(x<1)
 	break;
     }
@@ -210,10 +210,10 @@ gboolean DownloadFlash(const char* filename, int partition, int size) {
   fprintf(stderr, "flash download was %d bytes\n",count);
   //  Log(debug);
   return TRUE;
-
 }
 
-void download_flash_start_thread(gpointer data) {
+
+static void download_flash_start_thread(gpointer data) {
   twosome* ts = data;
   
   if(DownloadFlash((char*)(ts->a), (int)(ts->b), -1)==FALSE) {
@@ -225,11 +225,7 @@ void download_flash_start_thread(gpointer data) {
   }
   free(ts->a);
   free(ts);
-
-
 }
-
-
 
 
 
@@ -304,4 +300,3 @@ gboolean download_flash( GtkWidget *widget,
   set_progress_bar(0.0);
   return TRUE;
 }
-
