@@ -1,10 +1,5 @@
 #include "ops-linux.h"
 
-//static file_info* global_p;
-
-//static gchar* global_filename;
-//static char storedir_global[STRINGSIZE];
-
 static int GetLength(FILE* fp) {
   int l;
   fseek(fp, 0, SEEK_END);
@@ -13,7 +8,6 @@ static int GetLength(FILE* fp) {
   fseek(fp, 0, SEEK_SET);
   return l;
 }
-//gboolean MemoryToFile(const char* filename, unsigned char *buffer, unsigned int filesize)
 
 static gboolean UploadFile(char* saveto, char* filename) {
 	// This function expects that you've already changed the parition and 
@@ -106,18 +100,13 @@ static gboolean UploadFile(char* saveto, char* filename) {
   set_bitrate(0);
   fclose(file);
   //  Log("Success sending file");
-
-
-
-
-
   
-  Log("Leaving MemoryToFile");
+  Log("Leaving UploadFile");
   return TRUE;
-
-
 }
-void upload_file_start_thread(gpointer data) {
+
+
+static void upload_file_start_thread(gpointer data) {
   threesome* ts = data; //see DownloadFile for args
   //EnableControls(FALSE);
   if(UploadFile((char*)(ts->a), (char*)(ts->b))==FALSE) {
@@ -130,6 +119,7 @@ void upload_file_start_thread(gpointer data) {
   set_progress_bar(0.0);
   EnableControls(TRUE);
 }
+
 
 gboolean upload_file( GtkWidget *widget,
 		      GdkEvent *event,

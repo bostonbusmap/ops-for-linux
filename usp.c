@@ -62,17 +62,16 @@ gboolean FileToMemory(const char* filename, unsigned char *buffer, unsigned int 
   return TRUE;
 }
 
-gboolean MemoryToFile(const char* filename, unsigned char *buffer, unsigned int filesize)
+static gboolean MemoryToFile(const char* filename, char *buffer, unsigned int filesize)
 {
 	// This function expects that you've already changed the parition and 
 	// directory.
   //Log("entering MemoryToFile");
   unsigned int x,t;
-  unsigned int udata;
   //CFile file;
   //FILE* file = NULL;
 
-  unsigned char sfilename[256];
+  char sfilename[256];
   
   int bufsize;
   
@@ -81,26 +80,27 @@ gboolean MemoryToFile(const char* filename, unsigned char *buffer, unsigned int 
     return(FALSE);
   }
 
-  memset(sfilename,0,255);
-  strncpy((char *)sfilename,filename,12);
-  if(ControlMessageWrite(0xb105,(int *)sfilename,strlen((char *)sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
-    
+  memset(sfilename, '\0', sizeof sfilename);
+  strncpy(sfilename, filename, 12);
+  if(ControlMessageWrite(0xb105,(int *)sfilename,strlen(sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
     Log("failed at 0xb1");
     return FALSE;
   }
 
-  //Endianess appears to be screwed with this command!!
-  udata=((filesize&0xffff)<<16)|((filesize>>16));
-  
-  if(ControlMessageWrite(0x9505,(int *)&udata,4, TIMEOUT)== FALSE) { // Request Write
-    
+  char udata[4];
+  // It's a bisexual byte order! Arrrgh! The PDP-11 legacy lives on.
+  udata[1] = filesize >> 24;
+  udata[0] = filesize >> 16;
+  udata[3] = filesize >>  8;
+  udata[2] = filesize >>  0;
+  if(ControlMessageWrite(0x9505,udata,4,TIMEOUT)== FALSE) { // Request Write
     Log("failed at 0x95");
     return FALSE;
   }
   
   bufsize=BUFSIZE;
-  for(t=0;t<filesize;t=t+bufsize) {
-    if(t+BUFSIZE>filesize)
+  for(t=0; t<filesize; t=t+bufsize) {
+    if(t+BUFSIZE > filesize)
       bufsize=filesize-t; //last chunk... make the buffer smaller
     x=Write(buffer+t,bufsize,TIMEOUT);
     if(x<1) {
@@ -227,7 +227,6 @@ static char *verify_usp_data(usp_data *ud){
 
 static int get_usp_file(usp_file *uf) {
   // make sure the magic won't match by accident
-  char name[10] = "USP.BIN";
   uf->header = cpu_to_le16(0xdead);
   uf->footer = cpu_to_le16(0xb00b);
 
@@ -241,43 +240,12 @@ static int get_usp_file(usp_file *uf) {
     Log("ChangeDirectory(\"/\") failed.");
     return FALSE;
   }
-
   
-  
-  /* if(ControlMessageWrite(0xb101, name, sizeof name, TIMEOUT)==FALSE) { //SetFileName
-    Log("failed at 0xb1");
-    EnableControls(TRUE);
-    return FALSE;
-  }
-  
-  int data=0x00;
-  if(ControlMessageWrite(0x9301,(char*)&data,0,TIMEOUT)==FALSE) { // Request File Read
-    Log("failed at 0x93");
-    return FALSE;
-    }
-
-  int count;
-  count=Read((char*)uf, sizeof *uf, TIMEOUT);
-  if(count != sizeof *uf){
-    Log("short Read");
-    return FALSE;
-  }
-
-  fprintf(stderr, "Got 0x%03x (%d) bytes\n", count, count);  
-  
-  // make sure there isn't any more to come
-  count=Read((char*)&data, sizeof data, TIMEOUT);
-  if(count != sizeof data){
-  Log("excess data");
-//    return FALSE;
-}*/
-  
-  if(FileToMemory("USP.BIN",(char*)uf,(sizeof(usp_file)))==FALSE) {
+  if(FileToMemory("USP.BIN", (char*)uf, sizeof *uf)==FALSE) {
     Log("FileToMemory failed in get_usp_file");
   }
       
   //fprintf(stderr, "Got 0x%03x (%d) bytes\n", count, count);  
-
 
   return uf->header==cpu_to_le16(0xfaac) && uf->footer==cpu_to_le16(0xfaac);
 }
@@ -309,36 +277,8 @@ static int put_usp_file(usp_file *uf){
     return FALSE;
   }
 
-  /*  char name[] = "/USP.BIN";
-  char udata[4];
-
-  if(ControlMessageWrite(0xb100, name, sizeof name, TIMEOUT)==FALSE) { //SetFileName
-    Log("failed at 0xb1");
-    return FALSE;
-  }
-
-  int filesize = 0x804;
-  // It's a bisexual byte order! Arrrgh! The PDP-11 legacy lives on.
-  udata[1] = filesize >> 24;
-  udata[0] = filesize >> 16;
-  udata[3] = filesize >>  8;
-  udata[2] = filesize >>  0;
-  if(ControlMessageWrite(0x9500,udata,4,TIMEOUT)==FALSE) { // Request Write
-    Log("failed at 0x95");
-    return FALSE;
-  }
-
-  int x = Write((char*)uf, sizeof *uf, TIMEOUT);
-  if(x<1) {
-    Log("Error writing file to camera");
-    return FALSE;
-  }
-  Log("Success sending file");
-  */
-  if(MemoryToFile("USP.BIN",(char*)uf,(sizeof(usp_file)))==FALSE) {
+  if(MemoryToFile("USP.BIN", (char*)uf, sizeof *uf)==FALSE) {
     Log("FileToMemory failed in get_usp_file");
-    
-
   }
 
   return TRUE;
