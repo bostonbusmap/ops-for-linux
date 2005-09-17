@@ -1,8 +1,10 @@
 #include "ops-linux.h"
+
 typedef unsigned int DWORD;
 typedef unsigned int dword;
 typedef unsigned char byte;
 typedef unsigned short int word;
+
 //maybe some asserts to confirm byte sizes?
 #pragma pack (push, 0)
 typedef struct
@@ -31,6 +33,8 @@ typedef struct
 	word	BR_Signature; /*=AA55h*/
 }  BootRecord;
 #pragma pack (pop)
+
+
 int GetPartitionSize(int partition, gboolean rounded) {
   int data[2];
   int y;
@@ -122,13 +126,11 @@ gboolean DownloadFlash(const char* filename, int partition, int size) {
   int roundedsize,bufsize;
 
   
-  
   FILE* file = fopen(filename, "wb");
   if (file == NULL) {
     Log("Trouble creating filename");
     return FALSE;
   }
-
 
   if(partition==0) { //we repurpose 0 to mean start at 3 and grab the rest of the flash
     
@@ -298,15 +300,8 @@ gboolean download_flash( GtkWidget *widget,
     return FALSE;
   }
 
-  
-  
-  
-  
   EnableControls(TRUE);
   set_progress_bar(0.0);
   return TRUE;
-
-  
-  
 }
 
