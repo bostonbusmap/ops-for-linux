@@ -126,13 +126,13 @@ typedef struct usp_data { // file  data
   char challenge[128];    // 0x08a 0x088
   char response[128];     // 0x10a 0x108
   char zero1[32];         // 0x18a 0x188
-  char magic2[16];        // 0x1aa 0x1a8
+  char magic2[16];        // 0x1aa 0x1a8, the 0x01 bytes may be compression-related
   char magic3;            // 0x1ba 0x1b8
   char magic4[8];         // 0x1bb 0x1b9
   char softlimit;         // 0x1c3 0x1c1
   char fps;               // 0x1c4 0x1c2
   char magic5;            // 0x1c5 0x1c3
-  char magic6[2];         // 0x1c6 0x1c4
+  char magic6[2];         // 0x1c6 0x1c4, 1st byte may be compression-related
   short xres;             // 0x1c8 0x1c6
   short yres;             // 0x1ca 0x1c8
   char magic7[4];         // 0x1cc 0x1ca
