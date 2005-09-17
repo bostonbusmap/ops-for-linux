@@ -126,12 +126,14 @@ typedef struct usp_data { // file  data
   char challenge[128];    // 0x08a 0x088
   char response[128];     // 0x10a 0x108
   char zero1[32];         // 0x18a 0x188
+  // stuff beyond here can be found at 0x80140120 in the camera
   char magic2[16];        // 0x1aa 0x1a8, the 0x01 bytes may be compression-related
   char magic3;            // 0x1ba 0x1b8
   char zero1a[4];         // 0x1bb 0x1b9
   char compression0;      // 0x1bf 0x1bd
   char compression1;      // 0x1c0 0x1be
-  char magic4[2];         // 0x1c1 0x1bf
+  char magic4;            // 0x1c1 0x1bf
+  char maxfiles;          // 0x1c2 0x1c0
   char softlimit;         // 0x1c3 0x1c1
   char fps;               // 0x1c4 0x1c2
   char magic5;            // 0x1c5 0x1c3
@@ -142,6 +144,7 @@ typedef struct usp_data { // file  data
   char magic8;            // 0x1d0 0x1ce
   char hardlimit;         // 0x1d1 0x1cf
   char magic9[20];        // 0x1d2 0x1d0
+  // end of data found starting at 0x80140120
   char zero2[1560];       // 0x1e6 0x1e4
   char magic10[2];        // 0x7fe 0x7fc
   char zero3[2];          // 0x800 0x7fe
@@ -183,8 +186,10 @@ static char *verify_usp_data(usp_data *ud){
     return "bad zero1a";
   if(ud->compression0 != 0x60 && ud->compression1 != 0x7f)
     return "unknown compression-related bytes look bad";
-  if(memcmp(ud->magic4, "\x00\x62", sizeof ud->magic4))
+  if(ud->magic4 != 0)
     return "bad magic4";
+  if(ud->maxfiles != 0x62) // 98 files at most -- maybe near a DVD chapter limit?
+    return "bad maxfiles";
   if(ud->fps != 30 && ud->fps != 24)
     return "bad fps";
   if(ud->magic5 != 0x00)
