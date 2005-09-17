@@ -2,7 +2,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-gboolean FileToMemory(const char* filename, unsigned char *buffer, unsigned int maxlength) {
+static gboolean FileToMemory(const char* filename, unsigned char *buffer, unsigned int maxlength) {
 
   // This function expects that you've already changed the parition and 
   // directory to the correct path in the camcorder.

@@ -16,15 +16,12 @@ static gboolean UploadFile(char* saveto, char* filename) {
 
 	// directory.
   int filesize;
-  unsigned int x,t;
+  unsigned int x;
   unsigned int count = 0, tcount = 0, alt_total = 0;
-  unsigned int udata;
   //CFile file;
   FILE* file = NULL;
-  unsigned buffer [BUFSIZE];
-  unsigned char sfilename[256];
-  
-  int bufsize;
+  char buffer [BUFSIZE];
+  char sfilename[256];
   
   Log("entering UploadFile");
   printf("UploadFile(%s, %s)\n",saveto,filename);
@@ -45,22 +42,25 @@ static gboolean UploadFile(char* saveto, char* filename) {
 
   memset(sfilename,0,255);
   strncpy((char *)sfilename,filename,12);
-  if(ControlMessageWrite(0xb105,(int *)sfilename,strlen((char *)sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
+  if(ControlMessageWrite(0xb105, sfilename, strlen(sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
     Log("failed at 0xb1");
     return FALSE;
   }
 
-  //Endianess appears to be screwed with this command!!
-  udata=((filesize&0xffff)<<16)|((filesize>>16));
-  
-  if(ControlMessageWrite(0x9505,(int *)&udata,4, TIMEOUT)== FALSE) { // Request Write
-    
+  // It's a bisexual byte order! Arrrgh! The PDP-11 legacy lives on.
+  char udata[4];
+  udata[1] = filesize >> 24;
+  udata[0] = filesize >> 16;
+  udata[3] = filesize >>  8;
+  udata[2] = filesize >>  0;
+  if(ControlMessageWrite(0x9505, udata, 4, TIMEOUT)== FALSE) { // Request Write
     Log("failed at 0x95");
     return FALSE;
   }
+
   x=0;
   //  EnableControls(FALSE);
-  while(1) {
+  for(;;) {
     Log("writing...");
     count = fread(buffer, sizeof(char), BUFSIZE, file);
     if (count < 1) break;
