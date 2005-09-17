@@ -120,16 +120,18 @@ typedef struct file_info { //each one of these is at least 4000 bytes... :(
 } file_info;
 
 /* structs for passing data to other threads and callbacks */
+
 typedef struct {
   void* a;
   void* b;
-
 } twosome;
+
 typedef struct {
   void* a;
   void* b;
   void* c;
 } threesome;
+
 typedef struct {
   void* a;
   void* b;
