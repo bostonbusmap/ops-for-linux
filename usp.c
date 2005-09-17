@@ -128,7 +128,10 @@ typedef struct usp_data { // file  data
   char zero1[32];         // 0x18a 0x188
   char magic2[16];        // 0x1aa 0x1a8, the 0x01 bytes may be compression-related
   char magic3;            // 0x1ba 0x1b8
-  char magic4[8];         // 0x1bb 0x1b9
+  char zero1a[4];         // 0x1bb 0x1b9
+  char compression0;      // 0x1bf 0x1bd
+  char compression1;      // 0x1c0 0x1be
+  char magic4[2];         // 0x1c1 0x1bf
   char softlimit;         // 0x1c3 0x1c1
   char fps;               // 0x1c4 0x1c2
   char magic5;            // 0x1c5 0x1c3
@@ -176,7 +179,11 @@ static char *verify_usp_data(usp_data *ud){
     return "bad magic2";
   if(ud->magic3 != 0x14 && ud->magic3 != 0x00)
     return "bad magic3";
-  if(memcmp(ud->magic4, "\x00\x00\x00\x00\x60\x7f\x00\x62", sizeof ud->magic4))
+  if(memcmp(ud->zero1a, "\x00\x00\x00\x00", sizeof ud->zero1a))
+    return "bad zero1a";
+  if(ud->compression0 != 0x60 && ud->compression1 != 0x7f)
+    return "unknown compression-related bytes look bad";
+  if(memcmp(ud->magic4, "\x00\x62", sizeof ud->magic4))
     return "bad magic4";
   if(ud->fps != 30 && ud->fps != 24)
     return "bad fps";
@@ -483,7 +490,7 @@ static gboolean SettingsDialog(usp_data *ud){
   gtk_widget_show(soft_scale);
   gtk_widget_show(hard_scale);
   gtk_tooltips_set_tip(tooltips, size_scale, "X resolution (Y is 3/4 of X)", NULL);
-  gtk_tooltips_set_tip(tooltips, soft_scale, "the soft limit in minutes, beyond which you can not start a new video", NULL);
+  gtk_tooltips_set_tip(tooltips, soft_scale, "the soft limit in minutes, beyond which you can not start a new video (low values reduce compression artifacts)", NULL);
   gtk_tooltips_set_tip(tooltips, hard_scale, "the hard limit in minutes, beyond which you can not continue recording", NULL);
 
   checkbox = gtk_check_button_new_with_mnemonic("_enable hard limit");
