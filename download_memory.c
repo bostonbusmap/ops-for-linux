@@ -189,18 +189,10 @@ gboolean download_memory(GtkWidget* widget,
 }
 
 gboolean Monitor(const char* command) {
-  
-//  FILE* file;
-  char buffer[255];
-
-
-  memset(buffer, 0, sizeof buffer);
-  strcpy(buffer,command);
-  if(ControlMessageWrite(0xef00, buffer, strlen(buffer)+1, LONG_TIMEOUT)==TRUE) {
+  if(ControlMessageWrite(0xef00, command, strlen(command)+1, LONG_TIMEOUT)==TRUE) {
     Log("monitor command succeeded.");
     return TRUE;
   }
   Log("monitor command failed");
   return FALSE;
-
 }
