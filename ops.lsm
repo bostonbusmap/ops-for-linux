@@ -1,0 +1,14 @@
+Begin4
+Title: ops
+Version: 13.0.0
+Entered-date: 2005-9-18
+Description: Graphical tool for the CVS disposable camcorder
+Keywords: ops saturn cvs camcorder zoran
+Author: Albert Cahalan, Kees Cook, George S, etc.
+Maintained-by: various <saturntools-ops-linux@lists.sf.net>
+Primary-site: http://saturntools.sf.net/
+	277kB ops-13.0.0.tar.gz
+Alternate-site: http://www.debian.org/Packages/unstable/base/ops.html
+	277kB ops-13.0.0.tar.gz
+Copying-policy: mixed
+End

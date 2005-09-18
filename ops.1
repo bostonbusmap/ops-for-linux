@@ -1,0 +1,41 @@
+'\" t
+.\" (The preceding line is a note to broken versions of man to tell
+.\" them to pre-process this man page with tbl)
+.\" Man page for ops.
+.\" Licensed under version 2 of the GNU General Public License.
+.\" Written by Albert Cahalan
+.TH OPS 1 "September 18, 2005" "Linux" "Linux User's Manual"
+.SH NAME
+ops \- interact with the CVS disposable camcorder
+
+.na
+.nh
+.SH SYNOPSIS
+.TS
+l l.
+ops	Start ops in graphical mode.
+ops -d	Download (and delete?) all videos.
+ops -f	Format a filesystem on the camcorder.
+ops -h	Show help.
+.TE
+
+.SH DESCRIPTION
+The \fBCVS\*R ONE\[pc]TIME\[md]USE VIDEO CAMCORDER\fR
+is, despite the name, a reusable USB device made by Puredigital.
+It produces *.avi video files that use the Xvid codec.
+The sensor is believed to consist of 320x240 Bayer filter patterns,
+for a total of 640x480 single\-color sub\-pixels.
+Video resolution defaults to 320x240, but can be adjusted to 640x480
+and lower resolutions with \fBops\fR.
+
+.SH "SEE ALSO"
+gxine(1) ffplay(1) ogle(2) vlc(1) usbview(8)
+
+.SH AUTHOR
+Original MFC code by Bill Wiley <billwiley@users.sf.net>.
+Ported to Linux by George S <ygfperson@users.sf.net>.
+Also Kees Cook <kees@outflux.net> and Albert Cahalan <albert@users.sf.net>.
+
+Please send bug reports to <saturntools\-ops\-linux@lists.sf.net> or use
+the http://camerahacks.10.forumer.com/index.php forum's Applications and Questions
+topics \fBin the CVS One-Time-Use Camcorder section\fR.
