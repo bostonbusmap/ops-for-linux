@@ -19,8 +19,6 @@ SUBVERSION   := 0
 MINORVERSION := 0
 TARVERSION   := $(VERSION).$(SUBVERSION).$(MINORVERSION)
 
-############ vars
-
 # so you can disable it or choose something else
 install  := install -D --owner 0 --group 0
 
@@ -44,14 +42,15 @@ NAMES    := get_clock mass_storage download_flash usp capture_video \
             messagebox open_camcorder ops-linux readwrite unlock_camcorder \
             send_monitor_command update_directory_listing
 
-PNG      := opspic1.png opspic2.png opspic3.png opspic4.png
+IMAGES    := opspic1 opspic2 opspic3 opspic4
 
-OBJ   := $(addsuffix .o,$(NAMES))
-SRC   := $(addsuffix .c,$(NAMES))
+PNG_C     := $(addsuffix .c,$(IMAGES))
+
+OBJ   := $(addsuffix .o,$(NAMES)) $(addsuffix .o,$(IMAGES))
 
 TARFILES := AUTHORS README COPYING ChangeLog Makefile Makefile.win32 \
-            ops.lsm ops.spec ops-linux.h \
-            $(notdir $(MANFILES)) dummy.c $(PNG) $(SRC)
+            ops.lsm ops.spec ops-linux.h dummy.c \
+            $(notdir $(MANFILES)) $(addsuffix .png,$(IMAGES)) $(addsuffix .c,$(NAMES))
 
 ####### build flags
 
@@ -97,6 +96,7 @@ check_gcc = $(shell if $(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) dummy.c $(ALL_LDFLAGS
 #ALL_CFLAGS += $(call check_gcc,-Wdeclaration-after-statement,)
 #ALL_CFLAGS += $(call check_gcc,-Wpadded,)
 ALL_CFLAGS += $(call check_gcc,-Wstrict-aliasing,)
+ALL_CFLAGS += $(call check_gcc,-Wno-pointer-sign,)
 
 # if not debugging, enable things that could confuse gdb
 ifeq (,$(findstring -g,$(filter -g%,$(CFLAGS))))
@@ -120,7 +120,7 @@ endif
 
 ALL := $(notdir $(BINFILES))
 
-CLEAN := $(notdir $(BINFILES))
+CLEAN := $(notdir $(BINFILES)) $(PNG_C)
 
 DIRS :=
 
@@ -150,7 +150,7 @@ CLEAN += $(junk) $(foreach dir,$(DIRS),$(addprefix $(dir), $(junk)))
 ############
 
 # don't want to type "make ops-$(TARVERSION).tar.gz"
-tar: $(TARFILES)
+tar:
 	mkdir ops-$(TARVERSION)
 	(tar cf - $(TARFILES)) | (cd ops-$(TARVERSION) && tar xf -)
 	tar cf ops-$(TARVERSION).tar ops-$(TARVERSION)
@@ -173,6 +173,9 @@ install: $(filter-out $(SKIP) $(addprefix $(DESTDIR),$(SKIP)),$(INSTALL))
 
 $(OBJ): %.o: %.c ops-linux.h
 	$(CC) -c $(ALL_CPPFLAGS) $(ALL_CFLAGS) $< -o $@
+
+$(PNG_C): %.c: %.png
+	(echo '#include <gtk/gtk.h>' ; gdk-pixbuf-csource --raw --extern --name=$(<:.png=) $<) > $@
 
 # Two ways to do this, something obsolete might care
 ops: $(OBJ)
