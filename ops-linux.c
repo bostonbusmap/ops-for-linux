@@ -222,7 +222,6 @@ static void process_args(int argc, char * argv[])
 
 
 void EnableControls(gboolean value) {
-
   if (main_window) {
     gtk_widget_set_sensitive(button_open_camcorder, value);
     gtk_widget_set_sensitive(button_change_camera_settings, value);
@@ -245,45 +244,16 @@ void EnableControls(gboolean value) {
     gtk_widget_set_sensitive(button_get_clock,value);
     gtk_widget_set_sensitive(button_download_memory, value);
     gtk_widget_set_sensitive(button_powerdown_camcorder, value);
-    
   }
 }
-gboolean load_file_icons() {
-  GError *error = NULL;
-  icon_file = gdk_pixbuf_new_from_file("opspic1.png", &error);
-  if (error) {
-    g_warning ("Could not load icon: %s\n", error->message);
-    g_error_free(error);
-    error = NULL;
-    return FALSE;
-  }
 
-  
-  icon_directory = gdk_pixbuf_new_from_file("opspic2.png", &error);
-  if (error) {
-    g_warning ("Could not load icon: %s\n", error->message);
-    g_error_free(error);
-    error = NULL;
-    return FALSE;
-  }
-  
-  icon_partition = gdk_pixbuf_new_from_file("opspic3.png", &error);
-  if (error) {
-    g_warning ("Could not load icon: %s\n", error->message);
-    g_error_free(error);
-    error = NULL;
-    return FALSE;
-  }
-  
-  icon_root = gdk_pixbuf_new_from_file("opspic4.png", &error);
-  if (error) {
-    g_warning ("Could not load icon: %s\n", error->message);
-    g_error_free(error);
-    error = NULL;
-    return FALSE;
-  }
-  
+extern const guint8 opspic1[], opspic2[], opspic3[], opspic4[];
 
+static gboolean load_file_icons(void) {
+  icon_file      = gdk_pixbuf_new_from_inline(-1, opspic1, FALSE, NULL);
+  icon_directory = gdk_pixbuf_new_from_inline(-1, opspic2, FALSE, NULL);
+  icon_partition = gdk_pixbuf_new_from_inline(-1, opspic3, FALSE, NULL);
+  icon_root      = gdk_pixbuf_new_from_inline(-1, opspic4, FALSE, NULL);
 }
 
 
