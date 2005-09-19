@@ -249,7 +249,7 @@ void EnableControls(gboolean value) {
 
 extern const guint8 opspic1[], opspic2[], opspic3[], opspic4[];
 
-static gboolean load_file_icons(void) {
+static void load_file_icons(void) {
   icon_file      = gdk_pixbuf_new_from_inline(-1, opspic1, FALSE, NULL);
   icon_directory = gdk_pixbuf_new_from_inline(-1, opspic2, FALSE, NULL);
   icon_partition = gdk_pixbuf_new_from_inline(-1, opspic3, FALSE, NULL);
@@ -386,23 +386,13 @@ int main (int argc, char *argv[])
   gtk_tree_view_column_pack_start(col, renderer, TRUE);
 
   
-
-
-
-
-
   //  gtk_tree_view_column_add_attribute(col, renderer, "text", COL_POINTER);
   /*if (!g_thread_create(watch_progress_bar, NULL, FALSE, &error)) {
     Log(error->message);
     //go without if error
     }*/
   
-  if (load_file_icons() == FALSE) { 
-    Log("unable to load file icons for the camcorder directory listing (not related to regular file dialog boxes)");
-    return 1;
-  }
-
-
+  load_file_icons();
 
   information_label = gtk_label_new("");
   bitrate_label = gtk_label_new("");
