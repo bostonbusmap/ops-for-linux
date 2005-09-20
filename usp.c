@@ -127,7 +127,10 @@ typedef struct usp_data { // file  data
   char response[128];     // 0x10a 0x108
   char zero1[32];         // 0x18a 0x188
   // stuff beyond here can be found at 0x80140120 in the camera
-  char magic2[16];        // 0x1aa 0x1a8, the 0x01 bytes may be compression-related
+  char magic2a[12];        // 0x1aa 0x1a8, the 0x01 bytes may be compression-related
+  char recycle;           // 0x1b6 0x1b4
+  char magic2b;           // 0x1b7 0x1b5
+  char magic2c[2];        // 0x1b8 0x1b6
   char magic3;            // 0x1ba 0x1b8
   char zero1a[4];         // 0x1bb 0x1b9
   char compression0;      // 0x1bf 0x1bd
@@ -178,8 +181,12 @@ static char *verify_usp_data(usp_data *ud){
     return "bad zero0";
   if(memcmp(ud->zero1, zero, sizeof ud->zero1))
     return "bad zero1";
-  if(memcmp(ud->magic2, "\x6c\x0f\x00\x03\x00\x01\x15\x03\x01\x01\x01\xff\x00\x00\x00\x00", sizeof ud->magic2))
-    return "bad magic2";
+  if(memcmp(ud->magic2a, "\x6c\x0f\x00\x03\x00\x01\x15\x03\x01\x01\x01\xff", sizeof ud->magic2a))
+    return "bad magic2a";
+  if (ud->magic2b != 0)
+    return "bad magic2b";
+  if (memcmp(ud->magic2c, "\x00\x00", sizeof ud->magic2c))
+    return "bad magic2c";
   if(ud->magic3 != 0x14 && ud->magic3 != 0x00)
     return "bad magic3";
   if(memcmp(ud->zero1a, "\x00\x00\x00\x00", sizeof ud->zero1a))
@@ -322,7 +329,7 @@ static GtkWidget *hard_scale, *soft_scale, *size_scale;
 static GtkAdjustment *hard_adj, *soft_adj, *size_adj;
 //static GtkObject *hard_adj, *soft_adj, *size_adj;
 
-static GtkWidget *button30, *button24, *checkbox;
+static GtkWidget *button30, *button24, *checkbox, *checkbox_recycle;
 
 static GtkWidget *button_revert = NULL, *button_write = NULL, *button_cancel = NULL, *button_defaults = NULL;
 
@@ -332,6 +339,7 @@ static void set_button_states(void){
     gtk_widget_set_sensitive(button_revert, !!memcmp(&current_usp, &original_usp, sizeof current_usp)); 
     gtk_widget_set_sensitive(button_write, !!memcmp(&current_usp, &original_usp, sizeof current_usp)); 
     gtk_widget_set_sensitive(hard_scale, gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox)));
+    //    gtk_widget_set_sensitive(hard_scale, gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox_recycle)));
   }
 }
 
@@ -349,6 +357,7 @@ static gboolean settings_defaults(GtkWidget *widget, GdkEvent *event, gpointer d
   hard_adj->value = 25;
   g_signal_emit_by_name(G_OBJECT(hard_adj), "changed");
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox), TRUE);
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox_recycle), FALSE);
 
   current_usp.data.fps = 30;
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button30), TRUE);
@@ -368,6 +377,8 @@ static gboolean settings_revert(GtkWidget *widget, GdkEvent *event, gpointer dat
 
   unsigned hard = current_usp.data.hardlimit;
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox), !!hard);
+  unsigned recycle_status = current_usp.data.recycle;
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox_recycle), !!recycle_status);
   hard_adj->value = hard ? hard : soft_adj->value;
   g_signal_emit_by_name(G_OBJECT(hard_adj), "changed");
 
@@ -442,6 +453,16 @@ static void do_checkbox(GtkWidget *widget, gpointer data){
   set_button_states();
 }
 
+static void do_checkbox_recycle(GtkWidget *widget, gpointer data){
+  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))){
+    current_usp.data.recycle = 3;
+  }else{
+    current_usp.data.recycle = 0;
+  }
+  set_button_states();
+}
+
+
 static void do_fps(GtkWidget *widget, gpointer data){
   current_usp.data.fps = (long)data;
   set_button_states();
@@ -504,6 +525,15 @@ static gboolean SettingsDialog(usp_data *ud){
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox), !!ud->hardlimit);
   gtk_widget_show(checkbox);
   gtk_tooltips_set_tip(tooltips, checkbox, "uncheck to disable the hard limit (bad idea)", NULL);
+
+  checkbox_recycle = gtk_check_button_new_with_mnemonic("_enable ready to recycle");
+  g_signal_connect (G_OBJECT(checkbox_recycle), "toggled", G_CALLBACK(do_checkbox_recycle), (gpointer)NULL);
+  gtk_box_pack_start(GTK_BOX (box1), checkbox_recycle, TRUE, TRUE, 0);
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox_recycle), !!ud->recycle);
+  gtk_widget_show(checkbox_recycle);
+  gtk_tooltips_set_tip(tooltips, checkbox, "check to trigger camera 'ready to recycle' flag", NULL);
+
+
 
   button24 = gtk_radio_button_new_with_label(NULL, "24 frames per second");
   g_signal_connect (G_OBJECT(button24), "toggled", G_CALLBACK(do_fps), (gpointer)24);
