@@ -52,6 +52,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <usb.h>
+#include <stdint.h>
 
 //////////////////////////////////////////////////////////
 
@@ -95,6 +96,10 @@
 #define STRINGSIZE 128
 
 #define TIMEOUT 4000
+
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
 
 /////////////////////////////////////////////////////////////////
 
@@ -224,6 +229,7 @@ gboolean change_camera_settings(GtkWidget *widget, GdkEvent *event, gpointer dat
 gboolean download_flash(GtkWidget *widget, GdkEvent *event, gpointer data);
 gboolean enable_mass_storage(GtkWidget *widget, GdkEvent *event, gpointer data);
 gboolean get_clock(GtkWidget *widget, GdkEvent *event, gpointer data);
+gboolean set_clock(GtkWidget *widget, GdkEvent *event, gpointer data);
 
  
 /*  accessory functions to functions called from buttons  */

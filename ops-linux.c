@@ -43,6 +43,7 @@ static GtkWidget
   *button_download_flash,
   *button_enable_mass_storage,
   *button_get_clock,
+  *button_set_clock,
   *information_label,
   *bitrate_label;
 
@@ -242,6 +243,7 @@ void EnableControls(gboolean value) {
     gtk_widget_set_sensitive(button_download_flash, value);
     gtk_widget_set_sensitive(button_enable_mass_storage, value);
     gtk_widget_set_sensitive(button_get_clock,value);
+    gtk_widget_set_sensitive(button_set_clock,value);
     gtk_widget_set_sensitive(button_download_memory, value);
     gtk_widget_set_sensitive(button_powerdown_camcorder, value);
   }
@@ -420,6 +422,7 @@ int main (int argc, char *argv[])
   button_download_flash = gtk_button_new_with_label("Download flash");
   button_enable_mass_storage = gtk_button_new_with_label("Enable Mass Storage");
   button_get_clock = gtk_button_new_with_label("Get Clock value");
+  button_set_clock = gtk_button_new_with_label("Set Clock value");
   
   gtk_signal_connect (GTK_OBJECT (button_open_camcorder), "clicked", 
 		      GTK_SIGNAL_FUNC(open_camcorder), NULL);
@@ -467,7 +470,8 @@ int main (int argc, char *argv[])
 		      GTK_SIGNAL_FUNC(enable_mass_storage), NULL);
   gtk_signal_connect(GTK_OBJECT(button_get_clock), "clicked",
 		     GTK_SIGNAL_FUNC(get_clock), NULL);
-  
+  gtk_signal_connect(GTK_OBJECT(button_set_clock), "clicked",
+		     GTK_SIGNAL_FUNC(set_clock), NULL);
 
   gtk_box_pack_start (GTK_BOX (hbox1), button_open_camcorder, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox1), button_unlock, TRUE, TRUE, 0);
@@ -492,6 +496,8 @@ int main (int argc, char *argv[])
   gtk_box_pack_start (GTK_BOX (hbox_label), bitrate_label, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox_label), button_toggle_camera_lcd_screen, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox_label), button_get_clock, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (hbox_label), button_set_clock, TRUE, TRUE, 0);
+  
   gtk_container_add (GTK_CONTAINER (s_w), m_directory_tree);
 
   //  gtk_box_pack_start (GTK_BOX (s_w), 
