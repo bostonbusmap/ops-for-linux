@@ -167,7 +167,6 @@ extern GdkPixbuf* icon_file;
 //char m_product[STRINGSIZE];
 
 extern gboolean flipper_capture; //does user wish to stop video capture?
-extern int stopwatch;   //maybe time downloads in the future and printout a bitrate
 
 
 ////////////////////////////////////////////////////////////

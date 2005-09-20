@@ -79,11 +79,10 @@ static gboolean Init (void)
   for (p_bus = usb_get_busses(); p_bus != NULL; p_bus = p_bus->next, ++bus_no) {
     struct usb_device *p_device;// = p_bus->devices;
     fprintf(stderr, "trying bus %d\n", bus_no);
-    for (p_device = p_bus->devices; p_device != NULL; p_device = p_device->next ) {
+    for (p_device = p_bus->devices; p_device != NULL; p_device = p_device->next) {
       
-      fprintf(stderr, "usb device with VID==%04x PID==%04x\n", p_device->descriptor.idVendor, p_device->descriptor.iProduct);
-      if (p_device->descriptor.idVendor == VENDOROLD)	//Fujitsu (testmarket revision Saturn)
-      {
+      fprintf(stderr, "usb device with VID==%04x PID==%04x\n", p_device->descriptor.idVendor, p_device->descriptor.idProduct);
+      if (p_device->descriptor.idVendor == VENDOROLD) { //Fujitsu (testmarket revision Saturn)
 	MessageBox ("Unsupported testmarket camcorder found\r\nWarning: this will not work with Ops");
       }
       if (p_device->descriptor.idVendor == VENDOR) {
@@ -102,8 +101,8 @@ static gboolean Init (void)
 	      strncpy (m_manufacturer, tmp, STRINGSIZE - 1);
 	    }
 	  }
-	  if (p_device->descriptor.iProduct) {
-	    if (usb_get_string_simple (udev, p_device->descriptor.iProduct, tmp, sizeof (tmp)) > 0) {
+	  if (p_device->descriptor.idProduct) {
+	    if (usb_get_string_simple (udev, p_device->descriptor.idProduct, tmp, sizeof (tmp)) > 0) {
 	      // m_product = tmp;
 	      strncpy (m_product, tmp, STRINGSIZE - 1);
 	    }

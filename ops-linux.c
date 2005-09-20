@@ -19,7 +19,7 @@ GdkPixbuf* icon_root = NULL, *icon_partition = NULL, *icon_directory = NULL, *ic
 usb_dev_handle *m_p_handle;
 
 gboolean flipper_capture;
-int stopwatch;   //maybe time downloads in the future and printout a bitrate
+
 
 //////////////////////////////////////////
 
@@ -311,7 +311,6 @@ int main (int argc, char *argv[])
     exit(ret);
   }
   
-  stopwatch = 0;
     /* create a new window */
   main_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   window = main_window;
