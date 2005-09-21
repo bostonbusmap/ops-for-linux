@@ -15,8 +15,11 @@ gboolean set_clock(GtkWidget* widget,
 		   GdkEvent* event,
 		   gpointer data) {
   set_clock_struct scs;
+  time_t rawtime;
   struct tm *t;
-  t = localtime(time(NULL));
+
+  time(&rawtime);
+  t = localtime(&rawtime);
   scs.year = cpu_to_le16(t->tm_year+1900);
   scs.month = cpu_to_le16(t->tm_mon+1);
   scs.date = cpu_to_le16(t->tm_mday);
