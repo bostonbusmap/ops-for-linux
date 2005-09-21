@@ -7,19 +7,24 @@
 //////////////////////////////////////////
 // various true (multi-file) globals
 struct usb_device* m_usb_device;
-GtkWidget *main_window = NULL;
+GtkWidget *main_window;
 file_info* root_directory;
 gboolean toggle_camera_lcd_screen_is_on;
-GtkWidget *m_ctl_progress = NULL;
-GtkWidget* m_directory_tree = NULL;
+GtkWidget *m_ctl_progress;
+GtkWidget* m_directory_tree;
 double m_progressbar_fraction;
 int m_current_bytes;
 int m_previous_bytes;
-GdkPixbuf* icon_root = NULL, *icon_partition = NULL, *icon_directory = NULL, *icon_file = NULL;
 usb_dev_handle *m_p_handle;
-
 gboolean flipper_capture;
 
+GdkPixbuf* icon_blankdir;
+GdkPixbuf* icon_avifile;
+GdkPixbuf* icon_binfile;
+GdkPixbuf* icon_jpgfile;
+GdkPixbuf* icon_txtfile;
+GdkPixbuf* icon_wavfile;
+GdkPixbuf* icon_zbmfile;
 
 //////////////////////////////////////////
 
@@ -249,13 +254,18 @@ void EnableControls(gboolean value) {
   }
 }
 
-extern const guint8 opspic1[], opspic2[], opspic3[], opspic4[];
+extern const guint8 avifile[], binfile[], blankdir[], jpgfile[];
+extern const guint8 txtfile[], wavfile[], zbmfile[];
 
 static void load_file_icons(void) {
-  icon_file      = gdk_pixbuf_new_from_inline(-1, opspic1, FALSE, NULL);
-  icon_directory = gdk_pixbuf_new_from_inline(-1, opspic2, FALSE, NULL);
-  icon_partition = gdk_pixbuf_new_from_inline(-1, opspic3, FALSE, NULL);
-  icon_root      = gdk_pixbuf_new_from_inline(-1, opspic4, FALSE, NULL);
+  icon_blankdir = gdk_pixbuf_new_from_inline(-1, blankdir, FALSE, NULL);
+
+  icon_avifile = gdk_pixbuf_new_from_inline(-1, avifile, FALSE, NULL);
+  icon_binfile = gdk_pixbuf_new_from_inline(-1, binfile, FALSE, NULL);
+  icon_jpgfile = gdk_pixbuf_new_from_inline(-1, jpgfile, FALSE, NULL);
+  icon_txtfile = gdk_pixbuf_new_from_inline(-1, txtfile, FALSE, NULL);
+  icon_wavfile = gdk_pixbuf_new_from_inline(-1, wavfile, FALSE, NULL);
+  icon_zbmfile = gdk_pixbuf_new_from_inline(-1, zbmfile, FALSE, NULL);
 }
 
 

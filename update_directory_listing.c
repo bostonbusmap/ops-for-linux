@@ -300,16 +300,32 @@ static file_info* AddToTreeStore(GtkTreeStore* treestore, GtkTreeIter* toplevel,
   
   switch (addeditem->filetype) {
   case FIFILE:
-    pixbuf = icon_file;
+    {
+      pixbuf = icon_binfile;
+      char *cp = strchr(addeditem->filename, '.');
+      if(!cp) break;
+      cp++;
+      if(!strcasecmp(cp,"avi")) pixbuf = icon_avifile;
+      else
+      if(!strcasecmp(cp,"jpg")) pixbuf = icon_jpgfile;
+      else
+      if(!strcasecmp(cp,"txt")) pixbuf = icon_txtfile;
+      else
+      if(!strcasecmp(cp,"wav")) pixbuf = icon_wavfile;
+      else
+      if(!strcasecmp(cp,"zbm")) pixbuf = icon_zbmfile;
+      else
+      if(!strcasecmp(cp,"avi")) pixbuf = icon_avifile;
+    }
     break;
   case FIDIR:
-    pixbuf = icon_directory;
+    pixbuf = icon_blankdir;
     break;
   case FIPART:
-    pixbuf = icon_partition;
+    pixbuf = icon_blankdir;
     break;
   case FIROOT:
-    pixbuf = icon_root;
+    pixbuf = icon_blankdir;
     break;
   default:
     break;

@@ -42,7 +42,7 @@ NAMES    := set_clock get_clock mass_storage download_flash usp capture_video \
             messagebox open_camcorder ops-linux readwrite unlock_camcorder \
             send_monitor_command update_directory_listing
 
-IMAGES    := opspic1 opspic2 opspic3 opspic4
+IMAGES    := blankdir avifile binfile jpgfile txtfile wavfile zbmfile
 
 PNG_C     := $(addsuffix .c,$(IMAGES))
 

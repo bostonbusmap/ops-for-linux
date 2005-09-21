@@ -159,10 +159,16 @@ extern int m_previous_bytes;
 extern int m_current_bytes;
 
 extern usb_dev_handle *m_p_handle;
-extern GdkPixbuf* icon_root;
-extern GdkPixbuf* icon_partition;
-extern GdkPixbuf* icon_directory;
-extern GdkPixbuf* icon_file;
+
+extern GdkPixbuf* icon_blankdir;
+
+extern GdkPixbuf* icon_avifile;
+extern GdkPixbuf* icon_binfile;
+extern GdkPixbuf* icon_jpgfile;
+extern GdkPixbuf* icon_txtfile;
+extern GdkPixbuf* icon_wavfile;
+extern GdkPixbuf* icon_zbmfile;
+
 #define REFRESH_DATA_MS 250
 
 
