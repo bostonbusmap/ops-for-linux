@@ -5,7 +5,7 @@ gboolean enable_mass_storage(GtkWidget* widget,
 			     gpointer data) {
   if (CheckCameraOpen() == FALSE)
     return FALSE;
-  
+
   if (Monitor("wl 8013dee8 0xa") == TRUE) {
     Log("Sent Mass Storage enable command");
     MessageBox(
