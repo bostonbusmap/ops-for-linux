@@ -277,15 +277,6 @@ void create_and_display_button(void* func, const char* caption, GtkWidget* box, 
 
 }
 
-void debug_buttons() {
-  int count;
-  for (count = 0; count < NUM_OF_BUTTONS; ++count) {
-    fprintf(stderr, "button_debug: %08x", b_u.buttons[count]);
-
-  }
-
-}
-
 
 int main (int argc, char *argv[])
 {
@@ -372,9 +363,9 @@ int main (int argc, char *argv[])
   gtk_box_pack_start (GTK_BOX (vbox1), hbox3, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (vbox1), hbox4, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (vbox1), hbox5, TRUE, TRUE, 0);
-  gtk_box_pack_start (GTK_BOX (vbox1), hbox_progressbar, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (vbox1), hbox_tree, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (vbox1), hbox_label, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (vbox1), hbox_progressbar, TRUE, TRUE, 0);
   gtk_container_add (GTK_CONTAINER (window), vbox1);
   
 
