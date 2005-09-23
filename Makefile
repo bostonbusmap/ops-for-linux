@@ -48,7 +48,7 @@ PNG_C     := $(addsuffix .c,$(IMAGES))
 
 OBJ   := $(addsuffix .o,$(NAMES)) $(addsuffix .o,$(IMAGES))
 
-TARFILES := AUTHORS README COPYING ChangeLog Makefile Makefile.win32 \
+TARFILES := AUTHORS README COPYING ChangeLog Makefile \
             ops.lsm ops.spec ops-linux.h dummy.c \
             $(notdir $(MANFILES)) $(addsuffix .png,$(IMAGES)) $(addsuffix .c,$(NAMES))
 
