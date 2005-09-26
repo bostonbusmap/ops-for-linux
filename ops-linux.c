@@ -319,7 +319,10 @@ int main (int argc, char *argv[])
     if (open_camcorder(NULL,NULL,NULL)) {
       if (unlock_camcorder(NULL,NULL,NULL)) {
 
-        if (do_download && !download_all_movies(NULL,NULL,NULL)) ret=1;
+        if (do_download) {
+	  DownloadAllMovies();
+	  ret=1;
+	}
         if (do_format && !format_camcorder(NULL,NULL,NULL)) ret=1;
       }
       else ret=1;

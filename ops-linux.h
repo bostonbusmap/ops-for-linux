@@ -224,6 +224,7 @@ gboolean download_all_movies (GtkWidget *widget,
 gboolean download_file(GtkWidget *widget,
 		       GdkEvent *event,
 		       gpointer data);
+void download_file_start_thread(gpointer data);
 gboolean upload_file( GtkWidget *widget,
 		      GdkEvent *event,
 		      gpointer data);
@@ -266,6 +267,7 @@ gboolean Monitor(const char* command);
 gboolean MessageBoxText (const char* st, gpointer data);
 gboolean MessageBoxTextTwo (const char* st, gpointer data);
 gboolean DownloadFile(char* saveto, char* filename, int filesize);
+void DownloadAllMovies();
 gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile);
 
 gboolean delete_file(GtkWidget* widget,

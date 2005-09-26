@@ -3,7 +3,8 @@
 //static FILE* semiglobalfile;
 //static gint idle_tag;
 //static double global_filesize;
-
+//file_info* videos_array[MAX_VIDEOS_ARRAY_COUNT];
+file_info global_file_info;
 static int GetMovieCount(void) {
   short numofvideos_le16 = 0xffff;
   short numofvideos;
@@ -183,49 +184,60 @@ static gboolean download_last_movie_store_filename(GtkWidget *widget) {
 gboolean download_last_movie( GtkWidget *widget,
 			      GdkEvent *event,
 			      gpointer data) {
-  GtkWidget *file_selection_box = NULL;
-  
- 
-  //  GtkWidget* file_selection_box = NULL;
-  
-  if(CheckCameraOpen()==FALSE)
+  GtkWidget *file_selection_dialog = NULL;
+  char saveto[STRINGSIZE];
+  file_info* currently_selected_file = NULL;
+  threesome* ts = NULL;
+  gchar* save_filename = NULL;
+  GError* error = NULL;
+  if (CheckCameraOpen() == FALSE)
     return FALSE;
-
-  //  using_dialog_mutex = TRUE;
-
-  file_selection_box = gtk_file_selection_new("Please select a directory to download to.");
+  if (ChangePartition(0) == FALSE)
+    return FALSE;
+  if (ChangeDirectory("/DCIM/100COACH") == 0)
+    return FALSE;
+  currently_selected_file = (file_info*)malloc(sizeof (file_info)); 
+  //FIXME: memory leak
+  GetLastFileInfo(currently_selected_file);
   
-  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->ok_button),
-		      "clicked",
-		      GTK_SIGNAL_FUNC (download_last_movie_store_filename),
-		      file_selection_box);
+  file_selection_dialog =
+    gtk_file_chooser_dialog_new("Please select a place to download to",
+				main_window, //meaningless?
+				GTK_FILE_CHOOSER_ACTION_SAVE,
+				GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+				GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+				NULL);
+  gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(file_selection_dialog),currently_selected_file->filename );
+  if (gtk_dialog_run(GTK_DIALOG(file_selection_dialog)) == GTK_RESPONSE_ACCEPT) {
+    save_filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_selection_dialog));
+    strncpy(saveto, save_filename, STRINGSIZE); //make things easier later on
+  } else { //user cancelled
+    gtk_widget_destroy(file_selection_dialog);
+    return FALSE;
+  }
+
+  gtk_widget_destroy(file_selection_dialog); //does save_filename now point to garbage?
   
-  /*  gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->ok_button),
-		      "clicked",
-		      GTK_SIGNAL_FUNC (start_download_file),
-		      NULL);*/
-
-  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->ok_button),
-			     "clicked",
-			     GTK_SIGNAL_FUNC(gtk_widget_destroy),
-			     (gpointer) (file_selection_box));
-  gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->cancel_button),
-		      "clicked",
-		      GTK_SIGNAL_FUNC (enable_buttons),
-		      (gpointer) file_selection_box);
-
-  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->cancel_button),
-			     "clicked",
-			     GTK_SIGNAL_FUNC(gtk_widget_destroy),
-			     (gpointer) file_selection_box);
+  ts = malloc(sizeof(ts));
+  if (ts == NULL) return FALSE;
+  ts->a = malloc(sizeof(char) * (strlen(save_filename) + 1));
+  if (ts->a == NULL) { 
+    free(ts);
+    return FALSE;
+  } //very, very unlikely
+  strcpy(ts->a, saveto); //char*
+  ts->b = currently_selected_file->filename; //char*
+  ts->c = &(currently_selected_file->filesize); //int
+  EnableControls(FALSE);
+  if (!g_thread_create(download_file_start_thread, ts, FALSE, &error)) {
+    Log(error->message);
+    free(ts->a);
+    free(ts);
+    EnableControls(TRUE);
+    return FALSE;
+  }
   
 
-  gtk_widget_show(file_selection_box);
-  //EnableControls(FALSE);
-  //  for (i=0;i<100000;++i);
-  //if the program's going to stall it might as well be here
-
-  
   return TRUE;
   
 }
