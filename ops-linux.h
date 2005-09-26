@@ -22,6 +22,8 @@
 #define __BYTE_ORDER 1
 #define __BIG_ENDIAN 0
 #define __LITTLE_ENDIAN 1
+#elif defined(__APPLE__) && defined(__MACH__)
+#include <machine/endian.h>
 #else
 #include <endian.h>
 #endif

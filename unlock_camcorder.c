@@ -116,8 +116,6 @@ static gboolean Unlock (void)
   Log ("failed to unlock camcorder");
   return FALSE;
 
-
-
 }
 
 gboolean unlock_camcorder (GtkWidget * widget, GdkEvent * event, gpointer data)

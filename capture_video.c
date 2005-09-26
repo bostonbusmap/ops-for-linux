@@ -14,9 +14,7 @@ static gboolean capture_video_start( char* filename) {
   char buffer[BUFSIZE];
   int count = 0, x = 0, round = 0;
   FILE* file = NULL;
-  //  char* filename = gtk_entry_get_text(widget);
-  //  char* filename = data;
-  //char *fourbytes_p = (char*)fourbytes;
+
   if (CheckCameraOpen() == FALSE)
     return FALSE;
 
@@ -27,20 +25,10 @@ static gboolean capture_video_start( char* filename) {
     return FALSE;
   }
   fourbytes = 0;
-  /*count = usb_control_msg(m_p_handle,
-			  //USB_ENDPOINT_IN | USB_TYPE_VENDOR | USB_RECIP_INTERFACE,
-			  0xc0,
-			  
-			  0x01,
-			  0xd000,
-			  0x0000,
-			  (char *)&fourbytes,
-			  4,
-			  TIMEOUT );*/
-  //fprintf(stderr,"count = %d\n",count);
 
   if (ControlMessageRead(0xd000, (int*)&fourbytes, 4, TIMEOUT) == FALSE) {
     Log("failure on 0xd000");
+    fourbytes = le32_to_cpu(fourbytes);
     snprintf(log_string, STRINGSIZE - 1, "0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
     Log(log_string);
     return FALSE;
@@ -82,6 +70,7 @@ static gboolean capture_video_start( char* filename) {
 
   if (ControlMessageRead(0xd000, (int*)&fourbytes, 0, TIMEOUT) == FALSE) {
     Log("failure on 0xd000");
+    fourbytes = le32_to_cpu(fourbytes);
     snprintf(log_string, STRINGSIZE - 1, "0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
     Log(log_string);
     return FALSE;
@@ -92,6 +81,7 @@ static gboolean capture_video_start( char* filename) {
   fourbytes = 0;
   if (ControlMessageRead(0xd000, (int*)&fourbytes, 4, TIMEOUT) == FALSE) {
     Log("failure on 0xd000");
+    fourbytes = le32_to_cpu(fourbytes);
     snprintf(log_string, STRINGSIZE - 1, "0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
     Log(log_string);
     return FALSE;

@@ -175,7 +175,6 @@ static char *verify_usp_data(usp_data *ud){
   if(!memcmp(ud->serial, "Not Initialized", sizeof ud->serial)) {
     //fprintf(stderr,"serial: %s\n",ud->serial);
     fprintf(stderr, "WARNING: serial number \"Not Initialized\", maybe a FSP.BIN file?\n");
-
   }
   if(memcmp(ud->zero0, zero, sizeof ud->zero0))
     return "bad zero0";

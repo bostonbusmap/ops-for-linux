@@ -32,5 +32,7 @@ gboolean set_clock(GtkWidget* widget,
     Log("set_clock failed");
     return FALSE;
   }
+  Log("set_clock succeeded");
+  MessageBox("Set Clock succeeded");
   return TRUE;
 }
