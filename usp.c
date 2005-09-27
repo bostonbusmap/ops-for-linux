@@ -174,7 +174,7 @@ static char *verify_usp_data(usp_data *ud){
     return "bad magic0";
   if(!memcmp(ud->serial, "Not Initialized", sizeof ud->serial)) {
     //fprintf(stderr,"serial: %s\n",ud->serial);
-    fprintf(stderr, "WARNING: serial number \"Not Initialized\", maybe a FSP.BIN file?\n");
+    Log("WARNING: serial number \"Not Initialized\", maybe a FSP.BIN file?");
   }
   if(memcmp(ud->zero0, zero, sizeof ud->zero0))
     return "bad zero0";
@@ -226,7 +226,7 @@ static char *verify_usp_data(usp_data *ud){
     return "bad zero2";
   if(!ud->magic10[0] && !ud->magic10[1]) { // zero in the FSP, which we don't want
     
-    fprintf(stderr,"WARNING: bad magic10 (an FSP.BIN file?)\n");
+    Log("WARNING: bad magic10 (an FSP.BIN file?)");
   }
   if(memcmp(ud->zero3, zero, sizeof ud->zero3))
     return "bad zero3";

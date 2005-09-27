@@ -167,7 +167,7 @@ gboolean upload_file( GtkWidget *widget,
   } else {
     return FALSE; //nothing selected for download
   }
-  if (currently_selected_file->filetype != FIDIR) {
+  if (currently_selected_file->filetype != FIDIR && currently_selected_file->filetype != FIPART) {
     MessageBox("Only uploads to directories are currently supported.\nTry renaming your file and uploading it to a directory on the camcorder\nto overwrite another file on the camcorder.");
     return FALSE;
   }
@@ -194,8 +194,7 @@ gboolean upload_file( GtkWidget *widget,
 
 
   
-  if(currently_selected_file->filetype==FIPART ||
-     currently_selected_file->filetype==FIROOT) {
+  if (currently_selected_file->filetype==FIROOT) {
     MessageBox("Sorry, uploading partitions is not supported");
     return FALSE;
   }
@@ -207,7 +206,7 @@ gboolean upload_file( GtkWidget *widget,
   
   
   //if uploading to directory, make it use a filename you're saving to instead
-  if (currently_selected_file->filetype == FIDIR) {
+  if (currently_selected_file->filetype == FIDIR || currently_selected_file->filetype == FIPART) {
     if(ChangeDirectory(currently_selected_file->fullpath) == FALSE) {
       Log("ERROR: ChangeDirectory to upload directory failed.");
       return FALSE;
@@ -240,7 +239,7 @@ gboolean upload_file( GtkWidget *widget,
   //temp_save_filename overlaps saveto, but this shouldn't cause trouble
   //  ts->b = temp_save_filename; //char*
   strcpy(ts->a, saveto); //char*
-  if (currently_selected_file->filetype == FIDIR) {
+  if (currently_selected_file->filetype == FIDIR || currently_selected_file->filetype == FIPART) {
     ts->b = (temp_save_filename - saveto) + ts->a;
   } else {
     ts->b = currently_selected_file->filename + strlen(currently_selected_file->dirpath);
