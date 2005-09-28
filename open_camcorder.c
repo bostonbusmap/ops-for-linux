@@ -9,7 +9,7 @@ static char m_product[STRINGSIZE];
 static gboolean Open (void)
 {
   gboolean success = FALSE;
-
+  
   if (m_usb_device) {
     if (m_p_handle) {
       usb_close (m_p_handle);
@@ -17,7 +17,7 @@ static gboolean Open (void)
 
     m_p_handle = usb_open (m_usb_device); 
    
-    if (m_p_handle) {  
+    if (m_p_handle) {
       if (usb_set_configuration (m_p_handle, DEFAULT_CONFIGURATION) >= 0) {
 	if (usb_claim_interface (m_p_handle, DEFAULT_INTERFACE) >= 0) {
 	} //ignoring this because it acts weird
@@ -161,6 +161,7 @@ gboolean open_camcorder (GtkWidget * widget, GdkEvent * event, gpointer data)
     MessageBox ("Couldn't connect to camcorder\nMaybe you're not running as superuser (root)?");
     return FALSE;
   }
+  EnableControls(TRUE);
   return TRUE;
 }
 

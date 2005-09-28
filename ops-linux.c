@@ -245,6 +245,12 @@ void EnableControls(gboolean value) {
     }
   }
 }
+void EnableOpenButton(void) {
+  if (main_window) {
+    gtk_widget_set_sensitive(b_u.b_s.button_open_camcorder, TRUE);
+
+  }
+}
 
 extern const guint8 avifile[], binfile[], blankdir[], jpgfile[];
 extern const guint8 txtfile[], wavfile[], zbmfile[];
@@ -442,6 +448,9 @@ int main (int argc, char *argv[]) {
   create_and_display_button_short(capture_video, "Capture Video", hbox3);
   //  debug_buttons();
   
+  EnableControls(FALSE);
+  EnableOpenButton();
+
   gtk_signal_connect_object (GTK_OBJECT (b_u.b_s.button_close_camcorder), "clicked",
 			     GTK_SIGNAL_FUNC (gtk_widget_destroy),
 			     GTK_OBJECT (window));
@@ -459,6 +468,11 @@ int main (int argc, char *argv[]) {
 
   gtk_timeout_add(REFRESH_DATA_MS,(GtkFunction)watch_progress_bar, NULL);
   
+  //open camcorder by default
+  open_camcorder(NULL,NULL,NULL);
+  //unlock by default (as of sep 28, no camcorder is permanently unlocked)
+  unlock_camcorder(NULL,NULL,NULL);
+
   gdk_threads_enter();
   gtk_main ();
   gdk_threads_leave();

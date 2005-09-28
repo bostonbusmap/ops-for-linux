@@ -2,8 +2,8 @@
 
 #define FBLOCKSZ (64*1024) //64k.
 
-static int start_global;
-static int length_global;
+static u32 start_global;
+static u32 length_global;
 
 static gboolean DownloadMemory(const char* filename, unsigned long start, unsigned long length) {
 #define FBLOCKSZ (64*1024) //64k.D
@@ -81,7 +81,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
     
     tcount=0;
     set_bitrate(t);
-    set_progress_bar((double)t / (double)length);
+    set_progress_bar((double)(t - start) / (double)length);
     while (1) {
       count=Read(buffer,BUFSIZE,TIMEOUT);
       if(count<1)
