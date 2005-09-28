@@ -4,13 +4,14 @@
 //static gint idle_tag;
 //static double global_filesize;
 //file_info* videos_array[MAX_VIDEOS_ARRAY_COUNT];
-file_info global_file_info;
+
+file_info global_last_file;
 static int GetMovieCount(void) {
   short numofvideos_le16 = 0xffff;
   short numofvideos;
   int dummy;
   
-  if(ControlMessageWrite(0xb300,&dummy,0,TIMEOUT)==FALSE) {
+  if(ControlMessageWrite(0xb300,NULL,0,TIMEOUT)==FALSE) {
     Log("failed at 0xb3 (requesting video count).");
     Log("try unplugging camcorder and starting over");
     return(-1);
@@ -54,7 +55,7 @@ static gboolean DownloadMovie(int videonumber, FILE* file) {
  
   // 0x9300 sets up a bulk transfer on endpoint 0x81
   data=0x0000;
-  if(ControlMessageWrite(0x9300,&data,0,TIMEOUT)==FALSE) {
+  if(ControlMessageWrite(0x9300,NULL,0,TIMEOUT)==FALSE) {
     Log("failed at 0x93 (initiating bulk read of video)");
     Log("try unplugging camcorder and starting over");
     return FALSE;
@@ -127,7 +128,7 @@ static gboolean download_last_movie_start(gpointer data) {
 }
 
 
-static gboolean download_last_movie_store_filename(GtkWidget *widget) {
+/*static gboolean download_last_movie_store_filename(GtkWidget *widget) {
   //  GtkFileSelection *file_selection_box = data;
   //  semiglobalfile = NULL;
   FILE* semiglobalfile = NULL;
@@ -169,14 +170,14 @@ static gboolean download_last_movie_store_filename(GtkWidget *widget) {
 
 
   //  idle_tag = gtk_idle_add(GTK_SIGNAL_FUNC(download_last_movie_start), semiglobalfile);
-  if (!g_thread_create(download_last_movie_start, semiglobalfile, FALSE, &error)) {
+  if (!g_thread_create((GThreadFunc)download_last_movie_start, semiglobalfile, FALSE, &error)) {
     Log(error->message);
     return FALSE;
   }
 
 
   return TRUE;
-}
+  }*/
 
 
 
@@ -185,10 +186,10 @@ gboolean download_last_movie( GtkWidget *widget,
 			      GdkEvent *event,
 			      gpointer data) {
   GtkWidget *file_selection_dialog = NULL;
-  char saveto[STRINGSIZE];
+  char* filename_malloc;
   file_info* currently_selected_file = NULL;
   threesome* ts = NULL;
-  gchar* save_filename = NULL;
+  
   GError* error = NULL;
   if (CheckCameraOpen() == FALSE)
     return FALSE;
@@ -196,40 +197,22 @@ gboolean download_last_movie( GtkWidget *widget,
     return FALSE;
   if (ChangeDirectory("/DCIM/100COACH") == 0)
     return FALSE;
-  currently_selected_file = (file_info*)malloc(sizeof (file_info)); 
+  //currently_selected_file = (file_info*)malloc(sizeof (file_info)); 
+  currently_selected_file = &global_last_file;
   //FIXME: memory leak
   GetLastFileInfo(currently_selected_file);
   
-  file_selection_dialog =
-    gtk_file_chooser_dialog_new("Please select a place to download to",
-				main_window, //meaningless?
-				GTK_FILE_CHOOSER_ACTION_SAVE,
-				GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-				GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-				NULL);
-  gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(file_selection_dialog),currently_selected_file->filename );
-  if (gtk_dialog_run(GTK_DIALOG(file_selection_dialog)) == GTK_RESPONSE_ACCEPT) {
-    save_filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_selection_dialog));
-    strncpy(saveto, save_filename, STRINGSIZE); //make things easier later on
-  } else { //user cancelled
-    gtk_widget_destroy(file_selection_dialog);
-    return FALSE;
-  }
 
-  gtk_widget_destroy(file_selection_dialog); //does save_filename now point to garbage?
+  filename_malloc = get_download_filename(currently_selected_file->filename);
   
   ts = malloc(sizeof(ts));
   if (ts == NULL) return FALSE;
-  ts->a = malloc(sizeof(char) * (strlen(save_filename) + 1));
-  if (ts->a == NULL) { 
-    free(ts);
-    return FALSE;
-  } //very, very unlikely
-  strcpy(ts->a, saveto); //char*
+
+  ts->a = filename_malloc;
   ts->b = currently_selected_file->filename; //char*
   ts->c = &(currently_selected_file->filesize); //int
   EnableControls(FALSE);
-  if (!g_thread_create(download_file_start_thread, ts, FALSE, &error)) {
+  if (!g_thread_create((GThreadFunc)download_file_start_thread, ts, FALSE, &error)) {
     Log(error->message);
     free(ts->a);
     free(ts);

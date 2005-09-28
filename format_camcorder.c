@@ -14,31 +14,23 @@ static gboolean Format(void) {
   
 }
 
-static gboolean format_camcorder_confirmed( GtkWidget* widget) {
-  gboolean success = FALSE;
-  if(CheckCameraOpen()==FALSE)
-    return FALSE;
-  EnableControls(FALSE);
-  success = Format();
-  EnableControls(TRUE);
-  
-  return success;
-
-}
 
 gboolean format_camcorder( GtkWidget *widget,
 			   GdkEvent *event,
 			   gpointer data) {
   
-
+  gboolean success;
   if(CheckCameraOpen()==FALSE)
     return FALSE;
 
   if (main_window) {
-    return MessageBoxChoice("Do you really want to format the camcorder?\nYou will lose all of your movies.", format_camcorder_confirmed);
+    if (MessageBoxConfirm("Do you really want to format the camcorder?\nYou will lose all of your movies.")) {
+      EnableControls(FALSE);
+      success = Format();
+      EnableControls(TRUE);
+      return success;
+    }
   }
-  else {
-    format_camcorder_confirmed(NULL);
-  }
+  return FALSE;
 }
 

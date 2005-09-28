@@ -105,7 +105,7 @@ static gboolean watch_progress_bar (gpointer data) {
   
   data=data;
   
-  gtk_progress_bar_set_fraction(m_ctl_progress, m_progressbar_fraction);
+  gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(m_ctl_progress), m_progressbar_fraction);
   if (m_current_bytes && m_previous_bytes)
     snprintf(tempstring, STRINGSIZE - 1, "%f kbytes/sec", rate);
   else
@@ -238,7 +238,7 @@ static void process_args(int argc, char * argv[])
 
 void EnableControls(gboolean value) {
   if (main_window) {
-    int count;
+    unsigned int count;
     for (count = 0; count < NUM_OF_BUTTONS; ++count) {
       //      fprintf(stderr, "button: %08x\n", b_u.buttons[count]);
       gtk_widget_set_sensitive(b_u.buttons[count], value);
@@ -260,26 +260,21 @@ static void load_file_icons(void) {
   icon_wavfile = gdk_pixbuf_new_from_inline(-1, wavfile, FALSE, NULL);
   icon_zbmfile = gdk_pixbuf_new_from_inline(-1, zbmfile, FALSE, NULL);
 }
-#define create_and_display_button_short(func, caption, box) \
-  create_and_display_button(func, caption, box, &( b_u.b_s.button_##func ));
-
 
 void create_and_display_button(void* func, const char* caption, GtkWidget* box, GtkWidget** button) {
-  
-  
   *button = gtk_button_new_with_label(caption);
   gtk_signal_connect (GTK_OBJECT (*button), "clicked",
 		      GTK_SIGNAL_FUNC(func), NULL);
 
-  gtk_box_pack_start (GTK_BOX (box), GTK_BUTTON(*button), TRUE, TRUE, 0);
-  
-  
-
+  gtk_box_pack_start (GTK_BOX (box), GTK_WIDGET(*button), TRUE, TRUE, 0);
 }
 
+#define create_and_display_button_short(func, caption, box) \
+  create_and_display_button(func, caption, box, &( b_u.b_s.button_##func ));
 
-int main (int argc, char *argv[])
-{
+
+
+int main (int argc, char *argv[]) {
 
   /* GtkWidget is the storage type for widgets */
   
@@ -382,7 +377,8 @@ int main (int argc, char *argv[])
 			       300,
 			       300);
 
-  s_w = gtk_scrolled_window_new(hadjustment, vadjustment);
+  s_w = gtk_scrolled_window_new(GTK_ADJUSTMENT(hadjustment), 
+				GTK_ADJUSTMENT(vadjustment));
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(s_w),
 				  GTK_POLICY_AUTOMATIC,
 				  GTK_POLICY_AUTOMATIC);
@@ -458,11 +454,11 @@ int main (int argc, char *argv[])
   gtk_box_pack_start (GTK_BOX (hbox_label), bitrate_label, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox_progressbar), m_ctl_progress, TRUE, TRUE, 0);
   
-  gtk_container_add (GTK_CONTAINER (s_w), GTK_TREE_VIEW(m_directory_tree));
+  gtk_container_add (GTK_CONTAINER (s_w), GTK_WIDGET(m_directory_tree));
 
   gtk_widget_show_all (window);
 
-  gtk_timeout_add(REFRESH_DATA_MS,GTK_SIGNAL_FUNC(watch_progress_bar), NULL);
+  gtk_timeout_add(REFRESH_DATA_MS,(GtkFunction)watch_progress_bar, NULL);
   
   gdk_threads_enter();
   gtk_main ();

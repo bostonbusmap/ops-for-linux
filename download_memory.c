@@ -114,29 +114,25 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
 
 
 static gboolean download_memory_start_thread(gpointer data) {
-  return DownloadMemory(data, start_global, length_global);
-}
-
-
-static gboolean download_memory_store_filename(GtkFileSelection* file_selection_box) {
-  GError *error;
-  const gchar* winfilename = gtk_file_selection_get_filename(GTK_FILE_SELECTION(file_selection_box));
-  if (!g_thread_create(download_memory_start_thread, winfilename, FALSE, &error)) {
-    Log(error->message);
-    return FALSE;
-  }
-
-  return TRUE;
+  gboolean success;
+  char* var = (char*)data;
+  success = DownloadMemory(var, start_global, length_global);
+  free(var);
+  return success;
 }
 
 
 
 static gboolean download_memory_confirmed(double_widget* d_w) {
+  GError* error = NULL;
   const gchar *start_s, *length_s;
+  char* filename_malloc;
 //  unsigned long start, length;
-  GtkFileSelection* file_selection_box;
-  start_s = gtk_entry_get_text(d_w->a);
-  length_s = gtk_entry_get_text(d_w->b);
+  GtkWidget* file_selection_dialog = NULL;
+  char saveto[STRINGSIZE];
+  char* malloced_string = NULL;
+  start_s = gtk_entry_get_text(GTK_ENTRY(d_w->a));
+  length_s = gtk_entry_get_text(GTK_ENTRY(d_w->b));
   
   if (strlen(start_s) == 0 || strlen(length_s) == 0) {
     Log("Either the start or length fields are empty; please fill them");
@@ -145,36 +141,15 @@ static gboolean download_memory_confirmed(double_widget* d_w) {
   start_global = atoi(start_s);
   length_global = atoi(length_s);
   
+  filename_malloc = get_download_filename(NULL);  
 
-  file_selection_box = gtk_file_selection_new("Please choose the filename to download to");
-  
-  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->ok_button),
-			     "clicked",
-			     GTK_SIGNAL_FUNC (download_memory_store_filename),
-			     file_selection_box);
-  
-  /*  gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->ok_button),
-		      "clicked",
-		      GTK_SIGNAL_FUNC (start_download_file),
-		      NULL);*/
 
-  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->ok_button),
-			     "clicked",
-			     GTK_SIGNAL_FUNC(gtk_widget_destroy),
-			     (gpointer) (file_selection_box));
-  gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->cancel_button),
-		      "clicked",
-		      GTK_SIGNAL_FUNC (enable_buttons),
-		      (gpointer) file_selection_box);
+  if (!g_thread_create((GThreadFunc)download_memory_start_thread, filename_malloc, FALSE, &error)) {
+    Log(error->message);
+    return FALSE;
+  }
 
-  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selection_box)->cancel_button),
-			     "clicked",
-			     GTK_SIGNAL_FUNC(gtk_widget_destroy),
-			     (gpointer) file_selection_box);
-  
-
-  gtk_widget_show(file_selection_box);
-
+  return TRUE;
 }
 
 

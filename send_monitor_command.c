@@ -26,7 +26,7 @@ static gboolean send_monitor_command_confirmed( GtkWidget* data) {
   const char* text;
   //printf("data: %08x\n",data);
   //Log("a");
-  text = gtk_entry_get_text(textentry);
+  text = gtk_entry_get_text(GTK_ENTRY(textentry));
   //strncpy(commandtext, text, STRINGSIZE - 1);
   //free(text);
   //Log("b");

@@ -2,7 +2,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-static gboolean FileToMemory(const char* filename, unsigned char *buffer, unsigned int maxlength) {
+static gboolean FileToMemory(const char* filename, unsigned char *buffer, int maxlength) {
 
   // This function expects that you've already changed the parition and 
   // directory to the correct path in the camcorder.
@@ -30,7 +30,7 @@ static gboolean FileToMemory(const char* filename, unsigned char *buffer, unsign
   memset(sfilename,0,255);
   strcpy((char *)sfilename,filename);
   
-  if(ControlMessageWrite(0xb101,(int *)sfilename,strlen((char *)sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
+  if(ControlMessageWrite(0xb101,(char *)sfilename,strlen((char *)sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
 	
     Log("failed at 0xb1");
     return(FALSE);
@@ -38,7 +38,7 @@ static gboolean FileToMemory(const char* filename, unsigned char *buffer, unsign
   
   
   data=0x00;
-  if(ControlMessageWrite(0x9301,&data,0,TIMEOUT)==FALSE) { // Request File Read
+  if(ControlMessageWrite(0x9301,(char*)&data,0,TIMEOUT)==FALSE) { // Request File Read
     
     Log("failed at 0x93");
     return FALSE;
@@ -82,7 +82,7 @@ static gboolean MemoryToFile(const char* filename, char *buffer, unsigned int fi
 
   memset(sfilename, '\0', sizeof sfilename);
   strncpy(sfilename, filename, 12);
-  if(ControlMessageWrite(0xb105,(int *)sfilename,strlen(sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
+  if(ControlMessageWrite(0xb105,(char *)sfilename,strlen(sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
     Log("failed at 0xb1");
     return FALSE;
   }
@@ -166,7 +166,7 @@ static usp_file original_usp, default_usp, current_usp;
 
 static char zero[1600];
 
-static char *verify_usp_data(usp_data *ud){
+static const char *verify_usp_data(usp_data *ud){
   if(sizeof(usp_file) != 0x804)
     return "bad struct size";
 
@@ -597,7 +597,7 @@ gboolean change_camera_settings(GtkWidget *widget, GdkEvent *event, gpointer dat
   if(sizeof original_usp != 0x804 || !get_usp_file(&original_usp)){
     return FALSE; // is anybody checking this???
   }
-  char *msg = verify_usp_data(&original_usp.data);
+  const char *msg = verify_usp_data(&original_usp.data);
   if(msg){
     fprintf(stderr, "ERROR: %s\n", msg);
     return FALSE;

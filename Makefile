@@ -35,7 +35,8 @@ BINFILES := $(usr/bin)ops
 
 MANFILES := $(man1)ops.1
 
-NAMES    := set_clock get_clock mass_storage download_flash usp capture_video \
+NAMES    := file_dialog set_clock get_clock mass_storage download_flash usp \
+	    capture_video \
             powerdown_camcorder download_memory toggle_camera_lcd_screen \
             delete_file upload_file download_file close_camcorder \
             download_all_movies download_last_movie format_camcorder \

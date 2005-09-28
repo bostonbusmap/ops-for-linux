@@ -1,6 +1,6 @@
 #include "ops-linux.h"
 
-gboolean ControlMessageRead(unsigned int command, char *data, int size, int timeout) {
+gboolean ControlMessageRead(u16 command, char *data, int size, int timeout) {
   int x = usb_control_msg(m_p_handle,
 			  USB_ENDPOINT_IN | USB_TYPE_VENDOR | USB_RECIP_INTERFACE,
 			  
@@ -17,7 +17,7 @@ gboolean ControlMessageRead(unsigned int command, char *data, int size, int time
   return TRUE;
 }
 
-gboolean ControlMessageWrite(unsigned int command, const char *const data, int size, int timeout) {
+gboolean ControlMessageWrite(u16 command, char * data, int size, int timeout) {
   int x=usb_control_msg(m_p_handle,
 			USB_ENDPOINT_OUT | USB_TYPE_VENDOR | USB_RECIP_DEVICE,
 			0x01,
@@ -26,6 +26,7 @@ gboolean ControlMessageWrite(unsigned int command, const char *const data, int s
 			data,
 			size,
 			timeout);
+  /*  data can't be made const since usb_control_msg won't handle const char */
   if(x<size) {
       return FALSE;
   }
@@ -45,7 +46,7 @@ int Read(char *p_buffer, unsigned int length, int timeout)
 
 }
 
-int Write(const char *const p_buffer, unsigned int length, int timeout)
+int Write(char * p_buffer, unsigned int length, int timeout)
 {
 
   int bytes_written = -1;

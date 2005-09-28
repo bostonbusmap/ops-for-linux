@@ -34,18 +34,18 @@ typedef struct cvs_dir_entry {
 // and directory
 gboolean GetAnyFileInfo(const char* filename, file_info *thisfileinfo) {
   cvs_dir_entry data;
-
+  char tempstring[STRINGSIZE];
   Log("GetAnyFileInfo start");
   memset(&data, 0, sizeof data);
-  
+  strncpy(tempstring, filename, STRINGSIZE);
   // first we set the filename
-  if(ControlMessageWrite(0xb101, filename, strlen(filename)+1, TIMEOUT)==FALSE) { //SetFileName
+  if(ControlMessageWrite(0xb101, (char*)tempstring, strlen(filename)+1, TIMEOUT)==FALSE) { //SetFileName
     Log("failed to set filename");
     return FALSE;
   }
   ///  //b901 doesn't work for some reason... defaulting to bc00 for the time being
   //nevermind...
-  ControlMessageWrite(0xb901, (const char *)&data, 0, TIMEOUT);
+  ControlMessageWrite(0xb901, (char *)&data, 0, TIMEOUT);
   if(Read((char*)&data,28,TIMEOUT)<28) {
     Log("failed to retrieve file information");
     return FALSE;
@@ -337,17 +337,17 @@ static file_info* AddToTreeStore(GtkTreeStore* treestore, GtkTreeIter* toplevel,
 
 
 
-static void RecursiveListing(char* parentpath, file_info* parent, GtkTreeIter* parent_place, int partition, int level, GtkTreeStore* treestore) {
+static void RecursiveListing(const char* parentpath, file_info* parent, GtkTreeIter* parent_place, int partition, int level, GtkTreeStore* treestore) {
   gboolean firstitem;
   file_info tData, pData;
   int count;
   //  const char* parentpath = parentpath_cs.text;
-  int t, end;
+  int t;
   GtkTreeIter child;
   // file_info hitems[999];
   char recursedir[STRINGSIZE];
   char tempstring[STRINGSIZE];
-  file_info* f_i = NULL, tempfileinfo;
+  file_info* f_i;
   int total_getfileinfo_calls = 0;
   firstitem = TRUE;
   

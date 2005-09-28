@@ -18,8 +18,8 @@ static gboolean Unlock (void)
   // this struct is always kept in little-endian format
   struct parameters
   {
-    int index;
-    int keydata;
+    u32 index;
+    u32 keydata;
   } data;
 
   unsigned char *keydatastr = (unsigned char *) &data.keydata;

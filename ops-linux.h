@@ -239,7 +239,7 @@ gboolean download_flash(GtkWidget *widget, GdkEvent *event, gpointer data);
 gboolean enable_mass_storage(GtkWidget *widget, GdkEvent *event, gpointer data);
 gboolean get_clock(GtkWidget *widget, GdkEvent *event, gpointer data);
 gboolean set_clock(GtkWidget *widget, GdkEvent *event, gpointer data);
-
+void create_and_display_button(void* func, const char* caption, GtkWidget* box, GtkWidget** button);
  
 /*  accessory functions to functions called from buttons  */
 gboolean enable_buttons (GtkWidget* widget,
@@ -249,18 +249,20 @@ gboolean enable_buttons (GtkWidget* widget,
 
 /*  GUI-manipulating functions  */
 gboolean MessageBox(const char* st);
-gboolean MessageBoxChoice(const char* st, gpointer data);
 gboolean MessageBoxConfirm(const char* st);
 void EnableControls(gboolean value);
 gboolean set_progress_bar(double value);
 gboolean set_bitrate(double kbyterate);
+char* get_filename_from_dialog(const char* filenamechoice, int action);
+char* get_download_filename(const char* filenamechoice);
+char* get_upload_filename(void);
 
 /*  GUI-independent workhorse functions  */
 gboolean ChangePartition(unsigned int partition); 
 gboolean ChangeDirectory(const char* st);  
-gboolean ControlMessageWrite(unsigned int command, const char *const data, int size, int timeout);
-gboolean ControlMessageRead(unsigned int command, char* data, int size, int timeout);
-int Write(const char *const p_buffer, unsigned int length, int timeout);
+gboolean ControlMessageWrite(u16 command, char *  data, int size, int timeout);
+gboolean ControlMessageRead(u16 command, char* data, int size, int timeout);
+int Write(char * p_buffer, unsigned int length, int timeout);
 int Read(char *p_buffer, unsigned int length, int timeout);
 
 gboolean CheckCameraOpen(void);
@@ -269,13 +271,16 @@ gboolean Monitor(const char* command);
 gboolean MessageBoxText (const char* st, gpointer data);
 gboolean MessageBoxTextTwo (const char* st, gpointer data);
 gboolean DownloadFile(char* saveto, char* filename, int filesize);
-void DownloadAllMovies();
+void DownloadAllMovies(void);
 gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile);
+gboolean GetLastFileInfo(file_info* thisfileinfo);
 
 gboolean delete_file(GtkWidget* widget,
                GdkEvent* event,
                gpointer data);
 
 gboolean GetAnyFileInfo(const char* filename, file_info *thisfileinfo);
+gboolean PowerdownCamcorder(void);
+gboolean CaptureVideo(const char* filename);
 
 #endif

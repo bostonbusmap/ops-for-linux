@@ -37,7 +37,7 @@ typedef struct
 
 static int GetPartitionSize(int partition, gboolean rounded) {
   int data[2];
-  int y;
+  int y = 0;
   BootRecord bootrec;
   int size,sectors,dummy, division_quotient;
 
@@ -49,12 +49,12 @@ static int GetPartitionSize(int partition, gboolean rounded) {
     data[0]=512; //skip the EBR
   else
     data[0]=0; //other partitions aren't proceded with crap
-  if(ControlMessageWrite(0xf100|partition,data,8,TIMEOUT)==FALSE) { // Set memory transfer filter, and size
+  if(ControlMessageWrite(0xf100|partition,(char*)data,8,TIMEOUT)==FALSE) { // Set memory transfer filter, and size
     
     Log("failed at 0xf1, set memory type");
     return(-1);
   } 
-  if(ControlMessageWrite(0xf300,&dummy,0, TIMEOUT)==FALSE) { // Initiate the memory transfer
+  if(ControlMessageWrite(0xf300,(char*)&dummy,0, TIMEOUT)==FALSE) { // Initiate the memory transfer
     
     Log("failed at 0xf3, request memory");
     return(-1);
@@ -161,11 +161,11 @@ static gboolean DownloadFlash(const char* filename, int partition, int size) {
   p_ctl_progress->SetStep(1);
   p_ctl_progress->SetPos(0);*/
   
-  if(ControlMessageWrite(0xf100|partition,data,8,TIMEOUT)==FALSE) { // Set memory transfer filter, and size
+  if(ControlMessageWrite(0xf100|partition,(char*)data,8,TIMEOUT)==FALSE) { // Set memory transfer filter, and size
     Log("failed at 0xf1, set memory type");
     return FALSE;
   }
-  if(ControlMessageWrite(0xf300,&dummy,0,TIMEOUT)==FALSE) { // Initiate the memory transfer
+  if(ControlMessageWrite(0xf300,(char*)&dummy,0,TIMEOUT)==FALSE) { // Initiate the memory transfer
     Log("failed at 0xf3, request memory");
     return FALSE;
   }
@@ -219,7 +219,9 @@ static void download_flash_start_thread(gpointer data) {
   if(DownloadFlash((char*)(ts->a), (int)(ts->b), -1)==FALSE) {
     Log("DownloadFlash(p->filename, tempstring) failed.");
     EnableControls(TRUE);
-    return FALSE;
+    free(ts->a);
+    free(ts);
+    return;
   } else {
     Log("Success retrieving data file.");
   }
@@ -233,8 +235,8 @@ gboolean download_flash( GtkWidget *widget,
 			 GdkEvent *event,
 			 gpointer data) {
   GtkWidget *file_selection_dialog = NULL;
-  char* save_filename;
-  char saveto[STRINGSIZE];
+  char* filename_malloc;
+  
   twosome* ts = NULL;
   GError* error = NULL;
   //  GtkWidget* file_selection_box = NULL;
@@ -244,7 +246,7 @@ gboolean download_flash( GtkWidget *widget,
   //GtkTreeIter iter;
   //GtkTreeSelection* selection;
   //  gpointer data;
-  file_info* currently_selected_file;
+  //  file_info* currently_selected_file;
   int partition_value;
   if(CheckCameraOpen()==FALSE)
     return FALSE;
@@ -252,22 +254,8 @@ gboolean download_flash( GtkWidget *widget,
 
   partition_value = 0; //FIXME: replace with option box like windows ops has
   
-  file_selection_dialog =
-    gtk_file_chooser_dialog_new("Please select a place to download the flash to",
-				main_window, //meaingless except if program killed
-				GTK_FILE_CHOOSER_ACTION_SAVE,
-				GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-				GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-				NULL);
-  //  gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(file_selection_dialog),currently_selected_file->filename );
-  if (gtk_dialog_run(GTK_DIALOG(file_selection_dialog)) == GTK_RESPONSE_ACCEPT) {
-    save_filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_selection_dialog));
-    strncpy(saveto, save_filename, STRINGSIZE - 1);
-  } else { //user cancelled
-    gtk_widget_destroy(file_selection_dialog);
-    return FALSE;
-  }
-  gtk_widget_destroy(file_selection_dialog);
+  filename_malloc = get_download_filename(NULL);
+
   
   if(ChangePartition(partition_value)==FALSE) {
     Log("ChangePartition(p->partition) failed.");
@@ -276,10 +264,8 @@ gboolean download_flash( GtkWidget *widget,
 
   ts = malloc(sizeof(twosome));
   if (ts == NULL) return FALSE;
-  ts->a = malloc(sizeof(char) * (strlen(saveto) + 1));
-  if (ts->a == NULL) { free(ts); return FALSE; }
-  strcpy(ts->a, saveto);
-  ts->b = partition_value;
+  ts->a = filename_malloc;
+  ts->b = (void*)partition_value;
   /*if(ChangeDirectory(currently_selected_file->dirpath)== FALSE) {
     Log("ChangeDirectory(p->dirpath) failed.");
     return FALSE;
@@ -288,7 +274,7 @@ gboolean download_flash( GtkWidget *widget,
 
   EnableControls(FALSE);
 
-  if (!g_thread_create(download_flash_start_thread, ts, FALSE, &error)) {
+  if (!g_thread_create((GThreadFunc)download_flash_start_thread, ts, FALSE, &error)) {
     Log(error->message);
     free(ts->a);
     free(ts);

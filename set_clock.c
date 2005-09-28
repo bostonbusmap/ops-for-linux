@@ -14,6 +14,9 @@ typedef struct {
 gboolean set_clock(GtkWidget* widget,
 		   GdkEvent* event,
 		   gpointer data) {
+  widget = widget;
+  event = event;
+  data = data;
   set_clock_struct scs;
   time_t rawtime;
   struct tm *t;

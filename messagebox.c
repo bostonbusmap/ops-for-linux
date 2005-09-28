@@ -114,7 +114,7 @@ gboolean MessageBoxText (const char* st, gpointer data) {
   ok_button = gtk_button_new_with_label ("OK");
   cancel_button = gtk_button_new_with_label("Cancel");
   textentry = gtk_entry_new_with_max_length(255); //just to be safe
-  textbox = gtk_entry_get_text(textentry);
+  textbox = gtk_entry_get_text(GTK_ENTRY(textentry));
   //printf("textentry: %08x\n",textentry);
   gtk_signal_connect_object (GTK_OBJECT (cancel_button),
 			     "clicked",
@@ -164,51 +164,6 @@ gboolean MessageBoxText (const char* st, gpointer data) {
 }
 
 
-gboolean MessageBoxChoice (const char* st, gpointer data) {
-  GtkWidget *window, *ok_button, *cancel_button, *label, *hbox;
-  //  gpointer data = cc->function_pointer;
-  
-  window = gtk_dialog_new ();
-  
-  ok_button = gtk_button_new_with_label ("OK");
-  cancel_button = gtk_button_new_with_label("Cancel");
-  gtk_signal_connect_object (GTK_OBJECT (cancel_button),
-			     "clicked",
-			     GTK_SIGNAL_FUNC(gtk_widget_destroy), 
-			     GTK_OBJECT(window));
-  
-  
-  gtk_signal_connect_object (GTK_OBJECT (ok_button),
-			     "clicked",
-			     GTK_SIGNAL_FUNC (data),
-			     NULL);
-  
-  gtk_signal_connect_object (GTK_OBJECT (ok_button),
-			     "clicked",
-			     GTK_SIGNAL_FUNC(gtk_widget_destroy),
-			     GTK_OBJECT(window));
-
-  hbox = gtk_hbox_new(FALSE,0);
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG(window)->action_area),
-		      hbox, TRUE, TRUE, 0);
-
-  gtk_box_pack_start(GTK_BOX(hbox),
-		     ok_button, TRUE, TRUE, 0);
-  gtk_box_pack_start(GTK_BOX(hbox),
-		     cancel_button, TRUE, TRUE, 0);
-  
-  gtk_widget_show(ok_button);
-  gtk_widget_show(cancel_button);
-  gtk_widget_show(hbox);
-  //for now ignore the button part, use window manager button on top
-  label = gtk_label_new (st);
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (window)->vbox), label, TRUE, TRUE, 0);
-  
-  gtk_widget_show (label);
-  gtk_widget_show(window);
-  return TRUE;
-}
-
 gboolean MessageBoxConfirm (const char* st) {
   gboolean confirm;
   GtkWidget * dialog, * label;
@@ -218,7 +173,7 @@ gboolean MessageBoxConfirm (const char* st) {
   if (!main_window) return TRUE;
 
   // create dialog with ok/cancel buttons
-  dialog = gtk_dialog_new_with_buttons("Confirm",main_window,
+  dialog = gtk_dialog_new_with_buttons("Confirm",GTK_WINDOW(main_window),
                                        0,
                                        GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                        GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,

@@ -14,8 +14,6 @@ gboolean GetLastFileInfo(file_info* last) {
   }
   fprintf(stderr, "last->filename == %s\n", last->filename);
   return TRUE;
-
-
 }
 
 void DownloadAllMovies() {
@@ -38,11 +36,14 @@ void DownloadAllMovies() {
   }
 }
 
-
+void download_all_movies_start_thread(gpointer data);
 void download_all_movies_start_thread(gpointer data) {
   DownloadAllMovies();
   EnableControls(TRUE);
 }
+
+
+
 
 gboolean download_all_movies(GtkWidget *widget,
 			     GdkEvent *event,
@@ -62,7 +63,7 @@ gboolean download_all_movies(GtkWidget *widget,
   if (!ChangeDirectory("/DCIM/100COACH")) return FALSE;
   Log("Getting directory listing ...");
   EnableControls(FALSE);
-  if (!g_thread_create(download_all_movies_start_thread, NULL, FALSE, &error)) {
+  if (!g_thread_create((GThreadFunc)download_all_movies_start_thread, NULL, FALSE, &error)) {
     Log(error->message);
     //free(ts->a);
     //  free(ts);

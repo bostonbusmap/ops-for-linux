@@ -143,11 +143,12 @@ gboolean upload_file( GtkWidget *widget,
   GtkTreeIter iter;
   GtkTreeSelection* selection;
   char* temp_save_filename;
+  char* filename_malloc;
   //  gpointer data;
   file_info* currently_selected_file;
   //char tempfilename[STRINGSIZE];
   char delimiter;
-  char saveto[STRINGSIZE];
+ 
   threesome* ts = NULL;
 #ifdef _WIN32
   delimiter = '\\';
@@ -173,25 +174,7 @@ gboolean upload_file( GtkWidget *widget,
   }
 
 
-  file_selection_dialog =
-    gtk_file_chooser_dialog_new("Please select a file to upload",
-				main_window, //meaingless except if program killed
-				GTK_FILE_CHOOSER_ACTION_OPEN,
-				GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-				GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-				NULL);
-  //  gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(file_selection_dialog),currently_selected_file->filename );
-  if (gtk_dialog_run(GTK_DIALOG(file_selection_dialog)) == GTK_RESPONSE_ACCEPT) {
-    save_filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_selection_dialog));
-    strncpy(saveto, save_filename, STRINGSIZE); //make things easier later on
-  } else { //user cancelled
-    gtk_widget_destroy(file_selection_dialog);
-    return FALSE;
-  }
-  
-  gtk_widget_destroy(file_selection_dialog); //does save_filename now point to garbage?
-
-
+  filename_malloc = get_upload_filename();
 
   
   if (currently_selected_file->filetype==FIROOT) {
@@ -211,9 +194,9 @@ gboolean upload_file( GtkWidget *widget,
       Log("ERROR: ChangeDirectory to upload directory failed.");
       return FALSE;
     }
-    temp_save_filename = saveto;
+    temp_save_filename = filename_malloc;
     while (*temp_save_filename++); //go to end
-    while (--temp_save_filename != saveto) //back up to delimiter point
+    while (--temp_save_filename != filename_malloc) //back up to delimiter point
       if (*temp_save_filename == delimiter)
 	break;
     ++temp_save_filename;
@@ -231,22 +214,15 @@ gboolean upload_file( GtkWidget *widget,
   }
   ts = malloc(sizeof(threesome));
   if (ts == NULL) return FALSE;
-  ts->a = malloc(sizeof(char) * (strlen(saveto) + 1));
-  if (ts->a == NULL) { //extraordinarily rare...
-    free(ts);
-    return FALSE;
-  }
-  //temp_save_filename overlaps saveto, but this shouldn't cause trouble
-  //  ts->b = temp_save_filename; //char*
-  strcpy(ts->a, saveto); //char*
+  ts->a = filename_malloc;
   if (currently_selected_file->filetype == FIDIR || currently_selected_file->filetype == FIPART) {
-    ts->b = (temp_save_filename - saveto) + ts->a;
+    ts->b = (temp_save_filename - filename_malloc) + ts->a;
   } else {
     ts->b = currently_selected_file->filename + strlen(currently_selected_file->dirpath);
   }
   //  ts->c = &(currently_selected_file->filesize); //int
   EnableControls(FALSE);
-  if (!g_thread_create(upload_file_start_thread, ts, FALSE, &error)) {
+  if (!g_thread_create((GThreadFunc)upload_file_start_thread, ts, FALSE, &error)) {
     Log(error->message);
     EnableControls(TRUE);
     return FALSE;
