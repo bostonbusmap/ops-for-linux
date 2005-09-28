@@ -81,6 +81,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
     
     tcount=0;
     set_bitrate(t);
+    set_progress_bar((double)t / (double)length);
     while (1) {
       count=Read(buffer,BUFSIZE,TIMEOUT);
       if(count<1)
@@ -115,7 +116,9 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
 static gboolean download_memory_start_thread(gpointer data) {
   gboolean success;
   char* var = (char*)data;
+  //  EnableControls(FALSE);
   success = DownloadMemory(var, start_global, length_global);
+  EnableControls(TRUE);
   free(var);
   return success;
 }
@@ -142,7 +145,7 @@ static gboolean download_memory_confirmed(double_widget* d_w) {
   
   filename_malloc = get_download_filename(NULL);  
 
-
+  EnableControls(FALSE);
   if (!g_thread_create((GThreadFunc)download_memory_start_thread, filename_malloc, FALSE, &error)) {
     Log("%s",error->message);
     return FALSE;

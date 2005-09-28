@@ -98,7 +98,7 @@ gboolean MessageBox(const char *st)
 }
 
 
-char* MessageBoxText (const char* st) {
+char* MessageBoxText(const char* st) {
   GtkWidget *dialog, 
     *ok_button,
     *cancel_button,
@@ -119,8 +119,6 @@ char* MessageBoxText (const char* st) {
   
   textentry = gtk_entry_new_with_max_length(255); //just to be safe
   textbox = gtk_entry_get_text(GTK_ENTRY(textentry));
-  returnvalue = (char*)malloc(strlen(textbox) + 1);
-  strcpy(returnvalue, textbox);
   //printf("textentry: %08x\n",textentry);
   /*  gtk_signal_connect_object (GTK_OBJECT (cancel_button),
 			     "clicked",
@@ -161,10 +159,15 @@ char* MessageBoxText (const char* st) {
   gtk_widget_show_all(hbox);
   gtk_widget_show(label);
   result = gtk_dialog_run(GTK_DIALOG(dialog));
+  returnvalue = (char*)malloc(strlen(textbox) + 1);
+  strcpy(returnvalue, textbox);
+
   gtk_widget_destroy(dialog);
-  if (result == GTK_RESPONSE_ACCEPT)
+
+  if (result == GTK_RESPONSE_ACCEPT) {
+    Log("returnvalue is %s", returnvalue);
     return returnvalue;
-  else {
+  } else {
     free(returnvalue);
     return NULL;
   }

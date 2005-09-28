@@ -3,7 +3,7 @@
 
 gboolean Monitor(const char* command) {
   if(ControlMessageWrite(0xef00, command, strlen(command)+1, LONG_TIMEOUT)==TRUE) {
-    Log("monitor command succeeded: ");
+    Log("monitor command succeeded: %s", command);
     return TRUE;
   }
   Log("monitor command failed");
@@ -36,6 +36,7 @@ See http://www.maushammer.com/systems/cvscamcorder for a valid\
  command list\n\nCommand to send:");
   if (text == NULL) return FALSE;
   EnableControls(FALSE);
+  Log("send_monitor_command: %s", text);
   success = Monitor(text);
   EnableControls(TRUE);
   free(text);
