@@ -100,7 +100,7 @@ static gboolean DownloadMovie(int videonumber, FILE* file) {
 static gboolean download_last_movie_start(gpointer data) {
   gboolean success = FALSE;
   FILE* semiglobalfile = data;
-  printf("%0*zx\n", sizeof(size_t), (size_t)data);
+  //  Log("%0*zx", sizeof(size_t), (size_t)data);
   if (semiglobalfile == NULL) { 
     //    EnableControls(TRUE);
     return FALSE;
@@ -213,7 +213,7 @@ gboolean download_last_movie( GtkWidget *widget,
   ts->c = &(currently_selected_file->filesize); //int
   EnableControls(FALSE);
   if (!g_thread_create((GThreadFunc)download_file_start_thread, ts, FALSE, &error)) {
-    Log(error->message);
+    Log("%s",error->message);
     free(ts->a);
     free(ts);
     EnableControls(TRUE);

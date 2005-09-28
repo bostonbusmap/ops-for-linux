@@ -221,16 +221,15 @@ static void process_args(int argc, char * argv[])
       break;
       
     default:
-      printf ("?? getopt returned character code 0%o ??\n", 
-	      c);
+      Log("ERROR: getopt returned character code 0x%2x", c);
     }
   }
 
   if (optind < argc) {
-    printf ("non-option ARGV-elements: ");
+    Log ("non-option ARGV-elements: ");
     while (optind < argc) {
-      printf ("%s ", argv[optind++]);
-      printf ("\n");
+      Log("%s ", argv[optind++]);
+      Log("");
     }
   }
 }
@@ -302,11 +301,11 @@ int main (int argc, char *argv[]) {
   process_args(argc,argv);
   
   if (do_help) {
-    printf("flags:\n");
-    printf("-d -- download all movies from the camcorder\n");
-    printf("-f -- clear camera's movie partition (erase all movies)\n");
-    printf("-h -- print this help info\n");
-    printf("Flags may be combined to get a combined effect\n");
+    Log("flags:");
+    Log("-d -- download all movies from the camcorder");
+    Log("-f -- clear camera's movie partition (erase all movies)");
+    Log("-h -- print this help info");
+    Log("Flags may be combined to get a combined effect");
     exit(0);
   } else if (do_download || do_format) {
     int ret=0;

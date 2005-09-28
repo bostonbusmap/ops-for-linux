@@ -31,12 +31,12 @@ gboolean get_clock(GtkWidget* widget,
     Log("get_clock failed");
     return FALSE;
   }
-  printf("Camera time\n");
-  printf("Year: %d\n", le16_to_cpu(gcs.year));
-  printf("Month: %s\n", months[le16_to_cpu(gcs.month) - 1]);
-  printf("Day: %d\n", le16_to_cpu(gcs.date));
-  printf("%02d:%02d:%02d\n", le16_to_cpu(gcs.hour), le16_to_cpu(gcs.minute), le16_to_cpu(gcs.second));
-  printf("Day of week: %s\n", days[le16_to_cpu(gcs.day_of_week) - 1]);
+  Log("Camera time");
+  Log("Year: %d", le16_to_cpu(gcs.year));
+  Log("Month: %s", months[le16_to_cpu(gcs.month) - 1]);
+  Log("Day: %d", le16_to_cpu(gcs.date));
+  Log("%02d:%02d:%02d", le16_to_cpu(gcs.hour), le16_to_cpu(gcs.minute), le16_to_cpu(gcs.second));
+  Log("Day of week: %s", days[le16_to_cpu(gcs.day_of_week) - 1]);
 
   return TRUE;
 }

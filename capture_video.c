@@ -1,7 +1,6 @@
 #include "ops-linux.h"
 
 gboolean CaptureVideo(const char* filename) {
-  char log_string[STRINGSIZE];
   char buffer[BUFSIZE];
   int count = 0, x = 0, round = 0;
   u32 fourbytes = 0x00000000;
@@ -18,12 +17,11 @@ gboolean CaptureVideo(const char* filename) {
   if (ControlMessageRead(0xd000, (char*)&fourbytes, 4, TIMEOUT) == FALSE) {
     Log("failure on 0xd000");
     fourbytes = le32_to_cpu(fourbytes);
-    snprintf(log_string, STRINGSIZE - 1, "0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
-    Log(log_string);
+    Log("0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
     return FALSE;
   }
-  snprintf(log_string, STRINGSIZE - 1, "0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
-  Log(log_string);
+  Log("0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
+  
 
   if (ControlMessageWrite(0xf002, NULL, 0, TIMEOUT) == FALSE) {
     Log("failure on 0xf002");
@@ -60,24 +58,22 @@ gboolean CaptureVideo(const char* filename) {
   if (ControlMessageRead(0xd000, (char*)&fourbytes, 0, TIMEOUT) == FALSE) {
     Log("failure on 0xd000");
     fourbytes = le32_to_cpu(fourbytes);
-    snprintf(log_string, STRINGSIZE - 1, "0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
-    Log(log_string);
+    Log("0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
     return FALSE;
   }
-  snprintf(log_string, STRINGSIZE - 1, "0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
+  Log("0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
 
-  Log(log_string);
   fourbytes = 0;
   if (ControlMessageRead(0xd000, (char*)&fourbytes, 4, TIMEOUT) == FALSE) {
     Log("failure on 0xd000");
     fourbytes = le32_to_cpu(fourbytes);
-    snprintf(log_string, STRINGSIZE - 1, "0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
-    Log(log_string);
+    Log("0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
+   
     return FALSE;
   }
-  snprintf(log_string, STRINGSIZE - 1, "0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
+  Log("0xd000 returned: %02x %02x %02x %02x",fourbytes & 0xff, (fourbytes & 0xff00) >> 8, (fourbytes & 0xff0000) >> 16, (fourbytes & 0xff000000) >> 24);
 
-  Log(log_string);
+  
 
   file = fopen(filename, "w");
   Log(filename);
@@ -139,7 +135,7 @@ gboolean capture_video( GtkWidget *widget,
   flipper_capture = FALSE;
   EnableControls(FALSE);
   if (!g_thread_create((GThreadFunc)capture_video_start, filename_malloc, FALSE, &error)) {
-    Log(error->message);
+    Log("%s",error->message);
     EnableControls(TRUE);
     return FALSE;
   }

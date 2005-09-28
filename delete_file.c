@@ -76,16 +76,11 @@ gboolean delete_file(GtkWidget* widget,
 	    strcat(tempstring, p->filename);
 	  }
 	  //Log("Failed to delete "+p->filename);
-	  Log(tempstring);
+	  Log("%s",tempstring); //don't want a raw string as first parameter
 	  EnableControls(TRUE);
 	  return FALSE;
 	}
-	strcpy(tempstring, "Deleted ");
-	if (strlen(tempstring) + strlen(p->filename) + strlen("successfully") < STRINGSIZE) {
-	  strcat(tempstring, p->filename);
-	  strcat(tempstring, "successfully");
-	}
-	Log(tempstring);
+	Log("Deleted %s successfully", p->filename);
 	EnableControls(TRUE);
       }
     }

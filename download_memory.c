@@ -34,8 +34,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
   //  if (file.Open((LPCSTR)filename, CFile::modeCreate | CFile::modeWrite)==false)
   file = fopen(filename, "wb");
   if (file == NULL) {
-    Log("Trouble creating: ");
-    Log(filename);
+    Log("Trouble creating %s", filename);
     free(buffer);
     return FALSE;
   }
@@ -59,8 +58,8 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
     //    monitorcmd.Format("dumpf %d %d %s",t,fblocksz,Tmpfile);
     //		Log(monitorcmd);
     if(Monitor(monitorcmd)==FALSE) {
-      Log("flash dump command failed: ");
-      Log(monitorcmd);
+      Log("flash dump command failed: %s", monitorcmd);
+      
       fclose(file);
       free(buffer);
       return FALSE;
@@ -145,7 +144,7 @@ static gboolean download_memory_confirmed(double_widget* d_w) {
 
 
   if (!g_thread_create((GThreadFunc)download_memory_start_thread, filename_malloc, FALSE, &error)) {
-    Log(error->message);
+    Log("%s",error->message);
     return FALSE;
   }
 
@@ -163,11 +162,3 @@ gboolean download_memory(GtkWidget* widget,
   //  return FALSE;
 }
 
-gboolean Monitor(const char* command) {
-  if(ControlMessageWrite(0xef00, command, strlen(command)+1, LONG_TIMEOUT)==TRUE) {
-    Log("monitor command succeeded.");
-    return TRUE;
-  }
-  Log("monitor command failed");
-  return FALSE;
-}

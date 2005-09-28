@@ -98,6 +98,9 @@
 #define STRINGSIZE 128
 
 #define TIMEOUT 4000
+#define NEWLINE "\n"
+
+#define Log(...) do { fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n"); } while (0)
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -185,7 +188,6 @@ extern gboolean flipper_capture; //does user wish to stop video capture?
 ////////////////////////////////////////////////////////////
 
 /*  function prototypes */
-void Log(const char* stuff);  //to stderr at present moment
 
 /*  which are called by buttons  */
 
@@ -268,7 +270,7 @@ int Read(char *p_buffer, unsigned int length, int timeout);
 gboolean CheckCameraOpen(void);
 gboolean Close(void);
 gboolean Monitor(const char* command);
-gboolean MessageBoxText (const char* st, gpointer data);
+char* MessageBoxText (const char* st);
 gboolean MessageBoxTextTwo (const char* st, gpointer data);
 gboolean DownloadFile(char* saveto, char* filename, int filesize);
 void DownloadAllMovies(void);

@@ -128,7 +128,7 @@ gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
     break;
   default:
     Log("unknown file type");
-    fprintf(stderr, "type 0x%02x attr 0x%02x\n", data.filetype, data.fileattr);
+    Log("type 0x%02x attr 0x%02x", data.filetype, data.fileattr);
   case 0x20:
     thisfileinfo->filetype = FIFILE;
     break;
@@ -180,7 +180,7 @@ static gboolean rTrim(char * c, const char e) {
 
 gboolean ChangeDirectory(const char* d) {
   
-  printf("ChangeDirectory \"%s\"\n", d);
+  Log("ChangeDirectory \"%s\"", d);
   char data[LIBUSB_PATH_MAX];
   int c;
   char directory_p[LIBUSB_PATH_MAX], *directory;
@@ -207,8 +207,7 @@ gboolean ChangeDirectory(const char* d) {
       directory[0] = '\0';    
     
     if(ChangeDirectory(temp)==FALSE) {
-      Log("failed to change directory for:");
-      Log(temp);
+      Log("failed to change directory for %s",temp);
       return FALSE;
     }
 
@@ -239,12 +238,7 @@ gboolean ChangeDirectory(const char* d) {
   if(ControlMessageWrite(0xb800,data, strlen(data)+1,TIMEOUT)==TRUE) {
     return TRUE;
   }
-  strcpy(data, "change directory to ");
-  if (strlen(data) + strlen(directory) + strlen(" failed") < LIBUSB_PATH_MAX) {
-    strcat(data, directory);
-    strcat(data, " failed");
-    Log(data);
-  }
+  Log("change directory to %s failed", directory);
   return FALSE;
 }
 
@@ -351,12 +345,7 @@ static void RecursiveListing(const char* parentpath, file_info* parent, GtkTreeI
   int total_getfileinfo_calls = 0;
   firstitem = TRUE;
   
-  strcpy(tempstring, "RecursiveListing: ");
-  if (strlen(tempstring) + strlen(parentpath) < STRINGSIZE)
-    strcat(tempstring, parentpath);
-  Log(tempstring);
-  //Log("RecursiveListing: ");
-  //Log(parentpath);
+  Log("RecursiveListing: %s", parentpath);
   if (level == 5) return; //recursive runaway!!! lookout!!!
 
   //for (t=0; t < 1000; ++t) {
@@ -394,7 +383,7 @@ static void RecursiveListing(const char* parentpath, file_info* parent, GtkTreeI
     if (strlen(tData.filename) + strlen(pData.fullpath) < STRINGSIZE - 1)
       strcat(pData.fullpath, tData.filename);
     pData.partition=partition;
-    Log(pData.fullpath);
+    Log("pData.fullpath: %s", pData.fullpath);
       
       
     f_i = AddToTreeStore(GTK_TREE_STORE(treestore), parent_place, &child, &pData, parent);
@@ -405,12 +394,7 @@ static void RecursiveListing(const char* parentpath, file_info* parent, GtkTreeI
       strncpy (recursedir, pData.fullpath, STRINGSIZE - 2);
       strcat (recursedir, "/");
       if (ChangeDirectory(pData.fullpath) == FALSE) {
-	strcpy(tempstring, "Couldn't recurse into: ");
-	if (strlen(tempstring) + strlen(pData.fullpath) < STRINGSIZE)
-	  strcat(tempstring, pData.fullpath);
-	
-	//Log("Couldn't recurse into:");
-	Log(tempstring);
+	Log("Couldn't recurse into %s", pData.fullpath);
 	return;
 	
       }
@@ -436,9 +420,8 @@ static void RecursiveListing(const char* parentpath, file_info* parent, GtkTreeI
       //Log("end recursion");
     } else {
 	//AddToTreeStore(treestore, parent_place, &child, &pData, parent);
-      strcpy(tempstring, "Not a directory: ");
-      strcat(tempstring, pData.fullpath);
-      Log(tempstring);
+      Log("Not a directory: %s", pData.fullpath);
+      
       //Log("that point");
       
       //hItem[t] = m_directory_tree.InsertItem(pData->filename,2,2,parent);
@@ -509,7 +492,7 @@ static GtkTreeModel* create_model(void) {
     if (strlen(tempstring) + strlen(current_file_data.filename) < STRINGSIZE)
       strcat(tempstring, current_file_data.filename);
     //    Log("add filename:");
-    Log(current_file_data.filename);
+    Log("current_file_data.filename: %s", current_file_data.filename);
 
     AddToTreeStore(treestore, &rootlevel, &toplevel, &current_file_data, &root_file_data);
 

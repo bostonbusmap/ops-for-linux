@@ -78,10 +78,10 @@ static gboolean Init (void)
   
   for (p_bus = usb_get_busses(); p_bus != NULL; p_bus = p_bus->next, ++bus_no) {
     struct usb_device *p_device;// = p_bus->devices;
-    fprintf(stderr, "trying bus %d\n", bus_no);
+    Log("trying bus %d", bus_no);
     for (p_device = p_bus->devices; p_device != NULL; p_device = p_device->next) {
       
-      fprintf(stderr, "usb device with VID==%04x PID==%04x\n", p_device->descriptor.idVendor, p_device->descriptor.idProduct);
+      Log("usb device with VID==%04x PID==%04x", p_device->descriptor.idVendor, p_device->descriptor.idProduct);
       if (p_device->descriptor.idVendor == VENDOROLD) { //Fujitsu (testmarket revision Saturn)
 	MessageBox ("Unsupported testmarket camcorder found\r\nWarning: this will not work with Ops");
       }
@@ -113,8 +113,8 @@ static gboolean Init (void)
 	  /*      CString tstr;
 	     tstr.Format ("Found the camcorder: %s %s, VID:%.4X PID:%.4X", m_manufacturer, m_product, m_vendor_id, m_product_id);
 	     Log (tstr); */
-	  snprintf (tmp, 256, "Found the camcorder: %s %s, VID:%.4X PID:%.4X", m_manufacturer, m_product, m_vendor_id, m_product_id);
-	  Log (tmp);
+	  Log("Found the camcorder: %s %s, VID:%.4X PID:%.4X", m_manufacturer, m_product, m_vendor_id, m_product_id);
+	  
 	  break;
 	} else {
 	  Log ("Error: Found the camcorder, but couldn't open it.");

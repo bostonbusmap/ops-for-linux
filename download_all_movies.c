@@ -12,23 +12,22 @@ gboolean GetLastFileInfo(file_info* last) {
     *last = info;
 
   }
-  fprintf(stderr, "last->filename == %s\n", last->filename);
+  Log("last->filename == %s", last->filename);
   return TRUE;
 }
 
 void DownloadAllMovies() {
-  char logstr[STRINGSIZE];
   file_info info;
   gboolean first = TRUE;
   struct stat statbuf;
   while (GetFileInfo(&info,first)) {
     first=FALSE;
     if (info.filetype==FIFILE) {
-      sprintf(logstr,"found: %s (%d)",info.filename,info.filesize);
-      Log(logstr);
+      Log("found: %s (%d)",info.filename,info.filesize);
+      
       if (stat(info.filename,&statbuf)>=0) {
-	sprintf(logstr,"%s already exists locally: skipping!",info.filename);
-	Log(logstr);
+	Log("%s already exists locally: skipping!",info.filename);
+	
       } else if (!DownloadFile(info.filename,info.filename, info.filesize)) {
 	return;
       }

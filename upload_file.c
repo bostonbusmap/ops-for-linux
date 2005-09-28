@@ -24,7 +24,7 @@ static gboolean UploadFile(char* saveto, char* filename) {
   char sfilename[256];
   
   Log("entering UploadFile");
-  printf("UploadFile(%s, %s)\n",saveto,filename);
+  Log("UploadFile(%s, %s)\n",saveto,filename);
 
   if(strlen(filename)>12) {
     Log("Can't upload files with long filenames");
@@ -32,8 +32,8 @@ static gboolean UploadFile(char* saveto, char* filename) {
   }
   file = fopen(saveto, "rb");
   if (file == NULL) {
-    Log("Trouble opening: ");
-    Log(saveto);
+    Log("Trouble opening: %s", saveto);
+    
     return FALSE;
   }
   filesize = GetLength(file);
@@ -71,7 +71,7 @@ static gboolean UploadFile(char* saveto, char* filename) {
       //      fprintf(stderr,"m_progressbar: %f\n",m_progressbar_fraction);
       alt_total = tcount;
     }
-    printf("tcount: %d count: %d\n", tcount, count);
+    //    printf("tcount: %d count: %d\n", tcount, count);
     x=Write(buffer,count,TIMEOUT);
     //printf("x: %d\n",x);
     if(x<1) {
@@ -110,7 +110,7 @@ static void upload_file_start_thread(gpointer data) {
   threesome* ts = data; //see DownloadFile for args
   //EnableControls(FALSE);
   if(UploadFile((char*)(ts->a), (char*)(ts->b))==FALSE) {
-    Log("UpFile(p->filename, tempstring) failed.");
+    Log("UploadFile(p->filename == %s, tempstrin == %sg) failed.", (char*)ts->a, (char*)ts->b);
   } else {
     Log("Success retrieving data file.");
   }
@@ -183,7 +183,7 @@ gboolean upload_file( GtkWidget *widget,
   }
   
   if(ChangePartition(currently_selected_file->partition)==FALSE) {
-    Log("ChangePartition(p->partition) failed.");
+    Log("ChangePartition(%d) failed.", currently_selected_file->partition);
     return FALSE;
   }
   
@@ -223,7 +223,7 @@ gboolean upload_file( GtkWidget *widget,
   //  ts->c = &(currently_selected_file->filesize); //int
   EnableControls(FALSE);
   if (!g_thread_create((GThreadFunc)upload_file_start_thread, ts, FALSE, &error)) {
-    Log(error->message);
+    Log("%s",error->message);
     EnableControls(TRUE);
     return FALSE;
   }

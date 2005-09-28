@@ -248,7 +248,7 @@ static int get_usp_file(usp_file *uf) {
   uf->header = cpu_to_le16(0xdead);
   uf->footer = cpu_to_le16(0xb00b);
 
-  fprintf(stderr, "\n\n\n\n\n");
+ 
 
   if(ChangePartition(3)==FALSE) {
     Log("ChangePartition(3) failed.");
@@ -284,7 +284,7 @@ static int get_usp_file(usp_file *uf){
 #if 1
 
 static int put_usp_file(usp_file *uf){
-  fprintf(stderr, "\n\n\n\n\n");
+  
 
   if(ChangePartition(3)==FALSE) {
     Log("ChangePartition(3) failed.");
@@ -389,12 +389,12 @@ static gboolean settings_revert(GtkWidget *widget, GdkEvent *event, gpointer dat
 }
 
 static gboolean settings_write(GtkWidget *widget, GdkEvent *event, gpointer data){
-  fprintf(stderr, "Writing data...\n");
+  Log("Writing data...");
   if(put_usp_file(&current_usp))
-    fprintf(stderr, "Data written.\n");
+    Log("Data written.");
   else
-    fprintf(stderr, "Data NOT written.\n");
-  powerdown_camcorder(NULL,NULL,NULL);
+    Log("Data NOT written.");
+  PowerdownCamcorder();
   gtk_main_quit();
   return FALSE;
 }
@@ -599,7 +599,7 @@ gboolean change_camera_settings(GtkWidget *widget, GdkEvent *event, gpointer dat
   }
   const char *msg = verify_usp_data(&original_usp.data);
   if(msg){
-    fprintf(stderr, "ERROR: %s\n", msg);
+    Log("ERROR: %s", msg);
     return FALSE;
   }
 
@@ -613,7 +613,7 @@ gboolean change_camera_settings(GtkWidget *widget, GdkEvent *event, gpointer dat
 
   if(!SettingsDialog(&original_usp.data))
     return FALSE;
-  fprintf(stderr, "notice: called SettingsDialog and returned\n");
+  Log("notice: called SettingsDialog and returned");
   return TRUE; // success
 }
 

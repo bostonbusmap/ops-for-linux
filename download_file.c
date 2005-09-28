@@ -17,12 +17,11 @@ gboolean DownloadFile(char* saveto, char* filename, int filesize) {
   //char* sfilename = filename;
   char sfilename[256];
   char buffer[BUFSIZE];
-  printf("DownloadFile(%s, %s)\n", saveto, filename);
+  Log("DownloadFile(%s, %s)", saveto, filename);
   strcpy(sfilename, filename);
   file = fopen(saveto, "wb");
   if (file == NULL) {
-    Log("Trouble opening: ");
-    Log(filename);
+    Log("Trouble opening %s", filename);
     return FALSE;
   }
 
@@ -72,7 +71,7 @@ void download_file_start_thread(gpointer data) {
   threesome* ts = data; //see DownloadFile for args
   //EnableControls(FALSE);
   if(DownloadFile((char*)(ts->a), (char*)(ts->b), *(int*)(ts->c))==FALSE) {
-    Log("DownloadFile(p->filename, tempstring) failed.");
+    Log("DownloadFile(%s, %s, %d) failed.", (char*)ts->a, (char*)ts->b, *(int*)ts->c);
   } else {
     Log("Success retrieving data file.");
   }
@@ -127,12 +126,12 @@ gboolean download_file( GtkWidget *widget,
   }
   
   if(ChangePartition(currently_selected_file->partition)==FALSE) {
-    Log("ChangePartition(p->partition) failed.");
+    Log("ChangePartition(%d) failed.", currently_selected_file->partition);
     return FALSE;
   }
 
   if(ChangeDirectory(currently_selected_file->dirpath)== FALSE) {
-    Log("ChangeDirectory(p->dirpath) failed.");
+    Log("ChangeDirectory(%s) failed.", currently_selected_file->dirpath);
     return FALSE;
   }
   /* if function ends before thread initializes its variables
@@ -146,7 +145,7 @@ gboolean download_file( GtkWidget *widget,
   ts->c = &(currently_selected_file->filesize); //int
   EnableControls(FALSE);
   if (!g_thread_create((GThreadFunc)download_file_start_thread, ts, FALSE, &error)) {
-    Log(error->message);
+    Log("%s",error->message);
     free(ts->a);
     free(ts);
     EnableControls(TRUE);

@@ -1,36 +1,32 @@
 #include "ops-linux.h"
 
-typedef unsigned int DWORD;
-typedef unsigned int dword;
-typedef unsigned char byte;
-typedef unsigned short int word;
 
 //maybe some asserts to confirm byte sizes?
 #pragma pack (push, 0)
 typedef struct
 {
-	byte	JumpInstruction[3];
-	byte	OEMID[8];
-	word	BytesPerSector;
-	byte	SectorsPerCluster;
-	word	ReservedSectors;
-	byte	FATs;
-	word	RootEntries;
-	word	SmallSectors;
-	byte	Media;
-	word	FATSize;
-	word	TrackSize;
-	word	Heads;
-	dword	HiddenSectors;
-	dword	LargeSectors;
-	byte	DriveNumber;
-	byte	CurrentHead;
-	byte	Signature;
-	dword	ID;
-	byte	VolumeLabel[11];
-	byte	SystemID[8];
-	byte	LoadInstructions[448]; // 512-64
-	word	BR_Signature; /*=AA55h*/
+	u8	JumpInstruction[3];
+	u8	OEMID[8];
+	u16	BytesPerSector;
+	u8	SectorsPerCluster;
+	u16	ReservedSectors;
+	u8	FATs;
+	u16	RootEntries;
+	u16	SmallSectors;
+	u8	Media;
+	u16	FATSize;
+	u16	TrackSize;
+	u16	Heads;
+	u32	HiddenSectors;
+	u32	LargeSectors;
+	u8	DriveNumber;
+	u8	CurrentHead;
+	u8	Signature;
+	u32	ID;
+	u8	VolumeLabel[11];
+	u8	SystemID[8];
+	u8	LoadInstructions[448]; // 512-64
+	u16	BR_Signature; /*=AA55h*/
 }  BootRecord;
 #pragma pack (pop)
 
@@ -207,7 +203,7 @@ static gboolean DownloadFlash(const char* filename, int partition, int size) {
   fclose(file);
   
   //CString debug; debug.Format("flash download was %d bytes",count);
-  fprintf(stderr, "flash download was %d bytes\n",count);
+  Log("flash download was %d bytes",count);
   //  Log(debug);
   return TRUE;
 }
@@ -275,7 +271,7 @@ gboolean download_flash( GtkWidget *widget,
   EnableControls(FALSE);
 
   if (!g_thread_create((GThreadFunc)download_flash_start_thread, ts, FALSE, &error)) {
-    Log(error->message);
+    Log("%s", error->message);
     free(ts->a);
     free(ts);
     EnableControls(TRUE);
