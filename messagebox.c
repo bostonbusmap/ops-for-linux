@@ -1,5 +1,72 @@
 #include "ops-linux.h"
 
+int text_option_box(int number_of_options, const char* st, ...) {
+  GtkWidget* combobox = NULL;
+  int return_value;
+  GtkWidget * dialog, * label;
+  char* active_text = NULL;
+  GtkTreeIter iter;
+  va_list ap;
+  //const char* st = "Choose one:";
+  int count;
+  gint result;
+  const char* text; //variable arguments mean weak typing anyways, but whatev
+  
+  // create dialog with ok/cancel buttons
+  dialog = gtk_dialog_new_with_buttons("Confirm",GTK_WINDOW(main_window),
+				       0,
+				       GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+				       GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+				       NULL);
+  // add the box contents
+  label = gtk_label_new (st);
+  gtk_box_pack_start(GTK_BOX (GTK_DIALOG (dialog)->vbox), label, TRUE, TRUE, 0);
+  gtk_widget_show (label);
+
+  combobox = gtk_combo_box_new_text();
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(combobox),
+		     TRUE, TRUE, 0);
+  gtk_widget_show(GTK_WIDGET(combobox));
+
+  va_start(ap, st);
+  
+  for (count = 0; count < number_of_options; ++count) {
+    text = va_arg(ap, const char*);
+    gtk_combo_box_insert_text(GTK_COMBO_BOX(combobox), count, text);
+  }
+
+  // run the dialog and check the result
+  result = gtk_dialog_run( GTK_DIALOG(dialog) );
+  switch (result) {
+    case GTK_RESPONSE_ACCEPT:
+      active_text = gtk_combo_box_get_active_text(GTK_COMBO_BOX(combobox));
+      va_start(ap, st);
+      return_value = -1; //by default
+
+      for (count = 0; count < number_of_options; ++count) {
+	text = va_arg(ap, const char*);
+	if (strcmp(text, active_text) == 0) {
+	  return_value = count;
+	  break;
+	}
+      }
+      break;
+    default:
+      return_value = -1;
+      break;
+  }
+
+  // destroy the dialog
+  gtk_widget_destroy(dialog);
+
+  return return_value;
+
+
+}
+
+
+
+
 static double_widget global_dw;
 
 gboolean MessageBoxTextTwo (const char* st, gpointer data) {
@@ -73,6 +140,8 @@ gboolean MessageBoxTextTwo (const char* st, gpointer data) {
 }
 
 
+
+
 gboolean MessageBox(const char *st)
 {
   GtkWidget *window, *ok_button, *label;
@@ -98,7 +167,7 @@ gboolean MessageBox(const char *st)
 }
 
 
-char* MessageBoxText(const char* st) {
+char* MessageBoxText(const char* st) {  //NOTE: returns malloced info
   GtkWidget *dialog, 
     *ok_button,
     *cancel_button,

@@ -530,7 +530,7 @@ static gboolean SettingsDialog(usp_data *ud){
   gtk_box_pack_start(GTK_BOX (box1), checkbox_recycle, TRUE, TRUE, 0);
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox_recycle), !!ud->recycle);
   gtk_widget_show(checkbox_recycle);
-  gtk_tooltips_set_tip(tooltips, checkbox, "check to trigger camera 'ready to recycle' flag", NULL);
+  gtk_tooltips_set_tip(tooltips, checkbox_recycle, "check to trigger camera 'ready to recycle' flag", NULL);
 
 
 

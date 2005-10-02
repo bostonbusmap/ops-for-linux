@@ -1,7 +1,6 @@
 #include "ops-linux.h"
 
 
-//maybe some asserts to confirm byte sizes?
 #pragma pack (push, 0)
 typedef struct
 {
@@ -31,6 +30,22 @@ typedef struct
 #pragma pack (pop)
 
 
+void GetFirmwareRevision(char* firmware) {
+  u8 version[4];
+  
+  u32 data = cpu_to_le32(0x201); //request version
+  if (ControlMessageWrite(0xfe01, (char*)&data, 4, TIMEOUT) == FALSE) {
+    Log("failed at 0xfe, retrieving firmware revision");
+    strcpy(firmware, "Unknown");
+    return;
+  }
+  ControlMessageRead(0xff01, (char*)version, 4, TIMEOUT);
+  
+  snprintf(firmware, STRINGSIZE, "%02x.%02x",version[1],version[0]);
+  //WARNING: possible endian trouble here
+
+}
+
 static int GetPartitionSize(int partition, gboolean rounded) {
   int data[2];
   int y = 0;
@@ -45,6 +60,7 @@ static int GetPartitionSize(int partition, gboolean rounded) {
     data[0]=512; //skip the EBR
   else
     data[0]=0; //other partitions aren't proceded with crap
+  
   if(ControlMessageWrite(0xf100|partition,(char*)data,8,TIMEOUT)==FALSE) { // Set memory transfer filter, and size
     
     Log("failed at 0xf1, set memory type");
@@ -65,7 +81,7 @@ static int GetPartitionSize(int partition, gboolean rounded) {
       sub_y = Read(((unsigned char *)(&bootrec)) + BUFSIZE * sub_count,
 	       BUFSIZE, TIMEOUT);
       if (sub_y != BUFSIZE) { //weirdness
-	Log("ERROR: y != BUFSIZE (unable to read full boot record");
+	Log("ERROR: y != BUFSIZE (unable to read full boot record)");
 	return FALSE;
       }
       y += sub_y;
@@ -83,7 +99,7 @@ static int GetPartitionSize(int partition, gboolean rounded) {
     return(-1);
   }
   if(bootrec.BR_Signature != cpu_to_le16(0xaa55)) {
-    Log("Bad signature retrieved from partition's boot record");
+    Log("Bad signature retrieved from partition's boot record: %04x", bootrec.BR_Signature);
     return(-1);
   }
   
@@ -115,11 +131,12 @@ static gboolean DownloadFlash(const char* filename, int partition, int size) {
   //...it could be something else, but assuming the above fixes
   //a "rounded down" bug when delivering the NO_NAME partition.
   
-  char buffer[BUFSIZE];
-  int data[3];
-  int dummy;
-  int i,x;
-  int roundedsize,bufsize;
+  u8 buffer[BUFSIZE];
+  u32 data[3];
+  u32 dummy;
+  u32 i,x;
+  u32 roundedsize,bufsize;
+  gboolean wholeimage = FALSE;
 
   
   FILE* file = fopen(filename, "wb");
@@ -133,7 +150,9 @@ static gboolean DownloadFlash(const char* filename, int partition, int size) {
     partition=3;
     size=(128*1024*1024); //set bigger than the maximum we can grab
     roundedsize=size;
+    wholeimage = TRUE;
   }
+  
   if(partition==1) {
     size=(32*1024*1024); //p1 appears to be a ramdisk or something 32 Meg in size.
     roundedsize=size;
@@ -161,6 +180,19 @@ static gboolean DownloadFlash(const char* filename, int partition, int size) {
     Log("failed at 0xf1, set memory type");
     return FALSE;
   }
+  if (wholeimage == TRUE) {
+    char frev[STRINGSIZE];
+    GetFirmwareRevision(frev);
+    if (strcmp(frev, "03.40") == 0)
+      Monitor("wl 8012fee4 0x05");
+    else if (strcmp(frev, "03.62") == 0)
+      Monitor("wl 80130098 0x05");
+    else {
+      Log("Whole image download impossible. Can't find firmware revision");
+      Log("Flash image will begin at first filesystem");
+    }
+  }
+
   if(ControlMessageWrite(0xf300,(char*)&dummy,0,TIMEOUT)==FALSE) { // Initiate the memory transfer
     Log("failed at 0xf3, request memory");
     return FALSE;
@@ -213,7 +245,7 @@ static void download_flash_start_thread(gpointer data) {
   twosome* ts = data;
   
   if(DownloadFlash((char*)(ts->a), (int)(ts->b), -1)==FALSE) {
-    Log("DownloadFlash(p->filename, tempstring) failed.");
+    Log("DownloadFlash(%s, %08x, -1) failed.", (char*)(ts->a), (int)(ts->b));
     EnableControls(TRUE);
     free(ts->a);
     free(ts);
@@ -248,13 +280,26 @@ gboolean download_flash( GtkWidget *widget,
     return FALSE;
 
 
-  partition_value = 0; //FIXME: replace with option box like windows ops has
-  
+  //partition_value = 0; //FIXME: replace with option box like windows ops has
+  partition_value = text_option_box(6,
+				    "Choose which part of flash to download from",
+				    "All accessable flash",
+				    "Unknown partition",
+				    "p0, NO_NAME partition",
+				    "p2, ResourcesA partition",
+				    "p3, ResourcesB partition",
+				    "p4, ResourcesC partition");
+  if (partition_value < 0) {
+    Log("Invalid partition selected");
+    return FALSE;
+  }
+  // the translation from index number to a real partition number is done in
+  //DownloadFlash()
   filename_malloc = get_download_filename(NULL);
 
   
-  if(ChangePartition(partition_value)==FALSE) {
-    Log("ChangePartition(p->partition) failed.");
+  if(ChangePartition(0)==FALSE) {
+    Log("ChangePartition(%d) failed.", partition_value);
     return FALSE;
   }
 

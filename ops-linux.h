@@ -252,6 +252,7 @@ gboolean enable_buttons (GtkWidget* widget,
 /*  GUI-manipulating functions  */
 gboolean MessageBox(const char* st);
 gboolean MessageBoxConfirm(const char* st);
+int text_option_box(int number_of_options, const char* st,...);
 void EnableControls(gboolean value);
 gboolean set_progress_bar(double value);
 gboolean set_bitrate(double kbyterate);
