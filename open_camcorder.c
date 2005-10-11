@@ -34,9 +34,9 @@ static gboolean Open (void)
   }
 
   if (success == TRUE) {
-    Log ("Connected to camcorder.");
+    Log(NOTICE, "Connected to camcorder.");
   } else {
-    Log ("Error: Couldn't connect to camcorder.");
+    Log(ERROR, "Couldn't connect to camcorder.");
   }
 
   return success;
@@ -61,12 +61,12 @@ static gboolean Init (void)
   usb_init ();
   
   if (usb_find_busses () < 0) {
-    Log ("Error: Couldn't find USB bus.");
+    Log(ERROR, "Error: Couldn't find USB bus.");
     return FALSE;
   }
   
   if (usb_find_devices () < 0) {
-    Log ("Error: Couldn't find any USB devices.");
+    Log(ERROR, "Error: Couldn't find any USB devices.");
     return FALSE;
   }
   
@@ -78,10 +78,10 @@ static gboolean Init (void)
   
   for (p_bus = usb_get_busses(); p_bus != NULL; p_bus = p_bus->next, ++bus_no) {
     struct usb_device *p_device;// = p_bus->devices;
-    Log("trying bus %d", bus_no);
+    Log(DEBUGGING, "trying bus %d", bus_no);
     for (p_device = p_bus->devices; p_device != NULL; p_device = p_device->next) {
       
-      Log("usb device with VID==%04x PID==%04x", p_device->descriptor.idVendor, p_device->descriptor.idProduct);
+      Log(DEBUGGING, "usb device with VID==%04x PID==%04x", p_device->descriptor.idVendor, p_device->descriptor.idProduct);
       if (p_device->descriptor.idVendor == VENDOROLD) { //Fujitsu (testmarket revision Saturn)
 	MessageBox ("Unsupported testmarket camcorder found\r\nWarning: this will not work with Ops");
       }
@@ -113,11 +113,12 @@ static gboolean Init (void)
 	  /*      CString tstr;
 	     tstr.Format ("Found the camcorder: %s %s, VID:%.4X PID:%.4X", m_manufacturer, m_product, m_vendor_id, m_product_id);
 	     Log (tstr); */
-	  Log("Found the camcorder: %s %s, VID:%.4X PID:%.4X", m_manufacturer, m_product, m_vendor_id, m_product_id);
+	  Log(NOTICE, "Camcorder found!");
+	  Log(DEBUGGING, "Found the camcorder: %s %s, VID:%.4X PID:%.4X", m_manufacturer, m_product, m_vendor_id, m_product_id);
 	  
 	  break;
 	} else {
-	  Log ("Error: Found the camcorder, but couldn't open it.");
+	  Log (ERROR, "Error: Found the camcorder, but couldn't open it.");
 
 	  if (attempt == 0) {
 	    attempt = 1;
@@ -136,7 +137,7 @@ static gboolean Init (void)
   }
 
   if (m_usb_device == NULL) {
-    Log ("Error: Couldn't find camcorder.");
+    Log (ERROR, "Error: Couldn't find camcorder.");
     return FALSE;
   }
 
@@ -149,15 +150,15 @@ static gboolean Init (void)
 gboolean open_camcorder (GtkWidget * widget, GdkEvent * event, gpointer data)
 {
   if (Init () == FALSE) {
-    Log ("Init() == FALSE");	//update log with CCamcorder's's log
+    Log(ERROR, "Init() == FALSE");	//update log with CCamcorder's's log
     MessageBox ("Couldn't find camcorder");
     return FALSE;
   }
-  Log ("Found camcorder.");
+  Log(NOTICE, "Found camcorder.");
   if (Open () == FALSE) {
-    Log ("Open() == FALSE");	//update log with CCamcorders's log
-    Log ("Camera can be found but can't be opened.");
-    Log("Maybe you're not running as superuser (root)?");
+    Log(ERROR, "Open() == FALSE");	//update log with CCamcorders's log
+    Log(ERROR, "Camera can be found but can't be opened.");
+    Log(ERROR, "Maybe you're not running as superuser (root)?");
     MessageBox ("Couldn't connect to camcorder\nMaybe you're not running as superuser (root)?");
     return FALSE;
   }

@@ -35,23 +35,22 @@ typedef struct cvs_dir_entry {
 gboolean GetAnyFileInfo(const char* filename, file_info *thisfileinfo) {
   cvs_dir_entry data;
   char tempstring[STRINGSIZE];
-  Log("GetAnyFileInfo start");
+  Log(DEBUGGING, "GetAnyFileInfo start");
   memset(&data, 0, sizeof data);
   strncpy(tempstring, filename, STRINGSIZE);
   // first we set the filename
   if(ControlMessageWrite(0xb101, (char*)tempstring, strlen(filename)+1, TIMEOUT)==FALSE) { //SetFileName
-    Log("failed to set filename");
+    Log(ERROR, "failed to set filename");
     return FALSE;
   }
-  ///  //b901 doesn't work for some reason... defaulting to bc00 for the time being
-  //nevermind...
+
   ControlMessageWrite(0xb901, (char *)&data, 0, TIMEOUT);
   if(Read((char*)&data,28,TIMEOUT)<28) {
-    Log("failed to retrieve file information");
+    Log(ERROR, "failed to retrieve file information");
     return FALSE;
   }
   
-  Log("success in Read in GetAnyFileInfo");
+  Log(DEBUGGING, "success in Read in GetAnyFileInfo");
 
   // filename may have trailing 0xff garbage
   char *cp = memchr(data.filename, '\xff', 12);
@@ -71,7 +70,7 @@ gboolean GetAnyFileInfo(const char* filename, file_info *thisfileinfo) {
   if(data.fileattr==0x10)
     thisfileinfo->filetype = FIDIR;
 
-  Log("success in GetAnyFileInfo");
+  Log(DEBUGGING, "success in GetAnyFileInfo");
   return TRUE;
 }
 
@@ -90,25 +89,25 @@ gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
   //sometimes the first-file read fails after a partition change
   for(t=0;t<2;t++) {
     if(ControlMessageWrite(command,(char*)&dummy,0,TIMEOUT)==FALSE) {
-      Log("failed at 0xbc (requesting first file info).");
+      Log(ERROR, "failed at 0xbc (requesting first file info).");
       return FALSE;
     }
     if(((s=Read((char*)&data,28,TIMEOUT)))<28) {
       if(isfirstfile == FALSE)
 	break;
-      Log("failed to bulk read first file info...not retrying");
+      Log(ERROR, "failed to bulk read first file info...not retrying");
       //Sleep(150);
       continue;
     }
     break;
   }
   if(s!=28) {
-    Log("failed to bulk read file info");
+    Log(WARNING, "failed to bulk read file info");
     return FALSE;
   }
   
   if(data.unknown1[0]==0x0f) { //we've already read the last file
-    Log("Last file.");
+    Log(DEBUGGING, "Last file.");
     return FALSE;
   }
   {
@@ -127,8 +126,8 @@ gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
     thisfileinfo->filetype = FIDIR;
     break;
   default:
-    Log("unknown file type");
-    Log("type 0x%02x attr 0x%02x", data.filetype, data.fileattr);
+    
+    Log(WARNING, "unknown file type: 0x%02x attr 0x%02x", data.filetype, data.fileattr);
   case 0x20:
     thisfileinfo->filetype = FIFILE;
     break;
@@ -144,7 +143,7 @@ gboolean ChangePartition(unsigned int partition) {
   unsigned int cmd;
   
   if( (partition==1) || (partition>4)) {
-    Log("refusing to change to non-filesystem partition.");
+    Log(ERROR, "refusing to change to non-filesystem partition.");
     return FALSE;
   }
 
@@ -180,7 +179,7 @@ static gboolean rTrim(char * c, const char e) {
 
 gboolean ChangeDirectory(const char* d) {
   
-  Log("ChangeDirectory \"%s\"", d);
+  Log(DEBUGGING, "ChangeDirectory \"%s\"", d);
   char data[LIBUSB_PATH_MAX];
   int c;
   char directory_p[LIBUSB_PATH_MAX], *directory;
@@ -207,7 +206,7 @@ gboolean ChangeDirectory(const char* d) {
       directory[0] = '\0';    
     
     if(ChangeDirectory(temp)==FALSE) {
-      Log("failed to change directory for %s",temp);
+      Log(ERROR, "failed to change directory to parent directory %s",temp);
       return FALSE;
     }
 
@@ -225,7 +224,7 @@ gboolean ChangeDirectory(const char* d) {
   c=directory[0];
   if(! ( ((c>='a')&&(c<='z')) ||  ((c>='A')&&(c<='Z'))  || 
 	 ((c>='0')&&(c<='9')) || (c=='_') || c=='/') ) {
-    Log("//not liking the first character of this directory!");
+    Log(ERROR, "//not liking the first character of this directory!");
     //the camcorder's CD command created directories if they're not
     //there... best to be prudent and assume it's some kind of error.
     return FALSE;
@@ -238,7 +237,7 @@ gboolean ChangeDirectory(const char* d) {
   if(ControlMessageWrite(0xb800,data, strlen(data)+1,TIMEOUT)==TRUE) {
     return TRUE;
   }
-  Log("change directory to %s failed", directory);
+  Log(ERROR, "change directory to %s failed", directory);
   return FALSE;
 }
 
@@ -340,7 +339,7 @@ static void RecursiveListing(const char* parentpath, file_info* parent, GtkTreeI
   int total_getfileinfo_calls = 0;
   firstitem = TRUE;
   
-  Log("RecursiveListing: %s", parentpath);
+  Log(DEBUGGING, "RecursiveListing: %s", parentpath);
   if (level == 5) return; //recursive runaway!!! lookout!!!
 
   //for (t=0; t < 1000; ++t) {
@@ -352,11 +351,11 @@ static void RecursiveListing(const char* parentpath, file_info* parent, GtkTreeI
   //recursion.
   
   for(t=0;t<1000;t++)  { //don't bitch. 1000 items in one directory is a lot.
-    Log("Getfileinfo?");
+    Log(DEBUGGING, "Getfileinfo?");
     if(GetFileInfo(&tData, firstitem)==FALSE)
       break; //we've passed the last item.
     ++total_getfileinfo_calls;
-    Log("Getfileinfo.");
+    Log(DEBUGGING, "Getfileinfo.");
     firstitem=FALSE;
     
     
@@ -378,18 +377,18 @@ static void RecursiveListing(const char* parentpath, file_info* parent, GtkTreeI
     if (strlen(tData.filename) + strlen(pData.fullpath) < STRINGSIZE - 1)
       strcat(pData.fullpath, tData.filename);
     pData.partition=partition;
-    Log("pData.fullpath: %s", pData.fullpath);
+    Log(DEBUGGING, "pData.fullpath: %s", pData.fullpath);
       
       
     f_i = AddToTreeStore(GTK_TREE_STORE(treestore), parent_place, &child, &pData, parent);
     //from here on in f_i and pData should contain the same info (at different memory locations)
     //also, AddToTreeStore stores data elsewhere so don't delete f_i
     if(pData.filetype==FIDIR) {
-      Log("if (pData.filetype == FIDIR)");
+      Log(DEBUGGING, "if (pData.filetype == FIDIR)");
       strncpy (recursedir, pData.fullpath, STRINGSIZE - 2);
       strcat (recursedir, "/");
       if (ChangeDirectory(pData.fullpath) == FALSE) {
-	Log("Couldn't recurse into %s", pData.fullpath);
+	Log(ERROR, "Couldn't recurse into %s", pData.fullpath);
 	return;
 	
       }
@@ -399,12 +398,12 @@ static void RecursiveListing(const char* parentpath, file_info* parent, GtkTreeI
       //Log("enter recursion");
       
       //RecursiveListing(NULL, NULL, NULL, 0, 0, NULL);
-      Log("RecursiveListing recursion.");
+      Log(DEBUGGING, "RecursiveListing recursion.");
       RecursiveListing(recursedir, f_i, &child, partition, level + 1, GTK_TREE_STORE(treestore));
       //      strncpy(tempstring, f_i->dirpath, STRINGSIZE - 2); //really hoping dirpath is this dir
       //      strcat(tempstring, "/");
       if (ChangeDirectory(pData.dirpath) == FALSE) {
-	Log("PROBLEM: couldn't change back to current directory after recursion");
+	Log(ERROR, "couldn't change back to current directory after recursion");
 	return;
       }
       if (firstitem == TRUE) firstitem = FALSE;
@@ -415,7 +414,7 @@ static void RecursiveListing(const char* parentpath, file_info* parent, GtkTreeI
       //Log("end recursion");
     } else {
 	//AddToTreeStore(treestore, parent_place, &child, &pData, parent);
-      Log("Not a directory: %s", pData.fullpath);
+      Log(DEBUGGING, "Not a directory: %s", pData.fullpath);
       
       //Log("that point");
       
@@ -487,17 +486,15 @@ static GtkTreeModel* create_model(void) {
     if (strlen(tempstring) + strlen(current_file_data.filename) < STRINGSIZE)
       strcat(tempstring, current_file_data.filename);
     //    Log("add filename:");
-    Log("current_file_data.filename: %s", current_file_data.filename);
+    Log(DEBUGGING, "current_file_data.filename: %s", current_file_data.filename);
 
     AddToTreeStore(treestore, &rootlevel, &toplevel, &current_file_data, &root_file_data);
 
     if (ChangePartition(t) == FALSE) {
-      Log("Couldn't change partitions");
       EnableControls(TRUE);
       return NULL;
     }
     if(ChangeDirectory("/")==FALSE) {
-      Log("Couldn't change directories");
       EnableControls(TRUE);
       return NULL;
     }
@@ -535,11 +532,12 @@ gboolean update_directory_listing (GtkWidget *widget,
   model = create_model();
   
 
-  Log("model created.");
+  Log(DEBUGGING, "model created.");
   FreeAllocatedFiles(root_directory);
   root_directory = NULL;
   gtk_tree_view_set_model(GTK_TREE_VIEW(m_directory_tree), GTK_TREE_MODEL(model));
   gtk_tree_view_expand_all(GTK_TREE_VIEW(m_directory_tree)); 
+  Log(NOTICE, "directory tree created successfully");
   EnableControls(TRUE);
   return TRUE;
 }

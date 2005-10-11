@@ -23,16 +23,16 @@ static gboolean UploadFile(char* saveto, char* filename) {
   char buffer [BUFSIZE];
   char sfilename[256];
   
-  Log("entering UploadFile");
-  Log("UploadFile(%s, %s)\n",saveto,filename);
+  Log(DEBUGGING, "entering UploadFile");
+  Log(DEBUGGING, "UploadFile(%s, %s)\n",saveto,filename);
 
   if(strlen(filename)>12) {
-    Log("Can't upload files with long filenames");
+    Log(ERROR, "Can't upload files with long filenames");
     return(FALSE);
   }
   file = fopen(saveto, "rb");
   if (file == NULL) {
-    Log("Trouble opening: %s", saveto);
+    Log(ERROR, "Trouble opening: %s", saveto);
     
     return FALSE;
   }
@@ -43,7 +43,7 @@ static gboolean UploadFile(char* saveto, char* filename) {
   memset(sfilename,0,255);
   strncpy((char *)sfilename,filename,12);
   if(ControlMessageWrite(0xb105, sfilename, strlen(sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
-    Log("failed at 0xb1");
+    Log(ERROR, "failed at 0xb1");
     return FALSE;
   }
 
@@ -54,14 +54,14 @@ static gboolean UploadFile(char* saveto, char* filename) {
   udata[3] = filesize >>  8;
   udata[2] = filesize >>  0;
   if(ControlMessageWrite(0x9505, udata, 4, TIMEOUT)== FALSE) { // Request Write
-    Log("failed at 0x95");
+    Log(ERROR, "failed at 0x95");
     return FALSE;
   }
 
   x=0;
   //  EnableControls(FALSE);
   for(;;) {
-    Log("writing...");
+    Log(DEBUGGING, "writing...");
     count = fread(buffer, sizeof(char), BUFSIZE, file);
     if (count < 1) break;
     tcount += count;
@@ -75,7 +75,7 @@ static gboolean UploadFile(char* saveto, char* filename) {
     x=Write(buffer,count,TIMEOUT);
     //printf("x: %d\n",x);
     if(x<1) {
-      Log("Error writing file to camera");
+      Log(ERROR, "Error writing file to camera");
       fclose(file);
       //EnableControls(TRUE);
       //      m_progressbar_fraction = 0;
@@ -101,7 +101,7 @@ static gboolean UploadFile(char* saveto, char* filename) {
   fclose(file);
   //  Log("Success sending file");
   
-  Log("Leaving UploadFile");
+  Log(DEBUGGING, "Leaving UploadFile");
   return TRUE;
 }
 
@@ -110,9 +110,9 @@ static void upload_file_start_thread(gpointer data) {
   threesome* ts = data; //see DownloadFile for args
   //EnableControls(FALSE);
   if(UploadFile((char*)(ts->a), (char*)(ts->b))==FALSE) {
-    Log("UploadFile(p->filename == %s, tempstrin == %sg) failed.", (char*)ts->a, (char*)ts->b);
+    Log(ERROR, "UploadFile(p->filename == %s, tempstrin == %sg) failed.", (char*)ts->a, (char*)ts->b);
   } else {
-    Log("Success retrieving data file.");
+    Log(NOTICE, "Success retrieving data file.");
   }
   free(ts->a);
   free(ts);
@@ -183,7 +183,6 @@ gboolean upload_file( GtkWidget *widget,
   }
   
   if(ChangePartition(currently_selected_file->partition)==FALSE) {
-    Log("ChangePartition(%d) failed.", currently_selected_file->partition);
     return FALSE;
   }
   
@@ -191,7 +190,6 @@ gboolean upload_file( GtkWidget *widget,
   //if uploading to directory, make it use a filename you're saving to instead
   if (currently_selected_file->filetype == FIDIR || currently_selected_file->filetype == FIPART) {
     if(ChangeDirectory(currently_selected_file->fullpath) == FALSE) {
-      Log("ERROR: ChangeDirectory to upload directory failed.");
       return FALSE;
     }
     temp_save_filename = filename_malloc;
@@ -201,12 +199,11 @@ gboolean upload_file( GtkWidget *widget,
 	break;
     ++temp_save_filename;
     if (strlen(temp_save_filename) > 12) {
-      Log("Please rename this file to an 8.3 filename (ABCDEFGH.IJK for instance)");
+      Log(ERROR, "Please rename this file to an 8.3 filename (ABCDEFGH.IJK for instance)");
       return FALSE;
     }
   } else {
     if(ChangeDirectory(currently_selected_file->dirpath) == FALSE) {
-      Log("ERROR: ChangeDirectory to upload directory failed.");
       return FALSE;
     }
 
@@ -223,7 +220,7 @@ gboolean upload_file( GtkWidget *widget,
   //  ts->c = &(currently_selected_file->filesize); //int
   EnableControls(FALSE);
   if (!g_thread_create((GThreadFunc)upload_file_start_thread, ts, FALSE, &error)) {
-    Log("%s",error->message);
+    Log(ERROR, "g_thread says: %s",error->message);
     EnableControls(TRUE);
     return FALSE;
   }

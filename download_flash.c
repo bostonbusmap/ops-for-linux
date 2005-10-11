@@ -35,7 +35,7 @@ void GetFirmwareRevision(char* firmware) {
   
   u32 data = cpu_to_le32(0x201); //request version
   if (ControlMessageWrite(0xfe01, (char*)&data, 4, TIMEOUT) == FALSE) {
-    Log("failed at 0xfe, retrieving firmware revision");
+    Log(ERROR, "failed at 0xfe, retrieving firmware revision, in GetFirmwareREvision");
     strcpy(firmware, "Unknown");
     return;
   }
@@ -63,12 +63,12 @@ static int GetPartitionSize(int partition, gboolean rounded) {
   
   if(ControlMessageWrite(0xf100|partition,(char*)data,8,TIMEOUT)==FALSE) { // Set memory transfer filter, and size
     
-    Log("failed at 0xf1, set memory type");
+    Log(ERROR, "failed at 0xf1, set memory type, in GetPartitionSize");
     return(-1);
   } 
   if(ControlMessageWrite(0xf300,(char*)&dummy,0, TIMEOUT)==FALSE) { // Initiate the memory transfer
     
-    Log("failed at 0xf3, request memory");
+    Log(ERROR, "failed at 0xf3, request memory, in GetPartitionSize");
     return(-1);
   }
   if (BUFSIZE >= 512) {
@@ -81,7 +81,7 @@ static int GetPartitionSize(int partition, gboolean rounded) {
       sub_y = Read(((unsigned char *)(&bootrec)) + BUFSIZE * sub_count,
 	       BUFSIZE, TIMEOUT);
       if (sub_y != BUFSIZE) { //weirdness
-	Log("ERROR: y != BUFSIZE (unable to read full boot record)");
+	Log(ERROR, "y != BUFSIZE (unable to read full boot record), in GetPartitionSize");
 	return FALSE;
       }
       y += sub_y;
@@ -95,11 +95,11 @@ static int GetPartitionSize(int partition, gboolean rounded) {
   }
 
   if(y!=512) {
-    Log("Couldn't retrieve partition's boot record");
+    Log(ERROR, "Couldn't retrieve partition's boot record, in GetPartitionSize");
     return(-1);
   }
   if(bootrec.BR_Signature != cpu_to_le16(0xaa55)) {
-    Log("Bad signature retrieved from partition's boot record: %04x", bootrec.BR_Signature);
+    Log(ERROR, "Bad signature retrieved from partition's boot record: %04x (in GetParititionSize)", bootrec.BR_Signature);
     return(-1);
   }
   
@@ -141,7 +141,7 @@ static gboolean DownloadFlash(const char* filename, int partition, int size) {
   
   FILE* file = fopen(filename, "wb");
   if (file == NULL) {
-    Log("Trouble creating filename");
+    Log(ERROR, "Trouble creating filename, in DownloadFlash");
     return FALSE;
   }
 
@@ -177,7 +177,7 @@ static gboolean DownloadFlash(const char* filename, int partition, int size) {
   p_ctl_progress->SetPos(0);*/
   
   if(ControlMessageWrite(0xf100|partition,(char*)data,8,TIMEOUT)==FALSE) { // Set memory transfer filter, and size
-    Log("failed at 0xf1, set memory type");
+    Log(ERROR, "failed at 0xf1, set memory type, in DownloadFlash");
     return FALSE;
   }
   if (wholeimage == TRUE) {
@@ -188,13 +188,13 @@ static gboolean DownloadFlash(const char* filename, int partition, int size) {
     else if (strcmp(frev, "03.62") == 0)
       Monitor("wl 80130098 0x05");
     else {
-      Log("Whole image download impossible. Can't find firmware revision");
-      Log("Flash image will begin at first filesystem");
+      Log(WARNING, "Whole image download impossible. Can't find firmware revision");
+      Log(WARNING, "Flash image will begin at first filesystem");
     }
   }
 
   if(ControlMessageWrite(0xf300,(char*)&dummy,0,TIMEOUT)==FALSE) { // Initiate the memory transfer
-    Log("failed at 0xf3, request memory");
+    Log(ERROR, "failed at 0xf3, request memory, in GetPartitionSize");
     return FALSE;
   }
   
@@ -235,7 +235,7 @@ static gboolean DownloadFlash(const char* filename, int partition, int size) {
   fclose(file);
   
   //CString debug; debug.Format("flash download was %d bytes",count);
-  Log("flash download was %d bytes",count);
+  Log(NOTICE, "flash download was %d bytes",count);
   //  Log(debug);
   return TRUE;
 }
@@ -245,13 +245,13 @@ static void download_flash_start_thread(gpointer data) {
   twosome* ts = data;
   
   if(DownloadFlash((char*)(ts->a), (int)(ts->b), -1)==FALSE) {
-    Log("DownloadFlash(%s, %08x, -1) failed.", (char*)(ts->a), (int)(ts->b));
+    Log(ERROR, "DownloadFlash(%s, %08x, -1) failed.", (char*)(ts->a), (int)(ts->b));
     EnableControls(TRUE);
     free(ts->a);
     free(ts);
     return;
   } else {
-    Log("Success retrieving data file.");
+    Log(NOTICE, "Success retrieving data file.");
   }
   free(ts->a);
   free(ts);
@@ -290,7 +290,7 @@ gboolean download_flash( GtkWidget *widget,
 				    "p3, ResourcesB partition",
 				    "p4, ResourcesC partition");
   if (partition_value < 0) {
-    Log("Invalid partition selected");
+    Log(ERROR,"Invalid partition selected");
     return FALSE;
   }
   // the translation from index number to a real partition number is done in
@@ -299,7 +299,7 @@ gboolean download_flash( GtkWidget *widget,
 
   
   if(ChangePartition(0)==FALSE) {
-    Log("ChangePartition(%d) failed.", partition_value);
+    Log(ERROR, "ChangePartition(%d) failed.", partition_value);
     return FALSE;
   }
 
@@ -316,7 +316,7 @@ gboolean download_flash( GtkWidget *widget,
   EnableControls(FALSE);
 
   if (!g_thread_create((GThreadFunc)download_flash_start_thread, ts, FALSE, &error)) {
-    Log("%s", error->message);
+    Log(ERROR, "g_thread says: %s", error->message);
     free(ts->a);
     free(ts);
     EnableControls(TRUE);

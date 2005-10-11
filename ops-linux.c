@@ -221,15 +221,14 @@ static void process_args(int argc, char * argv[])
       break;
       
     default:
-      Log("ERROR: getopt returned character code 0x%2x", c);
+      Log(ERROR, "getopt returned character code 0x%2x", c);
     }
   }
 
   if (optind < argc) {
-    Log ("non-option ARGV-elements: ");
+    Log(DEBUGGING, "non-option ARGV-elements: ");
     while (optind < argc) {
-      Log("%s ", argv[optind++]);
-      Log("");
+      Log(DEBUGGING, "%s ", argv[optind++]);
     }
   }
 }
@@ -291,15 +290,15 @@ int main (int argc, char *argv[]) {
   GtkObject* hadjustment, *vadjustment;
   //GError* error = NULL;
   //camcorder_files_size = 0;
-  Log("Starting threading...");
+  Log(DEBUGGING, "Starting threading...");
   g_thread_init(NULL);
   gdk_threads_init();
-  Log("Threading started");
+  Log(DEBUGGING, "Threading started");
   root_directory = NULL;
   set_bitrate(0);
   /* This is called in all GTK applications. Arguments are parsed
    * from the command line and are returned to the application. */
-  Log("Starting gtk...");
+  Log(DEBUGGING, "Starting gtk...");
   gtk_init (&argc, &argv);
   toggle_camera_lcd_screen_is_on = TRUE;
  
@@ -307,11 +306,11 @@ int main (int argc, char *argv[]) {
   process_args(argc,argv);
   
   if (do_help) {
-    Log("flags:");
-    Log("-d -- download all movies from the camcorder");
-    Log("-f -- clear camera's movie partition (erase all movies)");
-    Log("-h -- print this help info");
-    Log("Flags may be combined to get a combined effect");
+    Log(NOTICE, "flags:");
+    Log(NOTICE, "-d -- download all movies from the camcorder");
+    Log(NOTICE, "-f -- clear camera's movie partition (erase all movies)");
+    Log(NOTICE, "-h -- print this help info");
+    Log(NOTICE, "Flags may be combined to get a combined effect");
     exit(0);
   } else if (do_download || do_format) {
     int ret=0;
@@ -320,7 +319,7 @@ int main (int argc, char *argv[]) {
       if (unlock_camcorder(NULL,NULL,NULL)) {
 
         if (do_download) {
-	  DownloadAllMovies();
+	  DownloadAllMovies(".");
 	  ret=1;
 	}
         if (do_format && !format_camcorder(NULL,NULL,NULL)) ret=1;
@@ -338,7 +337,7 @@ int main (int argc, char *argv[]) {
   main_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   window = main_window;
   gtk_window_set_title (GTK_WINDOW (window), "Ops for linux");
-  Log("main window created");
+  Log(DEBUGGING, "main window created");
     /* When the window is given the "delete_event" signal (this is given
      * by the window manager, usually by the "close" option, or on the
      * titlebar), we ask it to call the delete_event () function

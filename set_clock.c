@@ -32,10 +32,10 @@ gboolean set_clock(GtkWidget* widget,
   if (CheckCameraOpen() == FALSE)
     return FALSE;
   if (ControlMessageWrite(0xcb00, (char*)&scs, sizeof scs, TIMEOUT) == FALSE) {
-    Log("set_clock failed");
+    Log(ERROR, "set_clock failed");
     return FALSE;
   }
-  Log("set_clock succeeded");
+  Log(NOTICE, "set_clock succeeded");
   MessageBox("Set Clock succeeded");
   return TRUE;
 }

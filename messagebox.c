@@ -135,7 +135,7 @@ gboolean MessageBoxTextTwo (const char* st, gpointer data) {
 gboolean MessageBox(const char *st)
 {
   GtkWidget *window, *ok_button, *label;
-  Log("MessageBox: %s",st);
+  Log(DEBUGGING, "MessageBox: %s",st);
   window = gtk_dialog_new ();
 
   ok_button = gtk_button_new_with_label ("OK");
@@ -224,7 +224,7 @@ char* MessageBoxText(const char* st) {  //NOTE: returns malloced info
   gtk_widget_destroy(dialog);
 
   if (result == GTK_RESPONSE_ACCEPT) {
-    Log("returnvalue is %s", returnvalue);
+    Log(DEBUGGING, "returnvalue is %s", returnvalue);
     return returnvalue;
   } else {
     free(returnvalue);

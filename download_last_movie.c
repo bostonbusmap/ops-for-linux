@@ -12,16 +12,16 @@ static int GetMovieCount(void) {
   int dummy;
   
   if(ControlMessageWrite(0xb300,NULL,0,TIMEOUT)==FALSE) {
-    Log("failed at 0xb3 (requesting video count).");
-    Log("try unplugging camcorder and starting over");
+    Log(ERROR, "failed at 0xb3 (requesting video count).");
+    Log(ERROR, "try unplugging camcorder and starting over");
     return(-1);
   }
   dummy = Read((char *)&numofvideos_le16,2,TIMEOUT);
   numofvideos = le16_to_cpu(numofvideos_le16);
   if(dummy < 2) {
     //    fprintf(stderr,"%d\n",numofvideos);
-    Log("failed to bulk read video count");
-    Log("try unplugging camcorder and starting over");
+    Log(ERROR, "failed to bulk read video count");
+    Log(ERROR, "try unplugging camcorder and starting over");
     return(-1);
   }
   return(numofvideos);
@@ -56,8 +56,8 @@ static gboolean DownloadMovie(int videonumber, FILE* file) {
   // 0x9300 sets up a bulk transfer on endpoint 0x81
   data=0x0000;
   if(ControlMessageWrite(0x9300,NULL,0,TIMEOUT)==FALSE) {
-    Log("failed at 0x93 (initiating bulk read of video)");
-    Log("try unplugging camcorder and starting over");
+    Log(ERROR, "failed at 0x93 (initiating bulk read of video)");
+    Log(ERROR, "try unplugging camcorder and starting over");
     return FALSE;
   }
 
@@ -111,14 +111,14 @@ static gboolean download_last_movie_start(gpointer data) {
     //    if (strlen(filename) + strlen(temporary) < STRINGSIZE) {
     //      strcat(temporary, filename);
     //    }
-    Log("Trouble retrieving file");
+    Log(ERROR, "Trouble retrieving file");
   } else {
     //    strcpy(temporary, "Success retrieving ");
     //    if (strlen(filename) + strlen(temporary) < STRINGSIZE) {
     //      strcat(temporary, filename);
     //    }
     success = TRUE;
-    Log("Success retrieving file");
+    Log(NOTICE, "Success retrieving file");
   }
   //  Log(temporary);
   EnableControls(TRUE);
@@ -213,7 +213,7 @@ gboolean download_last_movie( GtkWidget *widget,
   ts->c = &(currently_selected_file->filesize); //int
   EnableControls(FALSE);
   if (!g_thread_create((GThreadFunc)download_file_start_thread, ts, FALSE, &error)) {
-    Log("%s",error->message);
+    Log(ERROR, "g_thread says: %s",error->message);
     free(ts->a);
     free(ts);
     EnableControls(TRUE);

@@ -2,7 +2,7 @@
 
 gboolean PowerdownCamcorder() {
   if(ControlMessageWrite(0x1000,NULL,0, TIMEOUT)==FALSE) { // Request File Read
-    Log("failed at 0x10");
+    Log(ERROR, "failed at 0x10");
     return FALSE;
   }	
   //  return(true);

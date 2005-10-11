@@ -23,7 +23,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
   buffer=malloc(FBLOCKSZ);
   if(buffer==NULL)
     {
-      Log("Couldn't allocate transfer buffer");
+      Log(ERROR,"Couldn't allocate transfer buffer");
       return FALSE;
     }
   
@@ -34,7 +34,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
   //  if (file.Open((LPCSTR)filename, CFile::modeCreate | CFile::modeWrite)==false)
   file = fopen(filename, "wb");
   if (file == NULL) {
-    Log("Trouble creating %s", filename);
+    Log(ERROR,"Trouble creating %s", filename);
     free(buffer);
     return FALSE;
   }
@@ -58,7 +58,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
     //    monitorcmd.Format("dumpf %d %d %s",t,fblocksz,Tmpfile);
     //		Log(monitorcmd);
     if(Monitor(monitorcmd)==FALSE) {
-      Log("flash dump command failed: %s", monitorcmd);
+      Log(ERROR, "flash dump command failed: %s", monitorcmd);
       
       fclose(file);
       free(buffer);
@@ -67,7 +67,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
       
     if(ControlMessageWrite(0xb101, Tmpfile, strlen(Tmpfile)+1, TIMEOUT)==FALSE) { // SetFileName
        
-      Log("failed at 0xb1");
+      Log(ERROR, "failed at 0xb1");
       return FALSE;
     }
       
@@ -75,7 +75,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
     
     data=0x00;
     if(ControlMessageWrite(0x9301, (char*)&data, 0, TIMEOUT)==FALSE) { // Request File Read
-      Log("failed at 0x93");
+      Log(ERROR,"failed at 0x93");
       return FALSE;
     }
     
@@ -96,7 +96,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
     }
       
     if(tcount<fblocksz) {
-      Log("short buffer error. data will likely be corrupt");
+      Log(WARNING, "short buffer error. data will likely be corrupt");
       free(buffer);
       fclose(file);
       return FALSE;
@@ -107,7 +107,7 @@ static gboolean DownloadMemory(const char* filename, unsigned long start, unsign
       
   }
   fclose(file);
-  Log("memory download succeeded");
+  Log(NOTICE,"memory download succeeded");
   free(buffer);
   return TRUE;
 }
@@ -137,7 +137,7 @@ static gboolean download_memory_confirmed(double_widget* d_w) {
   length_s = gtk_entry_get_text(GTK_ENTRY(d_w->b));
   
   if (strlen(start_s) == 0 || strlen(length_s) == 0) {
-    Log("Either the start or length fields are empty; please fill them");
+    Log(ERROR, "Either the start or length fields are empty; please fill them");
     return FALSE;
   }
   start_global = atoi(start_s);
@@ -147,7 +147,7 @@ static gboolean download_memory_confirmed(double_widget* d_w) {
 
   EnableControls(FALSE);
   if (!g_thread_create((GThreadFunc)download_memory_start_thread, filename_malloc, FALSE, &error)) {
-    Log("%s",error->message);
+    Log(ERROR, "g_thread says: %s",error->message);
     return FALSE;
   }
 

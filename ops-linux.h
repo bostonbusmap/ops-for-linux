@@ -100,9 +100,46 @@
 #define TIMEOUT 4000
 #define NEWLINE "\n"
 
-#define DEBUG
+//#define DEBUG
 
-#define Log(...) do { fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n"); } while (0)
+#ifdef DEBUG
+#define DEBUG_PRINT(...) do { fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n"); } while (0)
+#else
+#define DEBUG_PRINT(...) do { } while (0)
+#endif
+
+#define Log(warn, ...) do {  \
+    enum priority a = warn;  \
+    switch(a) { \
+    case ERROR: \
+      fprintf(stderr, "ERROR: (%s, %d): ", __FILE__, __LINE__);\
+      fprintf(stderr, __VA_ARGS__);\
+      fprintf(stderr, "\n");\
+      break;\
+    case WARNING:\
+      fprintf(stderr, "WARNING: (%s, %d): ", __FILE__, __LINE__);\
+      fprintf(stderr, __VA_ARGS__);\
+      fprintf(stderr, "\n");\
+      break;\
+    case NOTICE:\
+      fprintf(stderr, __VA_ARGS__);\
+      fprintf(stderr, "\n");\
+      break;\
+    case USEFUL:\
+      fprintf(stderr, __VA_ARGS__);\
+      fprintf(stderr, "\n");\
+      break;\
+    case DEBUGGING:				\
+      DEBUG_PRINT(__VA_ARGS__);			\
+      break;\
+    default:\
+      break;\
+    };\
+  } while (0)
+
+      
+
+enum priority { ERROR, WARNING, NOTICE, USEFUL, DEBUGGING };
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -281,7 +318,7 @@ gboolean Monitor(const char* command);
 char* MessageBoxText (const char* st);
 gboolean MessageBoxTextTwo (const char* st, gpointer data);
 gboolean DownloadFile(char* saveto, char* filename, int filesize);
-void DownloadAllMovies(void);
+void DownloadAllMovies(const char* foldername);
 gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile);
 gboolean GetLastFileInfo(file_info* thisfileinfo);
 

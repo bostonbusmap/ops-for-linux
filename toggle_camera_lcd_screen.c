@@ -9,7 +9,7 @@ gboolean toggle_camera_lcd_screen( GtkWidget *widget,
   if (toggle_camera_lcd_screen_is_on == TRUE)
     msg = 0x1f30;
   if(ControlMessageWrite(msg, NULL, 0 ,TIMEOUT)==FALSE) { //SetMode
-    Log("Unable to toggle camera lcd screen.");
+    Log(ERROR, "Unable to toggle camera lcd screen.");
     return FALSE;
   }
   if (toggle_camera_lcd_screen_is_on == TRUE)

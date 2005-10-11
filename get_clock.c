@@ -28,15 +28,15 @@ gboolean get_clock(GtkWidget* widget,
     return FALSE;
   get_clock_struct gcs;
   if (ControlMessageRead(0xcc00, (char*)&gcs, sizeof gcs, TIMEOUT) == FALSE) {
-    Log("get_clock failed");
+    Log(ERROR, "get_clock failed");
     return FALSE;
   }
-  Log("Camera time");
-  Log("Year: %d", le16_to_cpu(gcs.year));
-  Log("Month: %s", months[le16_to_cpu(gcs.month) - 1]);
-  Log("Day: %d", le16_to_cpu(gcs.date));
-  Log("%02d:%02d:%02d", le16_to_cpu(gcs.hour), le16_to_cpu(gcs.minute), le16_to_cpu(gcs.second));
-  Log("Day of week: %s", days[le16_to_cpu(gcs.day_of_week) - 1]);
+  Log(USEFUL,"Camera time");
+  Log(USEFUL,"Year: %d", le16_to_cpu(gcs.year));
+  Log(USEFUL,"Month: %s", months[le16_to_cpu(gcs.month) - 1]);
+  Log(USEFUL, "Day: %d", le16_to_cpu(gcs.date));
+  Log(USEFUL, "%02d:%02d:%02d", le16_to_cpu(gcs.hour), le16_to_cpu(gcs.minute), le16_to_cpu(gcs.second));
+  Log(USEFUL, "Day of week: %s", days[le16_to_cpu(gcs.day_of_week) - 1]);
 
   return TRUE;
 }

@@ -3,15 +3,16 @@
 #ifndef USE_GTK_FILE_CHOOSER
 #define GTK_FILE_CHOOSER_ACTION_SAVE 1
 #define GTK_FILE_CHOOSER_ACTION_OPEN 2
+#define GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER 3
 #endif
 
 
 
-void file_selection_ok (GtkWidget *widget, GtkFileSelection* info)
+void file_selection_ok (GtkWidget *widget, gboolean* do_it)
 {
-  const char* name;
-  //  trace("");
-
+ 
+  *do_it = TRUE;
+  
   gtk_main_quit();
 }
 
@@ -55,6 +56,7 @@ char* get_filename_from_dialog(const char* filenamechoice, int action) {
   }
 #else
   GtkFileSelection* file_selection_box =  gtk_file_selection_new("Choose a file");
+  gboolean do_it = FALSE;
   /*  g_signal_connect (GTK_FILE_SELECTION(file_selection_box)->ok_button,
 		    "clicked",
 		    G_CALLBACK(store_filename),
@@ -67,7 +69,7 @@ char* get_filename_from_dialog(const char* filenamechoice, int action) {
 		      GTK_SIGNAL_FUNC(gtk_main_quit), NULL);
   gtk_signal_connect (GTK_OBJECT (file_selection_box->ok_button), "clicked",
 		      GTK_SIGNAL_FUNC(file_selection_ok),
-		      file_selection_box);
+		      &do_it);
   gtk_signal_connect (GTK_OBJECT (file_selection_box->cancel_button), "clicked",
 		      GTK_SIGNAL_FUNC(gtk_main_quit), NULL);
 
@@ -79,9 +81,13 @@ char* get_filename_from_dialog(const char* filenamechoice, int action) {
   
   gtk_grab_add (GTK_WIDGET (file_selection_box));
   gtk_main ();
-  ret_val = store_filename(file_selection_box);
-  gtk_widget_destroy(file_selection_box);
-  return ret_val;
+  if (do_it) {
+    ret_val = store_filename(file_selection_box);
+    gtk_widget_destroy(file_selection_box);
+    return ret_val;
+  } else { //user pressed cancel
+    return NULL;
+  }
 #endif
 }
 
@@ -97,4 +103,8 @@ char* get_download_filename(const char* filenamechoice) {
 char* get_upload_filename() {
   return get_filename_from_dialog(NULL, GTK_FILE_CHOOSER_ACTION_OPEN);
 
+}
+
+char* get_download_folder() {
+  return get_filename_from_dialog(NULL, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
 }

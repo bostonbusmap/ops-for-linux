@@ -5,11 +5,11 @@ static gboolean Format(void) {
   
   data=0x0000;
   if(ControlMessageWrite(0xb700, (char*)&data, 0, LONG_TIMEOUT)== TRUE) {
-    Log("format successful. turn camera off and on to see change.");
+    Log(NOTICE, "format successful. turn camera off and on to see change.");
     return TRUE;
   }
-  Log("format failed");
-  Log("try unplugging camcorder and starting over");
+  Log(ERROR, "format failed");
+  Log(ERROR, "try unplugging camcorder and starting over");
   return FALSE;
   
 }

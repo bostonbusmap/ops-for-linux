@@ -12,23 +12,35 @@ gboolean GetLastFileInfo(file_info* last) {
     *last = info;
 
   }
-  Log("last->filename == %s", last->filename);
+  Log(DEBUGGING, "last->filename == %s", last->filename);
   return TRUE;
 }
 
-void DownloadAllMovies() {
+void DownloadAllMovies(const char* folder) { //FIXME: do array bounds checking
   file_info info;
   gboolean first = TRUE;
+#ifdef _WIN32
+  const char* delimiter = "\\";
+#else
+  const char* delimiter = "/";
+#endif
+  char filename[STRINGSIZE];
+  char *ptr;
+  strcpy(filename, folder);
+  strcat(filename, delimiter);
+  for (ptr = filename; *ptr; ++ptr);
   struct stat statbuf;
+  
   while (GetFileInfo(&info,first)) {
     first=FALSE;
     if (info.filetype==FIFILE) {
-      Log("found: %s (%d)",info.filename,info.filesize);
+      strcpy(ptr, info.filename);
+      Log(NOTICE, "found: %s (%d)",filename,info.filesize);
       
-      if (stat(info.filename,&statbuf)>=0) {
-	Log("%s already exists locally: skipping!",info.filename);
+      if (stat(filename,&statbuf)>=0) {
+	Log(NOTICE, "%s already exists locally: skipping!",filename);
 	
-      } else if (!DownloadFile(info.filename,info.filename, info.filesize)) {
+      } else if (!DownloadFile(filename,info.filename, info.filesize)) {
 	return;
       }
     }
@@ -37,8 +49,10 @@ void DownloadAllMovies() {
 
 void download_all_movies_start_thread(gpointer data);
 void download_all_movies_start_thread(gpointer data) {
-  DownloadAllMovies();
+  char* foldername = get_download_folder();
+  DownloadAllMovies(foldername);
   EnableControls(TRUE);
+  free(foldername);
 }
 
 
@@ -56,14 +70,12 @@ gboolean download_all_movies(GtkWidget *widget,
   if(CheckCameraOpen()==FALSE)
     return FALSE;
   
-  Log("Changing to p0 ...");
   if (!ChangePartition(0)) return FALSE;
-  Log("Changing to /DCIM/100COACH ...");
   if (!ChangeDirectory("/DCIM/100COACH")) return FALSE;
-  Log("Getting directory listing ...");
+
   EnableControls(FALSE);
   if (!g_thread_create((GThreadFunc)download_all_movies_start_thread, NULL, FALSE, &error)) {
-    Log(error->message);
+    Log(ERROR, "g_thread says: %s", error->message);
     //free(ts->a);
     //  free(ts);
     EnableControls(TRUE);
@@ -71,7 +83,7 @@ gboolean download_all_movies(GtkWidget *widget,
   }
 
 
-  Log("Finished downloading movies!");
+  Log(NOTICE, "Finished downloading movies!");
   
   return TRUE;
 }

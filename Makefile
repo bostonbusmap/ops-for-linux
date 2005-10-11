@@ -59,7 +59,11 @@ TARFILES := AUTHORS README COPYING ChangeLog Makefile \
 
 # Preprocessor flags.
 PKG_CPPFLAGS := $(shell pkg-config --cflags gtk+-2.0)
-CPPFLAGS     :=
+CPPFLAGS     := -D DEBUG=1
+
+ifndef DEBUG
+CPPFLAGS     := 
+endif
 ALL_CPPFLAGS := $(PKG_CPPFLAGS) $(CPPFLAGS)
 
 # Left out -Wconversion due to noise in glibc headers.

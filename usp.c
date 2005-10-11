@@ -17,13 +17,13 @@ static gboolean FileToMemory(const char* filename, unsigned char *buffer, int ma
 
 
   if(GetAnyFileInfo(filename,&fileinfo)==FALSE) {
-    Log("Trouble getting file size information");
+    Log(ERROR, "Trouble getting file size information");
     return FALSE;
   }
   
   if(fileinfo.filesize>maxlength) {
     //Log("Failed "+filename+" is larger than memory buffer.");
-    Log("Failed, file is larger than memory buffer.");
+    Log(ERROR, "Failed, file is larger than memory buffer.");
     return(FALSE);
   }
   
@@ -32,7 +32,7 @@ static gboolean FileToMemory(const char* filename, unsigned char *buffer, int ma
   
   if(ControlMessageWrite(0xb101,(char *)sfilename,strlen((char *)sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
 	
-    Log("failed at 0xb1");
+    Log(ERROR, "failed at 0xb1 in FileToMemory");
     return(FALSE);
   }
   
@@ -40,7 +40,7 @@ static gboolean FileToMemory(const char* filename, unsigned char *buffer, int ma
   data=0x00;
   if(ControlMessageWrite(0x9301,(char*)&data,0,TIMEOUT)==FALSE) { // Request File Read
     
-    Log("failed at 0x93");
+    Log(ERROR, "failed at 0x93 in FileToMemory");
     return FALSE;
   }
   
@@ -76,14 +76,14 @@ static gboolean MemoryToFile(const char* filename, char *buffer, unsigned int fi
   int bufsize;
   
   if(strlen(filename)>12) {
-    Log("Can't upload files with long filenames");
+    Log(ERROR, "Can't upload files with long filenames (in MemoryToFile)");
     return(FALSE);
   }
 
   memset(sfilename, '\0', sizeof sfilename);
   strncpy(sfilename, filename, 12);
   if(ControlMessageWrite(0xb105,(char *)sfilename,strlen(sfilename)+1, TIMEOUT)==FALSE) { // SetFileName
-    Log("failed at 0xb1");
+    Log(ERROR, "failed at 0xb1 in MemoryToFile");
     return FALSE;
   }
 
@@ -94,7 +94,7 @@ static gboolean MemoryToFile(const char* filename, char *buffer, unsigned int fi
   udata[3] = filesize >>  8;
   udata[2] = filesize >>  0;
   if(ControlMessageWrite(0x9505,udata,4,TIMEOUT)== FALSE) { // Request Write
-    Log("failed at 0x95");
+    Log(ERROR, "failed at 0x95 in MemoryToFile");
     return FALSE;
   }
   
@@ -105,14 +105,14 @@ static gboolean MemoryToFile(const char* filename, char *buffer, unsigned int fi
     x=Write(buffer+t,bufsize,TIMEOUT);
     if(x<1) {
       //Log("Error writing file "+filename+" to camera");
-      Log("Error writing file to camera");
+      Log(ERROR, "Error writing file to camera");
       
       //file.Close();
       return FALSE;
     }
     //DoMessagePump();
   }
-  Log("Leaving MemoryToFile");
+  Log(DEBUGGING, "Leaving MemoryToFile");
   return TRUE;
 }
 
@@ -174,7 +174,7 @@ static const char *verify_usp_data(usp_data *ud){
     return "bad magic0";
   if(!memcmp(ud->serial, "Not Initialized", sizeof ud->serial)) {
     //fprintf(stderr,"serial: %s\n",ud->serial);
-    Log("WARNING: serial number \"Not Initialized\", maybe a FSP.BIN file?");
+    Log(WARNING, "serial number \"Not Initialized\", maybe a FSP.BIN file?");
   }
   if(memcmp(ud->zero0, zero, sizeof ud->zero0))
     return "bad zero0";
@@ -226,7 +226,7 @@ static const char *verify_usp_data(usp_data *ud){
     return "bad zero2";
   if(!ud->magic10[0] && !ud->magic10[1]) { // zero in the FSP, which we don't want
     
-    Log("WARNING: bad magic10 (an FSP.BIN file?)");
+    Log(WARNING, "bad magic10 (an FSP.BIN file?)");
   }
   if(memcmp(ud->zero3, zero, sizeof ud->zero3))
     return "bad zero3";
@@ -251,16 +251,14 @@ static int get_usp_file(usp_file *uf) {
  
 
   if(ChangePartition(3)==FALSE) {
-    Log("ChangePartition(3) failed.");
     return FALSE;
   }
   if(ChangeDirectory("/")== FALSE) {
-    Log("ChangeDirectory(\"/\") failed.");
     return FALSE;
   }
   
   if(FileToMemory("USP.BIN", (char*)uf, sizeof *uf)==FALSE) {
-    Log("FileToMemory failed in get_usp_file");
+    Log(ERROR, "FileToMemory failed in get_usp_file");
   }
       
   //fprintf(stderr, "Got 0x%03x (%d) bytes\n", count, count);  
@@ -287,16 +285,14 @@ static int put_usp_file(usp_file *uf){
   
 
   if(ChangePartition(3)==FALSE) {
-    Log("ChangePartition(3) failed.");
     return FALSE;
   }
   if(ChangeDirectory("/")== FALSE) {
-    Log("ChangeDirectory(\"/\") failed.");
     return FALSE;
   }
 
   if(MemoryToFile("USP.BIN", (char*)uf, sizeof *uf)==FALSE) {
-    Log("FileToMemory failed in get_usp_file");
+    Log(ERROR, "FileToMemory failed in get_usp_file");
   }
 
   return TRUE;
@@ -389,11 +385,11 @@ static gboolean settings_revert(GtkWidget *widget, GdkEvent *event, gpointer dat
 }
 
 static gboolean settings_write(GtkWidget *widget, GdkEvent *event, gpointer data){
-  Log("Writing data...");
+  Log(NOTICE, "Writing data...");
   if(put_usp_file(&current_usp))
-    Log("Data written.");
+    Log(NOTICE, "Data written.");
   else
-    Log("Data NOT written.");
+    Log(WARNING, "Data NOT written.");
   PowerdownCamcorder();
   gtk_main_quit();
   return FALSE;
@@ -599,7 +595,7 @@ gboolean change_camera_settings(GtkWidget *widget, GdkEvent *event, gpointer dat
   }
   const char *msg = verify_usp_data(&original_usp.data);
   if(msg){
-    Log("ERROR: %s", msg);
+    Log(ERROR, "%s", msg);
     return FALSE;
   }
 
@@ -613,7 +609,7 @@ gboolean change_camera_settings(GtkWidget *widget, GdkEvent *event, gpointer dat
 
   if(!SettingsDialog(&original_usp.data))
     return FALSE;
-  Log("notice: called SettingsDialog and returned");
+  Log(DEBUGGING, "called SettingsDialog and returned");
   return TRUE; // success
 }
 

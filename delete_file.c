@@ -9,7 +9,7 @@ static gboolean DelFile(const char* name) {
   if(ControlMessageWrite(0xef00,buffer,strlen(buffer)+1,TIMEOUT)==TRUE) {
     return TRUE;
   }
-  Log("delete failed");
+  Log(ERROR, "delete failed");
   return FALSE;
 }
 
@@ -59,28 +59,21 @@ gboolean delete_file(GtkWidget* widget,
 	}
 	
 	if(ChangePartition(p->partition)==FALSE) {
-	  Log("ChangePartition failed in delete_file_confirmed");
 	  return FALSE;
 	}
 	  
 	if(ChangeDirectory(p->dirpath)==FALSE) {
-	  Log("ChangeDirectory failed in delete_file_confirmed");
 	  return FALSE;
 	}
 	
 	EnableControls(FALSE);
 	  
 	if(DelFile(p->filename)==FALSE) {
-	  strcpy(tempstring, "Failed to delete ");
-	  if (strlen(tempstring) + strlen(p->filename) < STRINGSIZE) {
-	    strcat(tempstring, p->filename);
-	  }
-	  //Log("Failed to delete "+p->filename);
-	  Log("%s",tempstring); //don't want a raw string as first parameter
+	  Log(ERROR, "Failed to delete %s", p->filename);
 	  EnableControls(TRUE);
 	  return FALSE;
 	}
-	Log("Deleted %s successfully", p->filename);
+	Log(ERROR, "Deleted %s successfully", p->filename);
 	EnableControls(TRUE);
       }
     }
