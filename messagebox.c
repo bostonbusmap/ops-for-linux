@@ -39,17 +39,7 @@ int text_option_box(int number_of_options, const char* st, ...) {
   result = gtk_dialog_run( GTK_DIALOG(dialog) );
   switch (result) {
     case GTK_RESPONSE_ACCEPT:
-      active_text = gtk_combo_box_get_active_text(GTK_COMBO_BOX(combobox));
-      va_start(ap, st);
-      return_value = -1; //by default
-
-      for (count = 0; count < number_of_options; ++count) {
-	text = va_arg(ap, const char*);
-	if (strcmp(text, active_text) == 0) {
-	  return_value = count;
-	  break;
-	}
-      }
+      return_value = gtk_combo_box_get_active(GTK_COMBO_BOX(combobox));
       break;
     default:
       return_value = -1;

@@ -83,7 +83,7 @@ gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile) {
 
   if(isfirstfile==TRUE)
     command=0xbc00; //first file
-
+  else
   if(isfirstfile==FALSE)
     command=0xbd00; //next file
   
@@ -259,7 +259,7 @@ static file_info* AddFileDataToList(file_info* temp) {
   file_info* pointer = malloc(sizeof(file_info));
   int count;
   //  Log("begin AddFileDataToList");
-  strcpy(pointer->filename, temp->fullpath);
+  strcpy(pointer->filename, temp->filename);
   strcpy(pointer->fullpath, temp->fullpath);
   strcpy(pointer->dirpath, temp->dirpath);
 
@@ -300,16 +300,11 @@ static file_info* AddToTreeStore(GtkTreeStore* treestore, GtkTreeIter* toplevel,
       if(!cp) break;
       cp++;
       if(!strcasecmp(cp,"avi")) pixbuf = icon_avifile;
-      else
-      if(!strcasecmp(cp,"jpg")) pixbuf = icon_jpgfile;
-      else
-      if(!strcasecmp(cp,"txt")) pixbuf = icon_txtfile;
-      else
-      if(!strcasecmp(cp,"wav")) pixbuf = icon_wavfile;
-      else
-      if(!strcasecmp(cp,"zbm")) pixbuf = icon_zbmfile;
-      else
-      if(!strcasecmp(cp,"avi")) pixbuf = icon_avifile;
+      else if(!strcasecmp(cp,"jpg")) pixbuf = icon_jpgfile;
+      else if(!strcasecmp(cp,"txt")) pixbuf = icon_txtfile;
+      else if(!strcasecmp(cp,"wav")) pixbuf = icon_wavfile;
+      else if(!strcasecmp(cp,"zbm")) pixbuf = icon_zbmfile;
+      else if(!strcasecmp(cp,"avi")) pixbuf = icon_avifile;
     }
     break;
   case FIDIR:

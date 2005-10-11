@@ -3,10 +3,12 @@
 
 
 gboolean CheckCameraOpen (void) {
+#ifndef DEBUG
   if (m_p_handle == NULL) {
     Log ("Open camcorder first");
     return FALSE;
   }
+#endif
   return TRUE;
 }
 

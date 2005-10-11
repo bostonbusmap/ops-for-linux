@@ -1,7 +1,7 @@
 #include "ops-linux.h"
 
 
-#pragma pack (push, 0)
+#pragma pack (push, 1)
 typedef struct
 {
 	u8	JumpInstruction[3];

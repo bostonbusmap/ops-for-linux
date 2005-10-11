@@ -14,13 +14,15 @@
 #
 # Set (or uncomment) SKIP if you wish to avoid something.
 
+PROJECTNAME := ops
+
 VERSION      := 13
 SUBVERSION   := 0
 MINORVERSION := 0
 TARVERSION   := $(VERSION).$(SUBVERSION).$(MINORVERSION)
 
 # so you can disable it or choose something else
-install  := install -D --owner 0 --group 0
+install  := install -D -o 0 -g 0
 
 usr/bin                  := $(DESTDIR)/usr/bin/
 bin                      := $(DESTDIR)/bin/
@@ -35,8 +37,8 @@ BINFILES := $(usr/bin)ops
 
 MANFILES := $(man1)ops.1
 
-NAMES    := file_dialog set_clock get_clock mass_storage download_flash usp \
-	    capture_video \
+NAMES    := file_dialog set_clock get_clock usp \
+            mass_storage download_flash capture_video \
             powerdown_camcorder download_memory toggle_camera_lcd_screen \
             delete_file upload_file download_file close_camcorder \
             download_all_movies download_last_movie format_camcorder \
@@ -80,8 +82,8 @@ PKG_CFLAGS   := -fno-common -ffast-math \
 CFLAGS       := -O2 -s
 ALL_CFLAGS   := $(PKG_CFLAGS) $(CFLAGS)
 
-PKG_LDFLAGS  := -Wl,-warn-common -lusb $(shell pkg-config --libs gtk+-2.0) -lgthread-2.0
-LDFLAGS      :=
+PKG_LDFLAGS  := -Wl,-lusb $(shell pkg-config --libs gtk+-2.0) -lgthread-2.0
+LDFLAGS      := 
 ALL_LDFLAGS  := $(PKG_LDFLAGS) $(LDFLAGS)
 
 ############ Add some extra flags if gcc allows
@@ -163,10 +165,10 @@ clean:
 ###### install
 
 $(BINFILES) : all
-	$(install) --mode a=rx $(notdir $@) $@
+	$(install) -m a=rx $(notdir $@) $@
 
 $(MANFILES) : all
-	$(install) --mode a=r $(notdir $@) $@
+	$(install) -m a=r $(notdir $@) $@
 
 install: $(filter-out $(SKIP) $(addprefix $(DESTDIR),$(SKIP)),$(INSTALL))
 

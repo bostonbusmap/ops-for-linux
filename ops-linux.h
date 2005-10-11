@@ -100,6 +100,8 @@
 #define TIMEOUT 4000
 #define NEWLINE "\n"
 
+#define DEBUG
+
 #define Log(...) do { fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n"); } while (0)
 
 typedef uint8_t u8;
@@ -148,6 +150,11 @@ typedef struct {
   void* c;
   void* d;
 } foursome;
+
+#if (GTK_CHECK_VERSION(2,4,0))
+#define USE_GTK_FILE_CHOOSER
+#endif
+
 
 
 ////////////////////////////////////////////////////////////////////

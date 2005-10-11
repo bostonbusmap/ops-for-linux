@@ -447,13 +447,10 @@ int main (int argc, char *argv[]) {
   create_and_display_button_short(set_clock, "Set Clock value", hbox4);
   create_and_display_button_short(capture_video, "Capture Video", hbox3);
   //  debug_buttons();
-  
+#ifndef DEBUG  
   EnableControls(FALSE);
   EnableOpenButton();
-
-  gtk_signal_connect_object (GTK_OBJECT (b_u.b_s.button_close_camcorder), "clicked",
-			     GTK_SIGNAL_FUNC (gtk_widget_destroy),
-			     GTK_OBJECT (window));
+#endif
   gtk_signal_connect (GTK_OBJECT (m_directory_tree), "cursor-changed", /* "row-activated",*/
 		      GTK_SIGNAL_FUNC(reset_label), NULL);
 
@@ -468,11 +465,12 @@ int main (int argc, char *argv[]) {
 
   gtk_timeout_add(REFRESH_DATA_MS,(GtkFunction)watch_progress_bar, NULL);
   
+#ifndef DEBUG
   //open camcorder by default
   open_camcorder(NULL,NULL,NULL);
   //unlock by default (as of sep 28, no camcorder is permanently unlocked)
   unlock_camcorder(NULL,NULL,NULL);
-
+#endif
   gdk_threads_enter();
   gtk_main ();
   gdk_threads_leave();

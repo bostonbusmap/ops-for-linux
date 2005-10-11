@@ -118,7 +118,7 @@ static gboolean MemoryToFile(const char* filename, char *buffer, unsigned int fi
 
 
 
-#pragma pack(push,0)
+#pragma pack(push,1)
 typedef struct usp_data { // file  data
   char magic0[8];         // 0x002 0x000
   char serial[16];        // 0x00a 0x008
@@ -154,7 +154,7 @@ typedef struct usp_data { // file  data
 } usp_data;               // 0x802 0x800 (offset of footer / size of struct)
 #pragma pack(pop)
 
-#pragma pack(push,0)
+#pragma pack(push,1)
 typedef struct usp_file {
   unsigned short header;        // 0x000, 2 bytes
   usp_data       data;          // 0x002, 2048 bytes
