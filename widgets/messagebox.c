@@ -1,5 +1,7 @@
-#include "ops-linux.h"
+#include "widgets.h"
 
+
+GtkWidget* main_window;
 int text_option_box(int number_of_options, const char* st, ...) {
   GtkWidget* combobox = NULL;
   int return_value;
@@ -18,6 +20,7 @@ int text_option_box(int number_of_options, const char* st, ...) {
 				       GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 				       GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
 				       NULL);
+
   // add the box contents
   label = gtk_label_new (st);
   gtk_box_pack_start(GTK_BOX (GTK_DIALOG (dialog)->vbox), label, TRUE, TRUE, 0);
@@ -53,8 +56,6 @@ int text_option_box(int number_of_options, const char* st, ...) {
 
 
 }
-
-
 
 
 static double_widget global_dw;

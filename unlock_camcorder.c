@@ -2,17 +2,6 @@
 #include <string.h>
 
 
-gboolean CheckCameraOpen (void) {
-#ifndef DEBUG
-  if (m_p_handle == NULL) {
-    Log (ERROR, "Open camcorder first");
-    return FALSE;
-  }
-#endif
-  return TRUE;
-}
-
-
 static gboolean Unlock (void)
 {
   int t;

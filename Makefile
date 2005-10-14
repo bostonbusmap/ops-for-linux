@@ -37,13 +37,15 @@ BINFILES := $(usr/bin)ops
 
 MANFILES := $(man1)ops.1
 
-NAMES    := file_dialog set_clock get_clock usp \
+NAMES    := widgets/file_dialog set_clock get_clock usp \
             mass_storage download_flash capture_video \
             powerdown_camcorder download_memory toggle_camera_lcd_screen \
             delete_file upload_file download_file close_camcorder \
             download_all_movies download_last_movie format_camcorder \
-            messagebox open_camcorder ops-linux readwrite unlock_camcorder \
-            send_monitor_command update_directory_listing
+            widgets/messagebox open_camcorder io/open_device \
+            ops-linux io/readwrite unlock_camcorder \
+            send_monitor_command update_directory_listing \
+            widgets/progressbar
 
 IMAGES    := blankdir avifile binfile jpgfile txtfile wavfile zbmfile
 

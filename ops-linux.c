@@ -6,16 +6,11 @@
 
 //////////////////////////////////////////
 // various true (multi-file) globals
-struct usb_device* m_usb_device;
-GtkWidget *main_window;
 file_info* root_directory;
 gboolean toggle_camera_lcd_screen_is_on;
-GtkWidget *m_ctl_progress;
+
 GtkWidget* m_directory_tree;
-double m_progressbar_fraction;
-int m_current_bytes;
-int m_previous_bytes;
-usb_dev_handle *m_p_handle;
+
 gboolean flipper_capture;
 
 GdkPixbuf* icon_blankdir;
@@ -57,9 +52,7 @@ union button_union {
   GtkWidget* buttons[NUM_OF_BUTTONS];
 } b_u;
 
-static GtkWidget
-  *information_label,
-  *bitrate_label;
+static GtkWidget *information_label;
 
 
 static gboolean delete_event (GtkWidget * widget, GdkEvent * event, gpointer data)
@@ -97,39 +90,6 @@ gboolean enable_buttons (GtkWidget* widget,
 
 }
 
-
-static gboolean watch_progress_bar (gpointer data) {
-  // quiet compiler
-  char tempstring[STRINGSIZE];
-  double rate = (double)(m_current_bytes - m_previous_bytes) / 1024.0 * (1000.0 / REFRESH_DATA_MS);
-  
-  data=data;
-  
-  gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(m_ctl_progress), m_progressbar_fraction);
-  if (m_current_bytes && m_previous_bytes)
-    snprintf(tempstring, STRINGSIZE - 1, "%f kbytes/sec", rate);
-  else
-    strcpy(tempstring, "");
-  gtk_label_set_text(GTK_LABEL(bitrate_label), tempstring);
-  m_previous_bytes = m_current_bytes;
-  
-  return TRUE;
-}
-gboolean set_progress_bar(double value) {
-  //  gtk_progress_bar_set_fraction(m_ctl_progress, value);
-  
-  m_progressbar_fraction = value;
-  //if (so_far)
-    
-  return TRUE;
-
-}
-gboolean set_bitrate(double bytes) {
-  m_current_bytes = bytes;
-  if (bytes == 0)
-    m_previous_bytes = 0; //initialization
-  return TRUE;
-}
 
 
 

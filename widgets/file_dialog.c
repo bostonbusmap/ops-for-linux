@@ -1,4 +1,4 @@
-#include "ops-linux.h"
+#include "widgets.h"
 
 #ifndef USE_GTK_FILE_CHOOSER
 #define GTK_FILE_CHOOSER_ACTION_SAVE 1
@@ -8,11 +8,9 @@
 
 
 
-void file_selection_ok (GtkWidget *widget, gboolean* do_it)
-{
- 
-  *do_it = TRUE;
-  
+void file_selection_ok (GtkWidget *widget, gboolean* confirmed)
+{ 
+  *confirmed = TRUE;
   gtk_main_quit();
 }
 
@@ -56,7 +54,7 @@ char* get_filename_from_dialog(const char* filenamechoice, int action) {
   }
 #else
   GtkFileSelection* file_selection_box =  gtk_file_selection_new("Choose a file");
-  gboolean do_it = FALSE;
+  gboolean confirmed = FALSE;
   /*  g_signal_connect (GTK_FILE_SELECTION(file_selection_box)->ok_button,
 		    "clicked",
 		    G_CALLBACK(store_filename),
@@ -69,7 +67,7 @@ char* get_filename_from_dialog(const char* filenamechoice, int action) {
 		      GTK_SIGNAL_FUNC(gtk_main_quit), NULL);
   gtk_signal_connect (GTK_OBJECT (file_selection_box->ok_button), "clicked",
 		      GTK_SIGNAL_FUNC(file_selection_ok),
-		      &do_it);
+		      &confirmed);
   gtk_signal_connect (GTK_OBJECT (file_selection_box->cancel_button), "clicked",
 		      GTK_SIGNAL_FUNC(gtk_main_quit), NULL);
 
@@ -81,13 +79,13 @@ char* get_filename_from_dialog(const char* filenamechoice, int action) {
   
   gtk_grab_add (GTK_WIDGET (file_selection_box));
   gtk_main ();
-  if (do_it) {
+  if (confirmed) {
     ret_val = store_filename(file_selection_box);
-    gtk_widget_destroy(file_selection_box);
-    return ret_val;
-  } else { //user pressed cancel
-    return NULL;
+  } else {
+    ret_val = NULL;
   }
+  gtk_widget_destroy(file_selection_box);
+  return ret_val;
 #endif
 }
 
