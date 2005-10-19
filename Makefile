@@ -131,7 +131,7 @@ ALL := $(notdir $(BINFILES))
 
 CLEAN := $(notdir $(BINFILES)) $(PNG_C)
 
-DIRS :=
+DIRS := io widgets
 
 INSTALL := $(BINFILES) $(MANFILES)
 
@@ -180,7 +180,7 @@ install: $(filter-out $(SKIP) $(addprefix $(DESTDIR),$(SKIP)),$(INSTALL))
 
 ###### build
 
-$(OBJ): %.o: %.c ops-linux.h
+$(OBJ): %.o: %.c ops-linux.h io/io.h widgets/widgets.h
 	$(CC) -c $(ALL_CPPFLAGS) $(ALL_CFLAGS) $< -o $@
 
 $(PNG_C): %.c: %.png
