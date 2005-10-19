@@ -131,7 +131,7 @@ ALL := $(notdir $(BINFILES))
 
 CLEAN := $(notdir $(BINFILES)) $(PNG_C)
 
-DIRS := io widgets
+DIRS := io/ widgets/
 
 INSTALL := $(BINFILES) $(MANFILES)
 
