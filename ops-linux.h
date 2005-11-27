@@ -172,7 +172,7 @@ gboolean Close(void);
 gboolean Monitor(const char* command);
 
 gboolean DownloadFile(char* saveto, char* filename, int filesize);
-void DownloadAllMovies(const char* foldername);
+gboolean DownloadAllMovies(const char* foldername);
 gboolean GetFileInfo(file_info* thisfileinfo, gboolean isfirstfile);
 gboolean GetLastFileInfo(file_info* thisfileinfo);
 

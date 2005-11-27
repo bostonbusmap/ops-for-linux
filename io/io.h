@@ -23,11 +23,11 @@ extern usb_dev_handle *m_p_handle;
 #define DEFAULT_INTERFACE	0
 #define DEFAULT_ALT_INTERFACE	0
 
-#ifdef OPS_LINUX
+//#ifdef OPS_LINUX
 #define VENDOR 0x167B
-#else
-#define VENDOR					0x0DCA
-#endif
+//#else
+//#define VENDOR					0x0DCA
+//#endif
 
 
 typedef uint8_t u8;

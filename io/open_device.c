@@ -18,16 +18,16 @@ gboolean Open (void) {
    
     if (m_p_handle) {  
       if (usb_set_configuration (m_p_handle, DEFAULT_CONFIGURATION) >= 0) {
-	if (usb_claim_interface (m_p_handle, DEFAULT_INTERFACE) >= 0) {
-	} //ignoring this because it acts weird
-	
-	if (usb_set_altinterface (m_p_handle, DEFAULT_ALT_INTERFACE)
-	    >= 0) {
-	} //ignoring this because it acts weird
-	success = TRUE;
+        if (usb_claim_interface (m_p_handle, DEFAULT_INTERFACE) >= 0) {
+        } //ignoring this because it acts weird
+        
+        if (usb_set_altinterface (m_p_handle, DEFAULT_ALT_INTERFACE)
+            >= 0) {
+        } //ignoring this because it acts weird
+        success = TRUE;
       } else {
-	usb_release_interface (m_p_handle, DEFAULT_INTERFACE);
-	usb_close (m_p_handle);
+        usb_release_interface (m_p_handle, DEFAULT_INTERFACE);
+        usb_close (m_p_handle);
       }
     }
   }
@@ -65,67 +65,64 @@ gboolean Init (void) {
     }
   }
 
-  struct usb_bus *p_bus = usb_get_busses ();
-
-  Close ();			// Just in case if already connected.
+  Close ();                        // Just in case if already connected.
   m_usb_device = NULL;
   
-  while (p_bus) {
-    struct usb_device *p_device = p_bus->devices;
-    
-    while (p_device) {
+  struct usb_bus *p_bus = NULL;
+  for (p_bus = usb_get_busses(); p_bus; p_bus = p_bus->next) {
+
+    struct usb_device *p_device = NULL;
+    for (p_device = p_bus->devices; p_device; p_device = p_device->next) {
       
-      fprintf(stderr, "usb device with VID==%04x PID==%04x\n", p_device->descriptor.idVendor, p_device->descriptor.iProduct);
+      fprintf(stderr, "usb device with VID==%04x PID==%04x\n", p_device->descriptor.idVendor, p_device->descriptor.idProduct);
       if (p_device->descriptor.idVendor == VENDOR) {
 
-	usb_dev_handle *udev = usb_open (p_device);
+        usb_dev_handle *udev = usb_open (p_device);
 
-	if (udev) {
-	  m_usb_device = p_device;
+        if (udev) {
+          m_usb_device = p_device;
 
-	  m_vendor_id = p_device->descriptor.idVendor;
-	  m_product_id = p_device->descriptor.idProduct;
+          m_vendor_id = p_device->descriptor.idVendor;
+          m_product_id = p_device->descriptor.idProduct;
 
-	  if (p_device->descriptor.iManufacturer) {
-	    if (usb_get_string_simple (udev, p_device->descriptor.iManufacturer, tmp, sizeof (tmp)) > 0) {
-	      //              m_manufacturer = tmp;
-	      strncpy (m_manufacturer, tmp, STRINGSIZE - 1);
-	    }
-	  }
-	  if (p_device->descriptor.iProduct) {
-	    if (usb_get_string_simple (udev, p_device->descriptor.iProduct, tmp, sizeof (tmp)) > 0) {
-	      // m_product = tmp;
-	      strncpy (m_product, tmp, STRINGSIZE - 1);
-	    }
-	  }
+          if (p_device->descriptor.iManufacturer) {
+            if (usb_get_string_simple (udev, p_device->descriptor.iManufacturer, tmp, sizeof (tmp)) > 0) {
+              //              m_manufacturer = tmp;
+              strncpy (m_manufacturer, tmp, STRINGSIZE - 1);
+            }
+          }
+          if (p_device->descriptor.iProduct) {
+            if (usb_get_string_simple (udev, p_device->descriptor.iProduct, tmp, sizeof (tmp)) > 0) {
+              // m_product = tmp;
+              strncpy (m_product, tmp, STRINGSIZE - 1);
+            }
+          }
 
-	  usb_close (udev);
+          usb_close (udev);
 
-	  /*      CString tstr;
-	     tstr.Format ("Found the camcorder: %s %s, VID:%.4X PID:%.4X", m_manufacturer, m_product, m_vendor_id, m_product_id);
-	     Log (tstr); */
-	  Log(NOTICE, "Found the camcorder: %s %s, VID:%.4X PID:%.4X", m_manufacturer, m_product, m_vendor_id, m_product_id);
-	  
-	  break;
-	} else {
-	  Log (ERROR, "Found the camcorder, but couldn't open it.");
+          /*      CString tstr;
+             tstr.Format ("Found the camcorder: %s %s, VID:%.4X PID:%.4X", m_manufacturer, m_product, m_vendor_id, m_product_id);
+             Log (tstr); */
+          Log(NOTICE, "Found the camcorder: %s %s, VID:%.4X PID:%.4X", m_manufacturer, m_product, m_vendor_id, m_product_id);
+          
+          break;
+        } else {
+          Log (ERROR, "Found the camcorder, but couldn't open it.");
 
-	  if (attempt == 0) {
-	    attempt = 1;
-	    Init ();
-	  }
-	  break;
-	}
+          if (attempt == 0) {
+            attempt = 1;
+            Init ();
+          }
+          break;
+        }
 
       }
-      p_device = p_device->next;
     }
 
     if (m_usb_device) {
       break;
     }
 
-    p_bus = p_bus->next;
   }
 
   if (m_usb_device == NULL) {

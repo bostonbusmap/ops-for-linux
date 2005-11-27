@@ -16,7 +16,7 @@ gboolean GetLastFileInfo(file_info* last) {
   return TRUE;
 }
 
-void DownloadAllMovies(const char* folder) { //FIXME: do array bounds checking
+gboolean DownloadAllMovies(const char* folder) { //FIXME: do array bounds checking
   file_info info;
   gboolean first = TRUE;
 #ifdef _WIN32
@@ -38,13 +38,14 @@ void DownloadAllMovies(const char* folder) { //FIXME: do array bounds checking
       Log(NOTICE, "found: %s (%d)",filename,info.filesize);
       
       if (stat(filename,&statbuf)>=0) {
-	Log(NOTICE, "%s already exists locally: skipping!",filename);
-	
+        Log(NOTICE, "%s already exists locally: skipping!",filename);
+        
       } else if (!DownloadFile(filename,info.filename, info.filesize)) {
-	return;
+        return FALSE;
       }
     }
   }
+  return TRUE;
 }
 
 void download_all_movies_start_thread(gpointer data);
@@ -59,8 +60,8 @@ void download_all_movies_start_thread(gpointer data) {
 
 
 gboolean download_all_movies(GtkWidget *widget,
-			     GdkEvent *event,
-			     gpointer data) {
+                             GdkEvent *event,
+                             gpointer data) {
   GError* error = NULL;
   // keep compiler quiet
   widget=widget;

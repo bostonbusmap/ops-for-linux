@@ -78,8 +78,8 @@ static void destroy (GtkWidget * widget, gpointer data)
 }
 
 gboolean enable_buttons (GtkWidget* widget,
-			 GdkEvent *event,
-			 gpointer data) {
+                         GdkEvent *event,
+                         gpointer data) {
   // quiet compiler
   widget=widget;
   event=event;
@@ -94,9 +94,9 @@ gboolean enable_buttons (GtkWidget* widget,
 
 
 static void reset_label(GtkTreeView* treeview,
-		 GtkTreePath *arg1,
-		 GtkTreeViewColumn *arg2,
-		 gpointer data_null) {
+                 GtkTreePath *arg1,
+                 GtkTreeViewColumn *arg2,
+                 gpointer data_null) {
   GtkTreeSelection* selection;
   GtkTreeIter iter;
   GtkTreeModel* model;
@@ -118,7 +118,7 @@ static void reset_label(GtkTreeView* treeview,
     file_info* p = NULL;
    
     gtk_tree_model_get (model, &iter, COL_FILENAME, &filename,
-			COL_POINTER, &data, -1);
+                        COL_POINTER, &data, -1);
     p = (file_info*)data;
     switch (p->filetype) {
     case FIROOT: //shouldn't happen
@@ -228,7 +228,7 @@ static void load_file_icons(void) {
 void create_and_display_button(void* func, const char* caption, GtkWidget* box, GtkWidget** button) {
   *button = gtk_button_new_with_label(caption);
   gtk_signal_connect (GTK_OBJECT (*button), "clicked",
-		      GTK_SIGNAL_FUNC(func), NULL);
+                      GTK_SIGNAL_FUNC(func), NULL);
 
   gtk_box_pack_start (GTK_BOX (box), GTK_WIDGET(*button), TRUE, TRUE, 0);
 }
@@ -267,9 +267,9 @@ int main (int argc, char *argv[]) {
   
   if (do_help) {
     Log(NOTICE, "flags:");
-    Log(NOTICE, "-d -- download all movies from the camcorder");
-    Log(NOTICE, "-f -- clear camera's movie partition (erase all movies)");
-    Log(NOTICE, "-h -- print this help info");
+    Log(NOTICE, " -d, --download   Download all movies from the camcorder");
+    Log(NOTICE, " -f, --format     Clear camera's movie partition (erase all movies)");
+    Log(NOTICE, " -h, --help       Print this help info");
     Log(NOTICE, "Flags may be combined to get a combined effect");
     exit(0);
   } else if (do_download || do_format) {
@@ -279,10 +279,11 @@ int main (int argc, char *argv[]) {
       if (unlock_camcorder(NULL,NULL,NULL)) {
 
         if (do_download) {
-	  DownloadAllMovies(".");
-	  ret=1;
-	}
-        if (do_format && !format_camcorder(NULL,NULL,NULL)) ret=1;
+          if (!ChangePartition(0) ||
+              !ChangeDirectory("/DCIM/100COACH") ||
+              !DownloadAllMovies(".")) ret=1;
+        }
+        if (!ret && do_format && !format_camcorder(NULL,NULL,NULL)) ret=1;
       }
       else ret=1;
 
@@ -338,14 +339,14 @@ int main (int argc, char *argv[]) {
   m_directory_tree = gtk_tree_view_new();
   //  m_directory_model = NULL;
   gtk_widget_set_size_request (m_directory_tree,
-			       300,
-			       300);
+                               300,
+                               300);
 
   s_w = gtk_scrolled_window_new(GTK_ADJUSTMENT(hadjustment), 
-				GTK_ADJUSTMENT(vadjustment));
+                                GTK_ADJUSTMENT(vadjustment));
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(s_w),
-				  GTK_POLICY_AUTOMATIC,
-				  GTK_POLICY_AUTOMATIC);
+                                  GTK_POLICY_AUTOMATIC,
+                                  GTK_POLICY_AUTOMATIC);
   //  gtk_container_set_height (GTK_TREE_VIEW (m_directory_tree), 300);
 
   //ICON COLUMN
@@ -411,7 +412,7 @@ int main (int argc, char *argv[]) {
   EnableOpenButton();
 #endif
   gtk_signal_connect (GTK_OBJECT (m_directory_tree), "cursor-changed", /* "row-activated",*/
-		      GTK_SIGNAL_FUNC(reset_label), NULL);
+                      GTK_SIGNAL_FUNC(reset_label), NULL);
 
   gtk_box_pack_start (GTK_BOX (hbox_tree), s_w, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (hbox_label), information_label, TRUE, TRUE, 0);

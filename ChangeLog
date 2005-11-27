@@ -1,3 +1,7 @@
+2005-11-27  Kees Cook  <kees@outflux.net>
+
+  * ops-linux.c: fixed refactoring of DownloadAllMovies.
+
 2005-09-06	Kees Cook  <kees@outflux.net>
 
   * messagebox.c: added MessageBoxConfirm with dialog_run()-style handling.
