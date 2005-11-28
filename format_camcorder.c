@@ -1,6 +1,6 @@
 #include "ops-linux.h"
 
-static gboolean Format(void) {
+gboolean Format(void) {
   int data;
   
   data=0x0000;

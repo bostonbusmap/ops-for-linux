@@ -283,7 +283,7 @@ int main (int argc, char *argv[]) {
               !ChangeDirectory("/DCIM/100COACH") ||
               !DownloadAllMovies(".")) ret=1;
         }
-        if (!ret && do_format && !format_camcorder(NULL,NULL,NULL)) ret=1;
+        if (!ret && do_format && !Format()) ret=1;
       }
       else ret=1;
 

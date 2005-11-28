@@ -1,6 +1,7 @@
 2005-11-27  Kees Cook  <kees@outflux.net>
 
   * ops-linux.c: fixed refactoring of DownloadAllMovies.
+  * ops-linux.c: fixed refactoring of Format.
 
 2005-09-06	Kees Cook  <kees@outflux.net>
 
