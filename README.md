@@ -28,7 +28,8 @@ an i386.
 
 
 GUI mode
-~~~~~~~~
+--------
+
 Click "Open Camcorder" then "Unlock" before doing anything else. In
 general please don't poke around with bugs in the implementation (ie,
 don't upload and download at the same time or you're asking for trouble,
@@ -36,7 +37,8 @@ for instance.) Don't unplug your camcorder until the program closes.
 
 
 Batch-run mode
-~~~~~~~~~~~~~~
+--------------
+
 To download all movies on the camcoder non-interactively, use the "-d" flag.
 To erase all movies from the camcorder non-interactively, use the "-f" flag.
 
@@ -47,7 +49,8 @@ Use the "-h" flag for more up-to-date help info.
 
 
 DISCLAIMER
-~~~~~~~~~~
+----------
+
 Anything you do with this program is your sole responsibility, even if
 there's an obvious bug which fries your camcorder that seems to imply
 some kind of incompetence on our part, even if the buttons seem to imply
