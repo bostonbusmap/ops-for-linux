@@ -1,3 +1,6 @@
+*NOTE*: This repository is here only for historical purposes (ie, it hasn't been updated since 2006). It's a clone from [http://sourceforge.net/projects/saturntools](http://sourceforge.net/projects/saturntools).
+
+
 Ops for linux is a port of the windows program "ops". Both programs
 are designed to unlock a CVS Puredigital camcorder and allow people to
 download movies from it, upload movies to it, and generally interact
